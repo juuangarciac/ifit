@@ -1,4 +1,4 @@
-package com.uca.juangarcia.ifit.modules.auth.service;
+package com.uca.juangarcia.ifit.shared.utils;
 
 import java.util.Optional;
 

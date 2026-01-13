@@ -2,11 +2,11 @@ package com.uca.juangarcia.ifit.modules.user.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 import com.uca.juangarcia.ifit.modules.user.model.AppRole;
 import com.uca.juangarcia.ifit.modules.user.repository.AppRoleRepository;
 
-import io.jsonwebtoken.lang.Assert;
 
 @Service
 public class AppRoleService {
