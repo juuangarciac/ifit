@@ -1,0 +1,7 @@
+{"properties": [
+  {
+    "name": "ifit.default.user.role",
+    "type": "java.lang.String",
+    "description": "A description for 'app.default-user-role'"
+  }
+]}

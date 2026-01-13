@@ -1,0 +1,17 @@
+{"properties": [
+  {
+    "name": "chat.memory.max-tokens",
+    "type": "java.lang.String",
+    "description": "The maximum number of tokens to retain."
+  },
+  {
+    "name": "chat.memory.max-messages",
+    "type": "java.lang.String",
+    "description": "The maximum number of messages to retain."
+  },
+  {
+    "name": "chat.systemmessage.personaltrainer.context",
+    "type": "java.lang.String",
+    "description": "When a user starts a conversation with any of the virtual trainers (Ronnie, Serena, Eliud, or Kael), follow this protocol"
+  }
+]}

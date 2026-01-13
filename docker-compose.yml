@@ -1,0 +1,275 @@
+# ============================================================================
+# DOCKER COMPOSE - SISTEMA IFIT COMPLETO
+# ============================================================================
+# 
+# Servicios:
+#   1. MySQL          - Base de datos
+#   2. Keycloak       - Servidor OAuth2/OIDC
+#   3. Ollama         - Modelos LLM locales
+#   4. Eureka Server  - Service Discovery
+#   5. API Gateway    - Punto de entrada único
+#   6. AuthAPI        - Autenticación
+#   7. IFIT           - Microservicio principal
+#   8. RONNIE         - Microservicio IA
+#
+# Uso:
+#   docker-compose up -d          # Iniciar todo
+#   docker-compose down           # Detener todo
+#   docker-compose logs -f        # Ver logs
+#
+# ============================================================================
+
+services:
+  # ==========================================================================
+  # MYSQL - BASE DE DATOS
+  # ==========================================================================
+  mysql:
+    image: mysql:8.0
+    container_name: ifit-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: Ronnie
+      MYSQL_USER: ifit
+      MYSQL_PASSWORD: ifit123
+    ports:
+      - "3308:3306"  # Host:Container
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # Script de inicialización (opcional)
+      # - ./init-db:/docker-entrypoint-initdb.d
+    networks:
+      - ifit-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ==========================================================================
+  # KEYCLOAK - SERVIDOR OAUTH2
+  # ==========================================================================
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    container_name: ifit-keycloak
+    restart: unless-stopped
+    command: start-dev
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HTTP_PORT: 9090
+      KC_HOSTNAME_STRICT: false
+      KC_HOSTNAME_STRICT_HTTPS: false
+      KC_HTTP_ENABLED: true
+    ports:
+      - "9090:9090"
+    networks:
+      - ifit-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/health/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # ==========================================================================
+  # OLLAMA - MODELOS LLM
+  # ==========================================================================
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ifit-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - ifit-network
+    # Descomentar si tienes GPU NVIDIA
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ==========================================================================
+  # EUREKA SERVER - SERVICE DISCOVERY
+  # ==========================================================================
+  eureka:
+    build:
+      context: ./eureka-server
+      dockerfile: Dockerfile
+    container_name: ifit-eureka
+    restart: unless-stopped
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SERVER_PORT=8761
+    networks:
+      - ifit-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ==========================================================================
+  # API GATEWAY - PUNTO DE ENTRADA
+  # ==========================================================================
+  gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: ifit-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SERVER_PORT=8080
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER-URI=http://keycloak:9090/realms/ifit-realm
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK-SET-URI=http://keycloak:9090/realms/ifit-realm/protocol/openid-connect/certs
+    depends_on:
+      eureka:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    networks:
+      - ifit-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # ==========================================================================
+  # AUTHAPI - AUTENTICACIÓN
+  # ==========================================================================
+  authapi:
+    build:
+      context: ./authapi
+      dockerfile: Dockerfile
+    container_name: ifit-authapi
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SERVER_PORT=8083
+      - SERVER_SERVLET_CONTEXT-PATH=/ifit/keycloak
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER-URI=http://keycloak:9090/realms/ifit-realm
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK-SET-URI=http://keycloak:9090/realms/ifit-realm/protocol/openid-connect/certs
+      - KEYCLOAK_TOKEN-URL=http://keycloak:9090/realms/ifit-realm/protocol/openid-connect/token
+    depends_on:
+      eureka:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    networks:
+      - ifit-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/ifit/keycloak/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # ==========================================================================
+  # IFIT - MICROSERVICIO PRINCIPAL
+  # ==========================================================================
+  ifit:
+    build:
+      context: ./ifit
+      dockerfile: Dockerfile
+    container_name: ifit-service
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SERVER_PORT=8081
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/Ronnie
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+    depends_on:
+      eureka:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    networks:
+      - ifit-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # ==========================================================================
+  # RONNIE - MICROSERVICIO IA
+  # ==========================================================================
+  ronnie:
+    build:
+      context: ./ronnie
+      dockerfile: Dockerfile
+    container_name: ifit-ronnie
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SERVER_PORT=8082
+      - SERVER_SERVLET_CONTEXT-PATH=/ifit/aimodels/api/v1
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/Ronnie
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+      - OLLAMA_BASE-URL=http://ollama:11434
+      - OLLAMA_MODEL-NAME=llama3.1:8b
+    depends_on:
+      eureka:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    networks:
+      - ifit-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/ifit/aimodels/api/v1/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+# ============================================================================
+# NETWORKS - COMUNICACIÓN ENTRE CONTENEDORES
+# ============================================================================
+networks:
+  ifit-network:
+    driver: bridge
+    name: ifit-network
+
+# ============================================================================
+# VOLUMES - PERSISTENCIA DE DATOS
+# ============================================================================
+volumes:
+  mysql_data:
+    name: ifit_mysql_data
+  ollama_data:
+    name: ifit_ollama_data

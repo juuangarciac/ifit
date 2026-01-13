@@ -1,0 +1,88 @@
+spring:
+  application:
+    name: ApiGatewayService
+  
+  main:
+    web-application-type: reactive
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9090/realms/ifit-realm
+          jwk-set-uri: http://localhost:9090/realms/ifit-realm/protocol/openid-connect/certs
+
+
+  cloud:
+    gateway:
+      default-filters:
+        # - TokenRelay  # ← COMENTADO: Lo aplicaremos solo a rutas protegidas
+      
+      routes:
+        - id: AUTHAPI-PUBLIC
+          uri: lb://AUTHAPI  
+          predicates:
+            - Path=/ifit/keycloak/auth/**,/ifit/keycloak/user/create
+          filters:
+            - StripPrefix=0  
+        
+        - id: AUTHAPI-PROTECTED
+          uri: lb://AUTHAPI
+          predicates:
+            - Path=/ifit/keycloak/**
+          filters:
+            - StripPrefix=0
+            - TokenRelay 
+        
+        - id: IFIT
+          uri: lb://IFIT
+          predicates:
+            - Path=/ifit/api/v1/**
+          filters:
+            - StripPrefix=0  # Mantiene el path completo
+            - TokenRelay     # ← Reenvía JWT
+        
+        - id: RONNIE
+          uri: lb://RONNIE
+          predicates:
+            - Path=/ifit/aimodels/api/v1/**
+          filters:
+            - StripPrefix=0
+            - TokenRelay 
+
+server:
+  port: 8080
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  
+  instance:
+    prefer-ip-address: true
+    hostname: localhost
+    instance-id: ${spring.application.name}:${server.port}
+
+logging:
+  level:
+    # Spring Security
+    org:
+      springframework:
+        security: 
+          web: DEBUG
+          oauth2: DEBUG
+        # Spring Cloud Gateway
+        cloud:
+          gateway: DEBUG
+    
+    # Reactor Netty (WebFlux)
+    reactor:
+      netty: DEBUG
+    
+    # Eureka / Netflix Discovery
+    com:
+      netflix:
+        eureka: DEBUG
+        discovery: DEBUG
