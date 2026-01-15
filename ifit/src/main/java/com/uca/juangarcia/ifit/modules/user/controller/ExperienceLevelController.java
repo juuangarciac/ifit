@@ -25,6 +25,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+/**
+ * Controlador REST que maneja las operaciones CRUD para los niveles de experiencia de los usuarios.
+ * 
+ * Todos los endpoints están bajo la ruta base {@code /api/v1/experience-levels} siguiendo
+ * las convenciones RESTful y versionado de API.
+ * 
+ * @author Juan Garcia
+ * @version 1.0
+ * @since 2026-10-01
+ */
 @RestController
 @RequestMapping("/experience-levels")
 @Tag(name = "Experience Levels", description = "Operaciones relacionadas con los niveles de experiencia")
@@ -33,6 +43,11 @@ public class ExperienceLevelController {
     @Autowired
     private ExperienceLevelService experienceLevelService;
 
+    /**
+     * Obtiene todos los niveles de experiencia.
+     *
+     * @return ResponseEntity<List<ExperienceLevelDto>> con la lista de niveles de experiencia.
+     */
     @GetMapping
     @Operation(
         summary = "Obtiene todos los niveles de experiencia",
@@ -53,6 +68,13 @@ public class ExperienceLevelController {
     }
 
 
+    /**
+     * Obtiene un nivel de experiencia por su ID.
+     * 
+     * @param id. ID del nivel de experiencia.
+     * @return ResponseEntity<ExperienceLevelDto> con el nivel de experiencia.
+     * @throws ExperienceLevelNotFoundException
+     */
     @GetMapping("/{id}")
     @Operation(
         summary = "Obtiene un nivel de experiencia por su ID",
@@ -75,6 +97,13 @@ public class ExperienceLevelController {
         return ResponseEntity.ok(experienceLevelService.getById(id));
     }
 
+    /**
+     * Obtiene un nivel de experiencia por su nombre.
+     * 
+     * @param name Nombre del nivel de experiencia.
+     * @return ResponseEntity<ExperienceLevelDto> con el nivel de experiencia.
+     * @throws ExperienceLevelNotFoundException
+     */
     @GetMapping("/{name}")
     @Operation(
         summary = "Obtiene un nivel de experiencia por su nombre",
@@ -87,7 +116,12 @@ public class ExperienceLevelController {
         return ResponseEntity.ok(experienceLevelService.getByName(name));
     }
     
-
+    /**
+     * Crea un nuevo nivel de experiencia.
+     * 
+     * @param createExperienceLevelDto Datos del nivel de experiencia a crear.
+     * @return ResponseEntity<ExperienceLevelDto> con el nivel de experiencia creado.
+     */
     @PostMapping
     @Operation(
         summary = "Crea un nuevo nivel de experiencia",
@@ -110,6 +144,13 @@ public class ExperienceLevelController {
         return ResponseEntity.ok(experienceLevelService.createExperienceLevel(createExperienceLevelDto));
     }
 
+    /**
+     * Elimina un nivel de experiencia por su ID.
+     * 
+     * @param id ID del nivel de experiencia a eliminar.
+     * @return ResponseEntity<Void>.
+     * @throws ExperienceLevelNotFoundException
+     */
     @DeleteMapping("/{id}")
     @Operation(
         summary = "Elimina un nivel de experiencia por su ID",
@@ -133,6 +174,14 @@ public class ExperienceLevelController {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * Actualiza un nivel de experiencia por su ID.
+     * 
+     * @param id ID del nivel de experiencia a actualizar.
+     * @param updateExperienceLevelDto Datos para actualizar el nivel de experiencia.
+     * @return ResponseEntity<ExperienceLevelDto> con el nivel de experiencia actualizado.
+     * @throws ExperienceLevelNotFoundException
+     */
     @PatchMapping("/{id}")
     @Operation(
         summary = "Actualiza un nivel de experiencia por su ID",

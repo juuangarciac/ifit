@@ -42,10 +42,10 @@ import jakarta.validation.Valid;
 /**
  * Controlador REST para la gestión de usuarios de la aplicación.
  * 
- * <p>Este controlador expone endpoints para realizar operaciones CRUD sobre usuarios,
+ * Este controlador expone endpoints para realizar operaciones CRUD sobre usuarios,
  * así como funcionalidades específicas del proceso de registro y configuración.
  * 
- * <p>Todos los endpoints están bajo la ruta base {@code /api/v1/users} siguiendo
+ * Todos los endpoints están bajo la ruta base {@code /api/v1/users} siguiendo
  * las convenciones RESTful y versionado de API.
  * 
  * 
@@ -72,9 +72,9 @@ public class AppUserController {
     /**
      * Obtiene todos los usuarios del sistema.
      * 
-     * <p><strong>Endpoint:</strong> {@code GET /api/v1/users}
+     * Endpoint: {@code GET /api/v1/users}
      * 
-     * <p><strong>Nota:</strong> Para grandes conjuntos de datos, se recomienda usar
+     * Para grandes conjuntos de datos, se recomienda usar
      * el endpoint paginado {@code GET /api/v1/users/paginated}.
      * 
      * @return ResponseEntity con la lista de usuarios y código 200 OK
@@ -105,12 +105,10 @@ public class AppUserController {
     /**
      * Obtiene usuarios con paginación.
      * 
-     * <p><strong>Endpoint:</strong> {@code GET /api/v1/users/paginated}
+     * Endpoint: {@code GET /api/v1/users/paginated}
      * 
-     * <p><strong>Ejemplo de uso:</strong>
-     * <pre>
+     * Ejemplo de uso:</strong>
      * GET /api/v1/users/paginated?page=0&size=20&sort=name,asc
-     * </pre>
      * 
      * @param page número de página (comienza en 0)
      * @param size tamaño de página (elementos por página)
@@ -158,7 +156,7 @@ public class AppUserController {
     /**
      * Obtiene un usuario por su ID.
      * 
-     * <p><strong>Endpoint:</strong> {@code GET /api/v1/users/{id}}
+     * Endpoint: {@code GET /api/v1/users/{id}}
      * 
      * @param id identificador único del usuario
      * @return ResponseEntity con el usuario y código 200 OK
@@ -192,7 +190,7 @@ public class AppUserController {
     /**
      * Obtiene un usuario por su email.
      * 
-     * <p><strong>Endpoint:</strong> {@code GET /api/v1/users/email/{email}}
+     * Endpoint: {@code GET /api/v1/users/email/{email}}
      * 
      * @param email dirección de email del usuario
      * @return ResponseEntity con el usuario y código 200 OK
@@ -224,16 +222,14 @@ public class AppUserController {
     /**
      * Crea un nuevo usuario.
      * 
-     * <p><strong>Endpoint:</strong> {@code POST /api/v1/users}
+     * Endpoint: {@code POST /api/v1/users}
      * 
-     * <p><strong>Cuerpo de la petición (JSON):</strong>
-     * <pre>
+     * Cuerpo de la petición (JSON):
      * {
      *   "name": "Juan García",
      *   "email": "juan@example.com",
      *   "password": "SecurePass123!"
      * }
-     * </pre>
      * 
      * @param createDto datos del nuevo usuario (validados)
      * @return ResponseEntity con el usuario creado y código 201 CREATED
@@ -273,9 +269,9 @@ public class AppUserController {
     /**
      * Actualiza un usuario existente.
      * 
-     * <p><strong>Endpoint:</strong> {@code PUT /api/v1/users/{id}}
+     * Endpoint: {@code PUT /api/v1/users/{id}}
      * 
-     * <p>Permite actualizaciones parciales. Solo los campos proporcionados
+     * Permite actualizaciones parciales. Solo los campos proporcionados
      * en el DTO serán actualizados.
      * 
      * @param id identificador del usuario a actualizar
@@ -317,9 +313,9 @@ public class AppUserController {
     /**
      * Elimina un usuario del sistema.
      * 
-     * <p><strong>Endpoint:</strong> {@code DELETE /api/v1/users/{id}}
+     * Endpoint: {@code DELETE /api/v1/users/{id}}
      * 
-     * <p><strong>Advertencia:</strong> Esta operación es irreversible.
+     * Advertencia: Esta operación es irreversible.
      * 
      * @param id identificador del usuario a eliminar
      * @return ResponseEntity con código 204 NO CONTENT
@@ -351,7 +347,7 @@ public class AppUserController {
     /**
      * Asigna un tipo de coach a un usuario.
      * 
-     * <p><strong>Endpoint:</strong> {@code PATCH /api/v1/users/{userId}/assign-coach/{coachId}}
+     * Endpoint: {@code PATCH /api/v1/users/{userId}/assign-coach/{coachId}}
      * 
      * @param userId identificador del usuario
      * @param coachId identificador del tipo de coach
@@ -388,7 +384,7 @@ public class AppUserController {
     /**
      * Asigna un nivel de experiencia a un usuario.
      * 
-     * <p><strong>Endpoint:</strong> {@code PATCH /api/v1/users/{userId}/assign-experience/{levelId}}
+     * Endpoint: {@code PATCH /api/v1/users/{userId}/assign-experience/{levelId}}
      * 
      * @param userId identificador del usuario
      * @param levelId identificador del nivel de experiencia
@@ -425,7 +421,7 @@ public class AppUserController {
     /**
      * Marca el registro de un usuario como completado.
      * 
-     * <p><strong>Endpoint:</strong> {@code PATCH /api/v1/users/{userId}/complete-registration}
+     * Endpoint: {@code PATCH /api/v1/users/{userId}/complete-registration}
      * 
      * @param userId identificador del usuario
      * @return ResponseEntity con el usuario actualizado y código 200 OK
@@ -457,7 +453,7 @@ public class AppUserController {
     /**
      * Verifica si existe un usuario con el email especificado.
      * 
-     * <p><strong>Endpoint:</strong> {@code GET /api/v1/users/exists/email/{email}}
+     * Endpoint: {@code GET /api/v1/users/exists/email/{email}}
      * 
      * @param email email a verificar
      * @return ResponseEntity con true/false y código 200 OK

@@ -46,8 +46,8 @@ import jakarta.validation.Valid;
  * 
  * <p>Proporciona dos grupos de endpoints:
  * <ul>
- *   <li><strong>CRUD de Cuestionarios:</strong> Operaciones sobre la plantilla del cuestionario</li>
- *   <li><strong>Sesiones de Usuario:</strong> Iniciar, responder y consultar respuestas de usuarios</li>
+ *   <li><strong>CRUD de Cuestionarios: Operaciones sobre la plantilla del cuestionario</li>
+ *   <li><strong>Sesiones de Usuario: Iniciar, responder y consultar respuestas de usuarios</li>
  * </ul>
  * 
  * @author Juan Garcia
@@ -66,14 +66,11 @@ public class QuestionnaireController {
         this.questionnaireService = questionnaireService;
     }
     
-    // ========================================================================
-    // CRUD DE CUESTIONARIOS (Plantillas)
-    // ========================================================================
     
     /**
-     * Obtiene todos los cuestionarios habilitados (versión compacta).
+     * Obtiene todos los cuestionarios habilitados.
      * 
-     * <p><strong>Endpoint:</strong> {@code GET /ifit/api/v1/questionnaires}
+     * Endpoint: {@code GET /ifit/api/v1/questionnaires}
      * 
      * @return Lista de cuestionarios en formato resumido
      */
@@ -106,9 +103,9 @@ public class QuestionnaireController {
     }
     
     /**
-     * Obtiene un cuestionario por su ID (versión completa).
+     * Obtiene un cuestionario por su ID.
      * 
-     * <p><strong>Endpoint:</strong> {@code GET /ifit/api/v1/questionnaires/{id}}
+     * Endpoint: {@code GET /ifit/api/v1/questionnaires/{id}}
      * 
      * @param id ID del cuestionario
      * @return Cuestionario completo con todos sus detalles
@@ -155,7 +152,7 @@ public class QuestionnaireController {
      * Obtiene un cuestionario con su primera pregunta incluida.
      * Endpoint optimizado que combina la info del cuestionario + primera pregunta.
      * 
-     * <p><strong>Endpoint:</strong> {@code GET /ifit/api/v1/questionnaires/{id}/with-first-question}
+     * Endpoint: {@code GET /ifit/api/v1/questionnaires/{id}/with-first-question}
      * 
      * @param id ID del cuestionario
      * @return Cuestionario con primera pregunta y opciones
@@ -202,7 +199,7 @@ public class QuestionnaireController {
     /**
      * Crea un nuevo cuestionario.
      * 
-     * <p><strong>Endpoint:</strong> {@code POST /ifit/api/v1/questionnaires}
+     * Endpoint: {@code POST /ifit/api/v1/questionnaires}
      * 
      * @param dto Datos del nuevo cuestionario
      * @return Cuestionario creado
@@ -259,7 +256,7 @@ public class QuestionnaireController {
     /**
      * Actualiza un cuestionario existente.
      * 
-     * <p><strong>Endpoint:</strong> {@code PUT /ifit/api/v1/questionnaires/{id}}
+     * Endpoint: {@code PUT /ifit/api/v1/questionnaires/{id}}
      * 
      * @param id ID del cuestionario a actualizar
      * @param dto Datos a actualizar (todos los campos son opcionales)
@@ -317,7 +314,7 @@ public class QuestionnaireController {
     /**
      * Elimina un cuestionario.
      * 
-     * <p><strong>Endpoint:</strong> {@code DELETE /ifit/api/v1/questionnaires/{id}}
+     * Endpoint: {@code DELETE /ifit/api/v1/questionnaires/{id}}
      * 
      * @param id ID del cuestionario a eliminar
      * @return Respuesta vacía con código 204
@@ -356,14 +353,10 @@ public class QuestionnaireController {
         return ResponseEntity.noContent().build();
     }
     
-    // ========================================================================
-    // SESIONES DE CUESTIONARIO (Respuestas de Usuario)
-    // ========================================================================
-    
     /**
      * Inicia una nueva sesión de cuestionario para el usuario autenticado.
      * 
-     * <p><strong>Endpoint:</strong> {@code POST /ifit/api/v1/questionnaires/{questionnaireId}/start}
+     * Endpoint: {@code POST /ifit/api/v1/questionnaires/{questionnaireId}/start}
      * 
      * @param questionnaireId ID del cuestionario a iniciar
      * @param user Usuario autenticado (inyectado automáticamente)
@@ -412,7 +405,7 @@ public class QuestionnaireController {
     /**
      * Registra una respuesta a una pregunta del cuestionario.
      * 
-     * <p><strong>Endpoint:</strong> {@code POST /ifit/api/v1/questionnaires/responses/{responseId}/answer}
+     * Endpoint: {@code POST /ifit/api/v1/questionnaires/responses/{responseId}/answer}
      * 
      * @param responseId ID de la sesión de cuestionario
      * @param answerRequest Respuesta del usuario
@@ -473,7 +466,7 @@ public class QuestionnaireController {
     /**
      * Obtiene el resumen completo de una sesión de cuestionario.
      * 
-     * <p><strong>Endpoint:</strong> {@code GET /ifit/api/v1/questionnaires/responses/{responseId}/summary}
+     * Endpoint: {@code GET /ifit/api/v1/questionnaires/responses/{responseId}/summary}
      * 
      * @param responseId ID de la sesión
      * @return Resumen con todas las respuestas del usuario
@@ -520,7 +513,7 @@ public class QuestionnaireController {
     /**
      * Obtiene todas las sesiones de cuestionarios del usuario autenticado.
      * 
-     * <p><strong>Endpoint:</strong> {@code GET /ifit/api/v1/questionnaires/responses/my-responses}
+     * Endpoint: {@code GET /ifit/api/v1/questionnaires/responses/my-responses}
      * 
      * @param user Usuario autenticado
      * @return Lista de todas sus sesiones
@@ -559,7 +552,7 @@ public class QuestionnaireController {
     /**
      * Obtiene las sesiones completadas del usuario autenticado.
      * 
-     * <p><strong>Endpoint:</strong> {@code GET /ifit/api/v1/questionnaires/responses/my-completed-responses}
+     * Endpoint: {@code GET /ifit/api/v1/questionnaires/responses/my-completed-responses}
      * 
      * @param user Usuario autenticado
      * @return Lista de sesiones completadas
@@ -598,7 +591,7 @@ public class QuestionnaireController {
     /**
      * Obtiene las sesiones activas (no completadas) del usuario autenticado.
      * 
-     * <p><strong>Endpoint:</strong> {@code GET /ifit/api/v1/questionnaires/responses/my-active-responses}
+     * Endpoint: {@code GET /ifit/api/v1/questionnaires/responses/my-active-responses}
      * 
      * @param user Usuario autenticado
      * @return Lista de sesiones activas
