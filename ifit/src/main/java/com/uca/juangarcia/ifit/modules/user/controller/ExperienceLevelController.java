@@ -13,11 +13,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.uca.juangarcia.ifit.exception.ExperienceLevelNotFoundException;
 import com.uca.juangarcia.ifit.modules.user.dto.CreateExperienceLevelDto;
 import com.uca.juangarcia.ifit.modules.user.dto.ExperienceLevelDto;
 import com.uca.juangarcia.ifit.modules.user.dto.UpdateExperienceLevelDto;
 import com.uca.juangarcia.ifit.modules.user.service.ExperienceLevelService;
-import com.uca.juangarcia.ifit.shared.exception.ExperienceLevelNotFoundException;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

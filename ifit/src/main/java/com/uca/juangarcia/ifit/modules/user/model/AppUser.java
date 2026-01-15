@@ -38,6 +38,9 @@ public class AppUser {
     @Column(columnDefinition="boolean default false")
     private boolean isRegistrationComplete = false;
 
+    @Column(name = "keycloak_id", unique = true)
+    private String keycloakId;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
@@ -67,7 +70,7 @@ public class AppUser {
 
     public AppUser() {}
 
-    public AppUser(String name, String password, String email, boolean isRegistrationComplete, LocalDateTime createdAt,
+    public AppUser(String name, String password, String email, boolean isRegistrationComplete, String keycloakId, LocalDateTime createdAt,
             LocalDateTime updatedAt, String verificationCode, boolean isVerified,
             LocalDateTime verificationCodeExpiresAt, AppRole role, CoachModelType coachModelType,
             ExperienceLevel experienceLevel) {
@@ -75,6 +78,7 @@ public class AppUser {
         this.password = password;
         this.email = email;
         this.isRegistrationComplete = isRegistrationComplete;
+        this.keycloakId = keycloakId;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.verificationCode = verificationCode;
@@ -91,6 +95,7 @@ public class AppUser {
         this.setPassword(user.getPassword());
         this.setEmail(user.getEmail());
         this.setIsRegistrationComplete(user.isRegistrationComplete());
+        this.setKeycloakId(user.getKeycloakId());
         this.setCreatedAt(user.getCreatedAt());
         this.setUpdatedAt(user.getUpdatedAt());
         this.setRole(user.getRole());
@@ -136,6 +141,14 @@ public class AppUser {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getKeycloakId() {
+        return keycloakId;
+    }
+    
+    public void setKeycloakId(String keycloakId) {
+        this.keycloakId = keycloakId;
     }
 
     public LocalDateTime getCreatedAt() {

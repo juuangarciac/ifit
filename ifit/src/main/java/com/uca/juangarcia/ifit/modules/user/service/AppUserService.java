@@ -11,6 +11,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.uca.juangarcia.ifit.exception.CoachModelTypeNotFoundException;
+import com.uca.juangarcia.ifit.exception.EmailAlreadyExistsException;
+import com.uca.juangarcia.ifit.exception.EmailNotFoundException;
+import com.uca.juangarcia.ifit.exception.ExperienceLevelNotFoundException;
+import com.uca.juangarcia.ifit.exception.UserIdNotFoundException;
 import com.uca.juangarcia.ifit.modules.coach.mapper.CoachModelTypeMapper;
 import com.uca.juangarcia.ifit.modules.coach.model.CoachModelType;
 import com.uca.juangarcia.ifit.modules.coach.service.CoachModelTypeService;
@@ -24,11 +29,6 @@ import com.uca.juangarcia.ifit.modules.user.model.AppRole;
 import com.uca.juangarcia.ifit.modules.user.model.AppUser;
 import com.uca.juangarcia.ifit.modules.user.model.ExperienceLevel;
 import com.uca.juangarcia.ifit.modules.user.repository.AppUserRepository;
-import com.uca.juangarcia.ifit.shared.exception.CoachModelTypeNotFoundException;
-import com.uca.juangarcia.ifit.shared.exception.EmailAlreadyExistsException;
-import com.uca.juangarcia.ifit.shared.exception.EmailNotFoundException;
-import com.uca.juangarcia.ifit.shared.exception.ExperienceLevelNotFoundException;
-import com.uca.juangarcia.ifit.shared.exception.UserIdNotFoundException;
 
 /**
  * Servicio para la gestión de usuarios de la aplicación.
@@ -66,7 +66,7 @@ public class AppUserService {
     private final PasswordEncoder passwordEncoder;
 
 
-    @Value("${ifit.default.user.role:USER}")
+    @Value("${ifit.default.user.role}")
     private String defaultUserRole;
 
     /**

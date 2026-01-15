@@ -33,6 +33,9 @@ public record CreateAppUserRequestDto(
     @Schema(description = "Email del usuario", example = "juan@example.com", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "El email no puede estar vacío")
     @Email(message = "El email debe ser válido")
-    String email
+    String email,
+
+    @Schema(description = "Keycloak ID del usuario", example = "123e4567-e89b-12d3-a456-426614174000", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+    String keycloakId
 ) {
 }

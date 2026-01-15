@@ -27,6 +27,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.uca.juangarcia.ifit.exception.CoachModelTypeNotFoundException;
+import com.uca.juangarcia.ifit.exception.EmailAlreadyExistsException;
+import com.uca.juangarcia.ifit.exception.EmailNotFoundException;
+import com.uca.juangarcia.ifit.exception.ExperienceLevelNotFoundException;
+import com.uca.juangarcia.ifit.exception.UserIdNotFoundException;
 import com.uca.juangarcia.ifit.modules.coach.model.CoachModelType;
 import com.uca.juangarcia.ifit.modules.coach.service.CoachModelTypeService;
 import com.uca.juangarcia.ifit.modules.user.dto.AppUserResponseDto;
@@ -40,11 +45,6 @@ import com.uca.juangarcia.ifit.modules.user.repository.AppUserRepository;
 import com.uca.juangarcia.ifit.modules.user.service.AppRoleService;
 import com.uca.juangarcia.ifit.modules.user.service.AppUserService;
 import com.uca.juangarcia.ifit.modules.user.service.ExperienceLevelService;
-import com.uca.juangarcia.ifit.shared.exception.CoachModelTypeNotFoundException;
-import com.uca.juangarcia.ifit.shared.exception.EmailAlreadyExistsException;
-import com.uca.juangarcia.ifit.shared.exception.EmailNotFoundException;
-import com.uca.juangarcia.ifit.shared.exception.ExperienceLevelNotFoundException;
-import com.uca.juangarcia.ifit.shared.exception.UserIdNotFoundException;
 
 /**
  * Tests unitarios para AppUserServiceV2.
@@ -310,7 +310,8 @@ class AppUserServiceTest {
             CreateAppUserRequestDto createDto = new CreateAppUserRequestDto(
                 "Juan García",
                 "password123",
-                "juan@example.com"
+                "juan@example.com",
+                "USER"
             );
 
             when(userRepository.findByEmail("juan@example.com")).thenReturn(Optional.empty());
@@ -339,7 +340,8 @@ class AppUserServiceTest {
             CreateAppUserRequestDto createDto = new CreateAppUserRequestDto(
                 "Juan García",
                 "password123",
-                "juan@example.com"
+                "juan@example.com",
+                "USER"
             );
 
             when(userRepository.findByEmail("juan@example.com")).thenReturn(Optional.of(testUser));

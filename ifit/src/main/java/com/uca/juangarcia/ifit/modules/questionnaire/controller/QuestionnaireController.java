@@ -15,6 +15,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.uca.juangarcia.ifit.exception.CoachModelTypeNotFoundException;
+import com.uca.juangarcia.ifit.exception.ErrorResponse;
+import com.uca.juangarcia.ifit.exception.ExperienceLevelNotFoundException;
+import com.uca.juangarcia.ifit.exception.QuestionNotFoundException;
+import com.uca.juangarcia.ifit.exception.QuestionnaireNotFoundException;
+import com.uca.juangarcia.ifit.exception.UserIdNotFoundException;
 import com.uca.juangarcia.ifit.modules.questionnaire.dto.AnswerRequestDTO;
 import com.uca.juangarcia.ifit.modules.questionnaire.dto.CreateQuestionnaireRequestDto;
 import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireDTO;
@@ -26,12 +32,6 @@ import com.uca.juangarcia.ifit.modules.questionnaire.dto.UpdateQuestionnaireRequ
 import com.uca.juangarcia.ifit.modules.questionnaire.model.QuestionnaireResponse;
 import com.uca.juangarcia.ifit.modules.questionnaire.service.QuestionnaireService;
 import com.uca.juangarcia.ifit.modules.user.model.AppUser;
-import com.uca.juangarcia.ifit.shared.exception.CoachModelTypeNotFoundException;
-import com.uca.juangarcia.ifit.shared.exception.ErrorResponse;
-import com.uca.juangarcia.ifit.shared.exception.ExperienceLevelNotFoundException;
-import com.uca.juangarcia.ifit.shared.exception.QuestionNotFoundException;
-import com.uca.juangarcia.ifit.shared.exception.QuestionnaireNotFoundException;
-import com.uca.juangarcia.ifit.shared.exception.UserIdNotFoundException;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

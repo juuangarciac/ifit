@@ -1,4 +1,4 @@
-package com.uca.juangarcia.ifit.shared.security;
+package com.uca.juangarcia.ifit.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;

@@ -1,10 +1,9 @@
-package com.uca.juangarcia.ifit.shared.exception;
+package com.uca.juangarcia.ifit.exception;
 
-public class EmailAlreadyExistsException extends Exception {
-
+public class EmailNotFoundException extends Exception{
     private String email;
 
-    public EmailAlreadyExistsException(String email) {
+    public EmailNotFoundException(String email) {
         this.email = email;
     }
 
@@ -17,6 +16,6 @@ public class EmailAlreadyExistsException extends Exception {
     }
 
     public String getMessage() {
-        return "User with email " + email + " already exists.";
+        return "User with email " + email + " does not exist.";
     }
 }

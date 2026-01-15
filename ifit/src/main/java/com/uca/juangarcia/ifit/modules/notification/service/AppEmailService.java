@@ -14,12 +14,12 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import com.uca.juangarcia.ifit.exception.EmailNotFoundException;
 import com.uca.juangarcia.ifit.modules.notification.dto.EmailResponseDto;
 import com.uca.juangarcia.ifit.modules.notification.model.AppEmailDetails;
 import com.uca.juangarcia.ifit.modules.user.mapper.AppUserMapper;
 import com.uca.juangarcia.ifit.modules.user.model.AppUser;
 import com.uca.juangarcia.ifit.modules.user.service.AppUserService;
-import com.uca.juangarcia.ifit.shared.exception.EmailNotFoundException;
 
 import jakarta.mail.internet.MimeMessage;
 

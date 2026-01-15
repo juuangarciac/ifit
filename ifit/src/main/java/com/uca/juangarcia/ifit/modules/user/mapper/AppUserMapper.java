@@ -112,6 +112,7 @@ public class AppUserMapper {
         user.setName(dto.name());
         user.setPassword(dto.password()); // NOTA: Debe ser encriptada por el servicio
         user.setEmail(dto.email());
+        user.setKeycloakId(dto.keycloakId());
         user.setCreatedAt(LocalDateTime.now());
         user.setVerified(false);
         user.setIsRegistrationComplete(false);

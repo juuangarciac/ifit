@@ -1,4 +1,4 @@
-package com.uca.juangarcia.ifit.shared.utils;
+package com.uca.juangarcia.ifit.utils;
 
 import java.util.Optional;
 
@@ -6,6 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import com.uca.juangarcia.ifit.exception.CoachModelTypeNotFoundException;
+import com.uca.juangarcia.ifit.exception.ExperienceLevelNotFoundException;
+import com.uca.juangarcia.ifit.exception.QuestionNotFoundException;
+import com.uca.juangarcia.ifit.exception.QuestionnaireNotFoundException;
+import com.uca.juangarcia.ifit.exception.UserIdNotFoundException;
 import com.uca.juangarcia.ifit.modules.coach.model.CoachModelType;
 import com.uca.juangarcia.ifit.modules.coach.repository.CoachModelTypeRepository;
 import com.uca.juangarcia.ifit.modules.questionnaire.model.Question;
@@ -18,11 +23,6 @@ import com.uca.juangarcia.ifit.modules.user.model.ExperienceLevel;
 import com.uca.juangarcia.ifit.modules.user.repository.AppRoleRepository;
 import com.uca.juangarcia.ifit.modules.user.repository.AppUserRepository;
 import com.uca.juangarcia.ifit.modules.user.repository.ExperienceLevelRepository;
-import com.uca.juangarcia.ifit.shared.exception.CoachModelTypeNotFoundException;
-import com.uca.juangarcia.ifit.shared.exception.ExperienceLevelNotFoundException;
-import com.uca.juangarcia.ifit.shared.exception.QuestionNotFoundException;
-import com.uca.juangarcia.ifit.shared.exception.QuestionnaireNotFoundException;
-import com.uca.juangarcia.ifit.shared.exception.UserIdNotFoundException;
 
 /**
  * This class is provided to enhance the security of the application's data.

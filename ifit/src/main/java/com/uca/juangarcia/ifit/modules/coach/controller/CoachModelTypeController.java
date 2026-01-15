@@ -13,12 +13,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.uca.juangarcia.ifit.exception.CoachModelTypeNotFoundException;
+import com.uca.juangarcia.ifit.exception.ErrorResponse;
 import com.uca.juangarcia.ifit.modules.coach.dto.CoachModelTypeResponseDto;
 import com.uca.juangarcia.ifit.modules.coach.dto.CreateCoachModelTypeRequestDto;
 import com.uca.juangarcia.ifit.modules.coach.dto.UpdateCoachModelTypeRequestDto;
 import com.uca.juangarcia.ifit.modules.coach.service.CoachModelTypeService;
-import com.uca.juangarcia.ifit.shared.exception.CoachModelTypeNotFoundException;
-import com.uca.juangarcia.ifit.shared.exception.ErrorResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

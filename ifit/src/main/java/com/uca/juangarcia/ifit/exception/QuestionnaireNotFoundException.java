@@ -1,4 +1,4 @@
-package com.uca.juangarcia.ifit.shared.exception;
+package com.uca.juangarcia.ifit.exception;
 
 public class QuestionnaireNotFoundException extends Exception {
   private Long id;

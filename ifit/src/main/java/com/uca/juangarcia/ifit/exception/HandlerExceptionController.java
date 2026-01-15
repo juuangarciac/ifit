@@ -1,4 +1,4 @@
-package com.uca.juangarcia.ifit.shared.exception;
+package com.uca.juangarcia.ifit.exception;
 
 import java.time.LocalDateTime;
 
@@ -6,6 +6,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -37,7 +38,8 @@ public class HandlerExceptionController {
         CoachModelTypeNotFoundException.class,
         ExperienceLevelNotFoundException.class,
         QuestionnaireQuestionNotFoundException.class,
-        QuestionnaireNotFoundException.class
+        QuestionnaireNotFoundException.class,
+        UsernameNotFoundException.class
     })
     public ResponseEntity<ErrorResponse> handleNotFoundException(Exception ex) {
         return ResponseEntity

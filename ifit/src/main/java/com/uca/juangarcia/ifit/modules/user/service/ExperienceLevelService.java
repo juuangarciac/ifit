@@ -6,13 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import com.uca.juangarcia.ifit.exception.ExperienceLevelNotFoundException;
 import com.uca.juangarcia.ifit.modules.user.dto.CreateExperienceLevelDto;
 import com.uca.juangarcia.ifit.modules.user.dto.ExperienceLevelDto;
 import com.uca.juangarcia.ifit.modules.user.dto.UpdateExperienceLevelDto;
 import com.uca.juangarcia.ifit.modules.user.mapper.ExperienceLevelMapper;
 import com.uca.juangarcia.ifit.modules.user.model.ExperienceLevel;
 import com.uca.juangarcia.ifit.modules.user.repository.ExperienceLevelRepository;
-import com.uca.juangarcia.ifit.shared.exception.ExperienceLevelNotFoundException;
 
 /**
  * Servicio para manejar los niveles de experiencia de los usuarios.

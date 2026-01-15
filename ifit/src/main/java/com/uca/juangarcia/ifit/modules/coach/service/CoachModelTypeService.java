@@ -8,13 +8,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.uca.juangarcia.ifit.exception.CoachModelTypeNotFoundException;
 import com.uca.juangarcia.ifit.modules.coach.dto.CoachModelTypeResponseDto;
 import com.uca.juangarcia.ifit.modules.coach.dto.CreateCoachModelTypeRequestDto;
 import com.uca.juangarcia.ifit.modules.coach.dto.UpdateCoachModelTypeRequestDto;
 import com.uca.juangarcia.ifit.modules.coach.mapper.CoachModelTypeMapper;
 import com.uca.juangarcia.ifit.modules.coach.model.CoachModelType;
 import com.uca.juangarcia.ifit.modules.coach.repository.CoachModelTypeRepository;
-import com.uca.juangarcia.ifit.shared.exception.CoachModelTypeNotFoundException;
 
 /**
  * Servicio para la gestión de tipos de modelos de coach de IA.
