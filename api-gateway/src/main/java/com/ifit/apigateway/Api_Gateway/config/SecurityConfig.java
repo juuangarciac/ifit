@@ -14,10 +14,7 @@ public class SecurityConfig {
     SecurityWebFilterChain filterChain(ServerHttpSecurity http) {
         http
             .authorizeExchange(exchange -> exchange
-                .pathMatchers("/ifit/keycloak/auth/**").permitAll()     // Login y registro
-                .pathMatchers("/ifit/keycloak/user/create").permitAll() // Crear usuario
-                .pathMatchers("/ifit/api/v1/**").authenticated()        // Servicio IFIT
-                .pathMatchers("/ifit/aimodels/api/v1/**").authenticated() // Servicio RONNIE
+                .pathMatchers("/ifit/api/v1/auth/**").permitAll()
                 .anyExchange().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2

@@ -1,0 +1,44 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-ApiGatewayApplication<Api-Gateway>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.ifit.apigateway.Api_Gateway.ApiGatewayApplication",
+            "projectName": "Api-Gateway",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-EurekaServerApplication<eureka-server>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.ifit.eurekaserver.eureka_server.EurekaServerApplication",
+            "projectName": "eureka-server",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-IfitApplication<ifit>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.uca.juangarcia.ifit.IfitApplication",
+            "projectName": "ifit",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-RonnieApplication<ronnie>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.ifit.ronnie.RonnieApplication",
+            "projectName": "ronnie",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

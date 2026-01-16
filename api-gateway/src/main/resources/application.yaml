@@ -12,44 +12,35 @@ spring:
           issuer-uri: http://localhost:9090/realms/ifit-realm
           jwk-set-uri: http://localhost:9090/realms/ifit-realm/protocol/openid-connect/certs
 
-
   cloud:
     gateway:
       default-filters:
-        # - TokenRelay  # ← COMENTADO: Lo aplicaremos solo a rutas protegidas
-      
       routes:
-        - id: AUTHAPI-PUBLIC
-          uri: lb://AUTHAPI  
+        # Ruta pública para autenticación (sin TokenRelay)
+        - id: IFIT-PUBLIC
+          uri: lb://IFIT
           predicates:
-            - Path=/ifit/keycloak/auth/**,/ifit/keycloak/user/create
+            - Path=/ifit/api/v1/auth/**
           filters:
-            - StripPrefix=0  
-        
-        - id: AUTHAPI-PROTECTED
-          uri: lb://AUTHAPI
-          predicates:
-            - Path=/ifit/keycloak/**
-          filters:
-            - StripPrefix=0
-            - TokenRelay 
-        
-        - id: IFIT
+            - StripPrefix=3  
+
+        # Ruta privada para endpoints protegidos
+        - id: IFIT-PRIVATE
           uri: lb://IFIT
           predicates:
             - Path=/ifit/api/v1/**
           filters:
-            - StripPrefix=0  # Mantiene el path completo
-            - TokenRelay     # ← Reenvía JWT
+            - StripPrefix=3  
+            - TokenRelay     
         
+        # Ruta para servicios de AI (Ronnie y otros coaches)
         - id: RONNIE
           uri: lb://RONNIE
           predicates:
             - Path=/ifit/aimodels/api/v1/**
           filters:
-            - StripPrefix=0
+            - StripPrefix=3  
             - TokenRelay 
-
 server:
   port: 8080
 
@@ -71,15 +62,15 @@ logging:
     org:
       springframework:
         security: 
-          web: DEBUG
-          oauth2: DEBUG
+          web: TRACE
+          oauth2: TRACE
         # Spring Cloud Gateway
         cloud:
-          gateway: DEBUG
+          gateway: TRACE
     
     # Reactor Netty (WebFlux)
     reactor:
-      netty: DEBUG
+      netty: TRACE
     
     # Eureka / Netflix Discovery
     com:
