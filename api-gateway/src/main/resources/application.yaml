@@ -37,7 +37,7 @@ spring:
         - id: RONNIE
           uri: lb://RONNIE
           predicates:
-            - Path=/ifit/aimodels/api/v1/**
+            - Path=/ifit/api/v1/**
           filters:
             - StripPrefix=3  
             - TokenRelay 

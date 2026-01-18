@@ -37,6 +37,8 @@ import lombok.extern.slf4j.Slf4j;
  * <ul>
  *   <li><strong>Login:</strong> Valida credenciales en Keycloak y devuelve tokens + perfil</li>
  *   <li><strong>Register:</strong> Crea usuario en Keycloak y BD de forma transaccional</li>
+ *   <li><strong>Refresh:</strong> Renueva tokens usando refresh token válido</li>
+ *   <li><strong>Logout:</strong> Invalida refresh token en Keycloak</li>
  * </ul>
  * 
  * <p><strong>Gestión de transacciones:</strong>
@@ -45,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
  * - Si falla Keycloak → No se crea en BD
  * 
  * @author Juan Garcia
- * @version 2.0
+ * @version 2.1
  * @since 1.0
  */
 @Service
@@ -61,6 +63,9 @@ public class AuthenticationService implements IAuthenticationService {
 
     @Value("${keycloak.token-url}")
     private String tokenUrl;
+    
+    @Value("${keycloak.logout-url}")
+    private String logoutUrl;  // Nueva propiedad
 
     private final AppUserService appUserService;
     private final IKeycloakService keycloakService;
@@ -160,6 +165,7 @@ public class AuthenticationService implements IAuthenticationService {
      * @throws EmailAlreadyExistsException si el email ya está registrado
      * @throws RuntimeException si falla la creación en Keycloak o BD
      */
+    @Override
     @Transactional
     public LoginResponseDTO register(RegisterRequestDTO registerDTO) {
         log.info("Starting registration process for user: {}", registerDTO.getEmail());
@@ -248,6 +254,124 @@ public class AuthenticationService implements IAuthenticationService {
             }
             
             throw new RuntimeException("Registration service unavailable: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Refresca los tokens usando un refresh token válido.
+     * 
+     * <p><strong>Diferencias con login():</strong>
+     * <ul>
+     *   <li>login() requiere email + password y consulta la BD</li>
+     *   <li>refreshToken() requiere SOLO el refresh token y NO consulta BD</li>
+     *   <li>refreshToken() es más rápido (no hay consulta a BD)</li>
+     * </ul>
+     * 
+     * <p><strong>Proceso:</strong>
+     * <ol>
+     *   <li>Envía refresh token a Keycloak con grant_type="refresh_token"</li>
+     *   <li>Keycloak valida el refresh token</li>
+     *   <li>Si es válido, genera NUEVOS access y refresh tokens</li>
+     *   <li>Devuelve los nuevos tokens (sin datos de usuario)</li>
+     * </ol>
+     * 
+     * @param refreshToken el refresh token actual
+     * @return respuesta con NUEVOS tokens
+     * @throws RuntimeException si el refresh token es inválido o expiró
+     */
+    @Override
+    public LoginResponseDTO refreshToken(String refreshToken) {
+        log.info("Refreshing authentication tokens");
+        
+        // Construir request para Keycloak
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", "refresh_token");  
+        body.add("client_id", clientId);
+        body.add("client_secret", clientSecret);
+        body.add("refresh_token", refreshToken); 
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
+
+        try {
+            // Llamar a Keycloak para obtener nuevos tokens
+            log.debug("Requesting new tokens from Keycloak");
+            ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, request, Map.class);
+            Map<String, Object> responseBody = response.getBody();
+            
+            if (responseBody == null) {
+                log.error("Empty response from Keycloak during token refresh");
+                throw new RuntimeException("Empty response from authentication server");
+            }
+
+            log.info("Tokens refreshed successfully");
+
+            // Construir respuesta con nuevos tokens
+            // NOTA: No incluimos appUser porque no hacemos consulta a BD
+            return LoginResponseDTO.builder()
+                    .accessToken((String) responseBody.get("access_token"))
+                    .refreshToken((String) responseBody.get("refresh_token"))
+                    .expiresIn((Integer) responseBody.get("expires_in"))
+                    .tokenType("Bearer")
+                    .appUser(null) 
+                    .build();
+            
+        } catch (HttpClientErrorException.Unauthorized e) {
+            log.error("Refresh token invalid or expired: {}", e.getResponseBodyAsString());
+            throw new RuntimeException("Refresh token invalid or expired");
+        } catch (Exception e) {
+            log.error("Unexpected error during token refresh: {}", e.getMessage(), e);
+            throw new RuntimeException("Token refresh service unavailable");
+        }
+    }
+
+    /**
+     * Cierra la sesión del usuario invalidando su refresh token en Keycloak.
+     * 
+     * <p><strong>Proceso:</strong>
+     * <ol>
+     *   <li>Envía petición de logout a Keycloak</li>
+     *   <li>Keycloak invalida el refresh token</li>
+     *   <li>Los access tokens derivados dejan de ser válidos</li>
+     * </ol>
+     * 
+     * <p><strong>Importante:</strong>
+     * El cliente también debe eliminar los tokens de su almacenamiento local
+     * (SecureStorage, SharedPreferences, etc.) después de llamar a este endpoint.
+     * 
+     * @param refreshToken el refresh token a invalidar
+     * @throws RuntimeException si hay error al comunicarse con Keycloak
+     */
+    @Override
+    public void logout(String refreshToken) {
+        log.info("Processing user logout");
+        
+        // Construir request para logout de Keycloak
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("client_id", clientId);
+        body.add("client_secret", clientSecret);
+        body.add("refresh_token", refreshToken);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
+
+        try {
+            // Llamar a Keycloak para invalidar el refresh token
+            log.debug("Invalidating refresh token in Keycloak");
+            restTemplate.postForEntity(logoutUrl, request, String.class);
+            
+            log.info("User logged out successfully - Refresh token invalidated");
+            
+        } catch (HttpClientErrorException e) {
+            log.error("Logout failed: {}", e.getResponseBodyAsString());
+            throw new RuntimeException("Logout failed: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error during logout: {}", e.getMessage(), e);
+            throw new RuntimeException("Logout service unavailable");
         }
     }
 }

@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.uca.juangarcia.ifit.exception.EmailNotFoundException;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LoginRequestDTO;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LoginResponseDTO;
+import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LogoutResponseDTO;
+import com.uca.juangarcia.ifit.modules.auth.controllers.dto.RefreshTokenRequestDTO;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.RegisterRequestDTO;
 import com.uca.juangarcia.ifit.modules.auth.service.IAuthenticationService;
 
@@ -28,19 +30,21 @@ import lombok.extern.slf4j.Slf4j;
  * <ul>
  *   <li>Login de usuarios existentes</li>
  *   <li>Registro de nuevos usuarios</li>
+ *   <li>Refresh de tokens (renovación automática)</li>
+ *   <li>Logout (invalidación de tokens)</li>
  * </ul>
  * 
- * <p>Todas las respuestas incluyen tokens de Keycloak y perfil completo del usuario.
+ * <p>Todas las respuestas de login/register/refresh incluyen tokens JWT de Keycloak.
  * 
  * @author Juan Garcia
- * @version 2.0
+ * @version 2.1
  * @since 1.0
  */
 @Slf4j
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-@Tag(name = "Authentication", description = "Endpoints para autenticación y registro de usuarios")
+@Tag(name = "Authentication", description = "Endpoints para autenticación y gestión de tokens JWT")
 public class AuthenticationController {
     
     private final IAuthenticationService authenticationService;
@@ -50,10 +54,17 @@ public class AuthenticationController {
      * 
      * <p>Valida las credenciales contra Keycloak y devuelve:
      * <ul>
-     *   <li>Access token (JWT)</li>
-     *   <li>Refresh token</li>
-     *   <li>Tiempo de expiración</li>
+     *   <li>Access token (JWT) - Válido por ~5 minutos</li>
+     *   <li>Refresh token - Válido por ~30 días</li>
+     *   <li>Tiempo de expiración del access token</li>
      *   <li>Perfil completo del usuario</li>
+     * </ul>
+     * 
+     * <p><strong>Cuándo usar:</strong>
+     * <ul>
+     *   <li>Primera vez que el usuario entra a la app</li>
+     *   <li>Después de hacer logout</li>
+     *   <li>Cuando el refresh token ha expirado</li>
      * </ul>
      * 
      * @param loginRequestDTO credenciales del usuario (email y password)
@@ -62,7 +73,7 @@ public class AuthenticationController {
      */
     @Operation(
         summary = "Login de usuario",
-        description = "Autentica un usuario existente y devuelve tokens de acceso junto con su perfil"
+        description = "Autentica un usuario con email y contraseña. Retorna access token (5 min), refresh token (30 días) y perfil completo del usuario."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Login exitoso"),
@@ -96,7 +107,7 @@ public class AuthenticationController {
      */
     @Operation(
         summary = "Registro de nuevo usuario",
-        description = "Crea un nuevo usuario en Keycloak y en la base de datos, luego realiza login automático"
+        description = "Crea un nuevo usuario en Keycloak y en la base de datos, luego realiza login automático. Si falla, hace rollback completo."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Usuario creado exitosamente"),
@@ -110,5 +121,74 @@ public class AuthenticationController {
         LoginResponseDTO response = authenticationService.register(registerDTO);
         log.info("Registration successful for: {}", registerDTO.getEmail());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * Refresca los tokens de autenticación usando un refresh token válido.
+     * 
+     * @param request objeto con el refreshToken actual
+     * @return respuesta con NUEVOS access token y refresh token
+     */
+    @Operation(
+        summary = "Refrescar tokens JWT",
+        description = "Obtiene nuevos access token y refresh token usando un refresh token válido. "
+                    + "NO requiere email ni password. Más rápido que login porque no consulta la base de datos. "
+                    + "Usar cuando el access token expira (típicamente cada 5-15 minutos)."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Tokens refrescados exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Refresh token no proporcionado"),
+        @ApiResponse(responseCode = "401", description = "Refresh token inválido o expirado"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponseDTO> refreshToken(@Valid @RequestBody RefreshTokenRequestDTO request) {
+        log.info("Token refresh request received");
+        LoginResponseDTO response = authenticationService.refreshToken(request.getRefreshToken());
+        log.info("Tokens refreshed successfully");
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Cierra la sesión del usuario invalidando su refresh token en Keycloak.
+     * 
+     * <p><strong>Proceso:</strong>
+     * <ol>
+     *   <li>Invalida el refresh token en Keycloak</li>
+     *   <li>Los access tokens derivados dejan de ser válidos</li>
+     *   <li>El cliente debe eliminar los tokens de su almacenamiento local</li>
+     * </ol>
+     * 
+     * <p><strong>Importante para el cliente (.NET MAUI):</strong>
+     * Después de llamar a este endpoint, el cliente debe:
+     * <pre>
+     * 1. Llamar a /auth/logout (este endpoint)
+     * 2. Eliminar tokens del SecureStorage local
+     * 3. Redirigir al usuario a la pantalla de login
+     * </pre>
+     * @param request objeto con el refreshToken a invalidar
+     * @return mensaje de confirmación (código 200)
+     */
+    @Operation(
+        summary = "Cerrar sesión",
+        description = "Invalida el refresh token en Keycloak para cerrar la sesión del usuario. "
+                    + "El cliente debe eliminar los tokens de su almacenamiento local después de llamar a este endpoint."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Sesión cerrada exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Refresh token no proporcionado"),
+        @ApiResponse(responseCode = "500", description = "Error al comunicarse con Keycloak")
+    })
+    @PostMapping("/logout")
+    public ResponseEntity<LogoutResponseDTO> logout(@Valid @RequestBody RefreshTokenRequestDTO request) {
+        log.info("Logout request received");
+        authenticationService.logout(request.getRefreshToken());
+        log.info("Logout successful - Refresh token invalidated");
+        
+        return ResponseEntity.ok(
+            LogoutResponseDTO.builder()
+            .message("Session closed successfully")
+            .success(true)
+            .build());
     }
 }
