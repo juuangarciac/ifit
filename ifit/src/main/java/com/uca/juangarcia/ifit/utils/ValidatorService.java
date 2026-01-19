@@ -6,11 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
-import com.uca.juangarcia.ifit.exception.CoachModelTypeNotFoundException;
-import com.uca.juangarcia.ifit.exception.ExperienceLevelNotFoundException;
-import com.uca.juangarcia.ifit.exception.QuestionNotFoundException;
-import com.uca.juangarcia.ifit.exception.QuestionnaireNotFoundException;
-import com.uca.juangarcia.ifit.exception.UserIdNotFoundException;
+import com.uca.juangarcia.ifit.exception.dto.CoachModelTypeNotFoundException;
+import com.uca.juangarcia.ifit.exception.dto.ExperienceLevelNotFoundException;
+import com.uca.juangarcia.ifit.exception.dto.QuestionNotFoundException;
+import com.uca.juangarcia.ifit.exception.dto.QuestionnaireNotFoundException;
+import com.uca.juangarcia.ifit.exception.dto.UserIdNotFoundException;
 import com.uca.juangarcia.ifit.modules.coach.model.CoachModelType;
 import com.uca.juangarcia.ifit.modules.coach.repository.CoachModelTypeRepository;
 import com.uca.juangarcia.ifit.modules.questionnaire.model.Question;

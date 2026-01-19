@@ -7,16 +7,20 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import com.uca.juangarcia.ifit.exception.EmailAlreadyExistsException;
-import com.uca.juangarcia.ifit.exception.EmailNotFoundException;
-import com.uca.juangarcia.ifit.exception.KeycloakUserCreationException;
+import com.uca.juangarcia.ifit.exception.dto.EmailAlreadyExistsException;
+import com.uca.juangarcia.ifit.exception.dto.EmailNotFoundException;
+import com.uca.juangarcia.ifit.exception.dto.InvalidCredentialsException;
+import com.uca.juangarcia.ifit.exception.dto.KeycloakUserCreationException;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LoginRequestDTO;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LoginResponseDTO;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.RegisterRequestDTO;
@@ -72,23 +76,21 @@ public class AuthenticationService implements IAuthenticationService {
     private final RestTemplate restTemplate;
 
     /**
-     * Autentica un usuario y devuelve tokens + perfil.
+     * Realiza el login de un usuario autenticándolo en Keycloak y cargando su perfil desde la BD.
      * 
      * <p>Proceso de login:
      * <ol>
-     *   <li>Valida credenciales contra Keycloak</li>
-     *   <li>Obtiene accessToken y refreshToken</li>
-     *   <li>Busca el perfil del usuario en la BD</li>
-     *   <li>Devuelve respuesta unificada con tokens + datos del usuario</li>
+     *   <li>Envía credenciales a Keycloak para obtener tokens</li>
+     *   <li>Si Keycloak valida, busca el perfil del usuario en la BD</li>
+     *   <li>Devuelve tokens + perfil del usuario</li>
      * </ol>
      * 
-     * @param loginRequestDTO credenciales del usuario (email y password)
+     * @param loginRequestDTO datos de login (email y password)
      * @return respuesta con tokens y perfil del usuario
-     * @throws EmailNotFoundException si no se encuentra el perfil del usuario
-     * @throws RuntimeException si las credenciales son inválidas o hay error de comunicación
+     * @throws InvalidCredentialsException si las credenciales son inválidas o el usuario no existe en BD
      */
     @Override
-    public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) throws EmailNotFoundException {
+    public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) throws InvalidCredentialsException {
         log.info("Attempting login for user: {}", loginRequestDTO.getUsername());
         
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
@@ -100,7 +102,6 @@ public class AuthenticationService implements IAuthenticationService {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
 
         try {
@@ -111,7 +112,7 @@ public class AuthenticationService implements IAuthenticationService {
             
             if (responseBody == null) {
                 log.error("Empty response from Keycloak for user: {}", loginRequestDTO.getUsername());
-                throw new RuntimeException("Empty response from authentication server");
+                throw new AuthenticationServiceException("Empty response from authentication server");
             }
 
             log.info("Keycloak authentication successful for user: {}", loginRequestDTO.getUsername());
@@ -119,7 +120,6 @@ public class AuthenticationService implements IAuthenticationService {
             // 2. Buscar perfil del usuario en BD
             log.debug("Fetching user profile from database: {}", loginRequestDTO.getUsername());
             AppUserResponseDto appUser = appUserService.findUserByEmail(loginRequestDTO.getUsername());
-
             log.info("User profile loaded successfully for: {}", loginRequestDTO.getUsername());
 
             // 3. Construir respuesta con tokens + perfil
@@ -130,17 +130,45 @@ public class AuthenticationService implements IAuthenticationService {
                     .tokenType("Bearer")
                     .appUser(appUser)
                     .build();
+                    
+        } catch (HttpClientErrorException.Unauthorized e) {
+            // Credenciales incorrectas (401 de Keycloak)
+            log.error("Invalid credentials for user: {}", loginRequestDTO.getUsername());
+            throw new InvalidCredentialsException(loginRequestDTO.getUsername(), e.getMessage());
             
         } catch (HttpClientErrorException e) {
-            log.error("Login failed for user {}: {}", 
-                     loginRequestDTO.getUsername(), 
-                     e.getResponseBodyAsString());
-            throw new RuntimeException("Invalid username or password");
+            // Otros errores HTTP de Keycloak (500, 503, etc.)
+            log.error("Keycloak returned error {} for user {}: {}", 
+                    e.getStatusCode(), 
+                    loginRequestDTO.getUsername(), 
+                    e.getResponseBodyAsString());
+            throw new AuthenticationServiceException("Keycloak service error: " + e.getStatusCode(), e);
+            
+        } catch (ResourceAccessException e) {
+            // Error de red (timeout, conexión rechazada)
+            log.error("Cannot connect to Keycloak for user {}: {}", 
+                    loginRequestDTO.getUsername(), 
+                    e.getMessage());
+            throw new AuthenticationServiceException("Cannot connect to authentication server", e);
+            
+        } catch (EmailNotFoundException e) {
+            // Usuario no existe en BD (pero sí en Keycloak)
+            log.error("User profile not found for: {}", loginRequestDTO.getUsername());
+            throw new InvalidCredentialsException(loginRequestDTO.getUsername(), e.getMessage());
+            
+        } catch (RestClientException e) {
+            // Otras excepciones de RestTemplate
+            log.error("RestClient error during login for user {}: {}", 
+                    loginRequestDTO.getUsername(), 
+                    e.getMessage());
+            throw new AuthenticationServiceException("Authentication request failed", e);
+            
         } catch (Exception e) {
+            // Error inesperado
             log.error("Unexpected error during login for user {}: {}", 
-                     loginRequestDTO.getUsername(), 
-                     e.getMessage(), e);
-            throw new RuntimeException("Authentication service unavailable");
+                    loginRequestDTO.getUsername(), 
+                    e.getMessage(), e);
+            throw new AuthenticationServiceException("Unexpected authentication error", e);
         }
     }
 

@@ -1,6 +1,9 @@
 package com.uca.juangarcia.ifit.modules.auth.service;
 
-import com.uca.juangarcia.ifit.exception.EmailNotFoundException;
+import org.springframework.security.authentication.AuthenticationServiceException;
+
+import com.uca.juangarcia.ifit.exception.dto.EmailNotFoundException;
+import com.uca.juangarcia.ifit.exception.dto.InvalidCredentialsException;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LoginRequestDTO;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LoginResponseDTO;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.RegisterRequestDTO;
@@ -22,14 +25,25 @@ import com.uca.juangarcia.ifit.modules.auth.controllers.dto.RegisterRequestDTO;
  */
 public interface IAuthenticationService {
     
+    
     /**
-     * Autentica un usuario y devuelve tokens + perfil.
+     * Autentica a un usuario con email y contraseña.
      * 
-     * @param loginRequestDTO credenciales del usuario
+     * <p>Proceso:
+     * <ol>
+     *   <li>Verifica que el email exista en la base de datos</li>
+     *   <li>Valida las credenciales con Keycloak</li>
+     *   <li>Genera tokens de acceso y refresh</li>
+     *   <li>Devuelve la respuesta con los tokens y perfil del usuario</li>
+     * </ol>
+     * 
+     * @param loginRequestDTO datos de login (email y password)
      * @return respuesta con tokens y perfil del usuario
-     * @throws EmailNotFoundException si no se encuentra el perfil del usuario
+     * @throws EmailNotFoundException si el email no existe en la BD
+     * @throws InvalidCredentialsException si las credenciales son inválidas
+     * @throws AuthenticationServiceException si hay error en el servicio de autenticación
      */
-    LoginResponseDTO login(LoginRequestDTO loginRequestDTO) throws EmailNotFoundException;
+    LoginResponseDTO login(LoginRequestDTO loginRequestDTO) throws InvalidCredentialsException, AuthenticationServiceException;
     
     /**
      * Registra un nuevo usuario en el sistema.

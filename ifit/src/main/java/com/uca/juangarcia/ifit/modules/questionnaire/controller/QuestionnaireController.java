@@ -15,12 +15,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.uca.juangarcia.ifit.exception.CoachModelTypeNotFoundException;
-import com.uca.juangarcia.ifit.exception.ErrorResponse;
-import com.uca.juangarcia.ifit.exception.ExperienceLevelNotFoundException;
-import com.uca.juangarcia.ifit.exception.QuestionNotFoundException;
-import com.uca.juangarcia.ifit.exception.QuestionnaireNotFoundException;
-import com.uca.juangarcia.ifit.exception.UserIdNotFoundException;
+import com.uca.juangarcia.ifit.exception.dto.CoachModelTypeNotFoundException;
+import com.uca.juangarcia.ifit.exception.dto.ExperienceLevelNotFoundException;
+import com.uca.juangarcia.ifit.exception.dto.QuestionNotFoundException;
+import com.uca.juangarcia.ifit.exception.dto.QuestionnaireNotFoundException;
+import com.uca.juangarcia.ifit.exception.dto.UserIdNotFoundException;
+import com.uca.juangarcia.ifit.exception.model.ErrorResponse;
 import com.uca.juangarcia.ifit.modules.questionnaire.dto.AnswerRequestDTO;
 import com.uca.juangarcia.ifit.modules.questionnaire.dto.CreateQuestionnaireRequestDto;
 import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireDTO;

@@ -15,7 +15,7 @@ import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
-import com.uca.juangarcia.ifit.exception.KeycloakUserCreationException;
+import com.uca.juangarcia.ifit.exception.dto.KeycloakUserCreationException;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.UserDTO;
 import com.uca.juangarcia.ifit.modules.auth.service.IKeycloakService;
 import com.uca.juangarcia.ifit.modules.auth.util.KeycloakProvider;

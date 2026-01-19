@@ -2,12 +2,13 @@ package com.uca.juangarcia.ifit.modules.auth.controllers;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.uca.juangarcia.ifit.exception.EmailNotFoundException;
+import com.uca.juangarcia.ifit.exception.dto.EmailNotFoundException;
+import com.uca.juangarcia.ifit.exception.dto.InvalidCredentialsException;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LoginRequestDTO;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LoginResponseDTO;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LogoutResponseDTO;
@@ -69,7 +70,8 @@ public class AuthenticationController {
      * 
      * @param loginRequestDTO credenciales del usuario (email y password)
      * @return respuesta con tokens y perfil del usuario
-     * @throws EmailNotFoundException si no se encuentra el perfil del usuario
+     * @throws InvalidCredentialsException si las credenciales son inválidas
+     * @throws AuthenticationServiceException si hay error en el servicio de autenticación
      */
     @Operation(
         summary = "Login de usuario",
@@ -83,7 +85,7 @@ public class AuthenticationController {
     })
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO) 
-            throws EmailNotFoundException {
+            throws InvalidCredentialsException, AuthenticationServiceException {
         log.info("Login request received for: {}", loginRequestDTO.getUsername());
         LoginResponseDTO response = authenticationService.login(loginRequestDTO);
         log.info("Login successful for: {}", loginRequestDTO.getUsername());

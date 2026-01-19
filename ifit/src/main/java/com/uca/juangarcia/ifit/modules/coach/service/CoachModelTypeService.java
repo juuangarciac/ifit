@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.uca.juangarcia.ifit.exception.CoachModelTypeNotFoundException;
+import com.uca.juangarcia.ifit.exception.dto.CoachModelTypeNotFoundException;
 import com.uca.juangarcia.ifit.modules.coach.dto.CoachModelTypeResponseDto;
 import com.uca.juangarcia.ifit.modules.coach.dto.CreateCoachModelTypeRequestDto;
 import com.uca.juangarcia.ifit.modules.coach.dto.UpdateCoachModelTypeRequestDto;

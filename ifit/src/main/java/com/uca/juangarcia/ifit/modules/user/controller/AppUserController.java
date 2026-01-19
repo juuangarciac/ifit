@@ -19,12 +19,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.uca.juangarcia.ifit.exception.CoachModelTypeNotFoundException;
-import com.uca.juangarcia.ifit.exception.EmailAlreadyExistsException;
-import com.uca.juangarcia.ifit.exception.EmailNotFoundException;
-import com.uca.juangarcia.ifit.exception.ErrorResponse;
-import com.uca.juangarcia.ifit.exception.ExperienceLevelNotFoundException;
-import com.uca.juangarcia.ifit.exception.UserIdNotFoundException;
+import com.uca.juangarcia.ifit.exception.dto.CoachModelTypeNotFoundException;
+import com.uca.juangarcia.ifit.exception.dto.EmailAlreadyExistsException;
+import com.uca.juangarcia.ifit.exception.dto.EmailNotFoundException;
+import com.uca.juangarcia.ifit.exception.dto.ExperienceLevelNotFoundException;
+import com.uca.juangarcia.ifit.exception.dto.UserIdNotFoundException;
+import com.uca.juangarcia.ifit.exception.model.ErrorResponse;
 import com.uca.juangarcia.ifit.modules.user.dto.AppUserResponseDto;
 import com.uca.juangarcia.ifit.modules.user.dto.CreateAppUserRequestDto;
 import com.uca.juangarcia.ifit.modules.user.dto.UpdateAppUserRequestDto;

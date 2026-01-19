@@ -1,4 +1,4 @@
-package com.uca.juangarcia.ifit.exception;
+package com.uca.juangarcia.ifit.exception.dto;
 
 /**
  * Excepción lanzada cuando falla la creación de un usuario en Keycloak.

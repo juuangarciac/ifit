@@ -1,4 +1,4 @@
-package com.uca.juangarcia.ifit.exception;
+package com.uca.juangarcia.ifit.exception.dto;
 
 public class CoachModelTypeNotFoundException extends Exception {
     private String coachId;

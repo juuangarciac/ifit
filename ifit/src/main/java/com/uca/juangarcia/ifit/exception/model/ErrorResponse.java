@@ -1,4 +1,4 @@
-package com.uca.juangarcia.ifit.exception;
+package com.uca.juangarcia.ifit.exception.model;
 
 public class ErrorResponse {
     
