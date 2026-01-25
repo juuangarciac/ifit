@@ -195,7 +195,7 @@ public class AuthenticationService implements IAuthenticationService {
      */
     @Override
     @Transactional
-    public LoginResponseDTO register(RegisterRequestDTO registerDTO) {
+    public LoginResponseDTO register(RegisterRequestDTO registerDTO) throws EmailAlreadyExistsException {
         log.info("Starting registration process for user: {}", registerDTO.getEmail());
         
         String keycloakUserId = null;
@@ -263,7 +263,7 @@ public class AuthenticationService implements IAuthenticationService {
                 }
             }
             
-            throw new RuntimeException("Registration failed: " + e.getMessage());
+            throw new EmailAlreadyExistsException(registerDTO.getEmail());
             
         } catch (Exception e) {
             log.error("Unexpected error during registration for user {}: {}", 

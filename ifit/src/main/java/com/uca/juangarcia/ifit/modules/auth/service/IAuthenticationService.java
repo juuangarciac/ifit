@@ -2,6 +2,7 @@ package com.uca.juangarcia.ifit.modules.auth.service;
 
 import org.springframework.security.authentication.AuthenticationServiceException;
 
+import com.uca.juangarcia.ifit.exception.dto.EmailAlreadyExistsException;
 import com.uca.juangarcia.ifit.exception.dto.EmailNotFoundException;
 import com.uca.juangarcia.ifit.exception.dto.InvalidCredentialsException;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LoginRequestDTO;
@@ -53,8 +54,9 @@ public interface IAuthenticationService {
      * 
      * @param registerDTO datos del nuevo usuario
      * @return respuesta con tokens y perfil del usuario creado
+     * @throws EmailAlreadyExistsException 
      */
-    LoginResponseDTO register(RegisterRequestDTO registerDTO);
+    LoginResponseDTO register(RegisterRequestDTO registerDTO) throws EmailAlreadyExistsException;
     
     /**
      * Refresca los tokens de autenticación usando un refresh token válido.

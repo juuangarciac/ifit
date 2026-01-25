@@ -7,7 +7,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import com.uca.juangarcia.ifit.exception.dto.EmailNotFoundException;
+
+import com.uca.juangarcia.ifit.exception.dto.EmailAlreadyExistsException;
 import com.uca.juangarcia.ifit.exception.dto.InvalidCredentialsException;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LoginRequestDTO;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LoginResponseDTO;
@@ -118,7 +119,8 @@ public class AuthenticationController {
         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @PostMapping("/register")
-    public ResponseEntity<LoginResponseDTO> register(@Valid @RequestBody RegisterRequestDTO registerDTO) {
+    public ResponseEntity<LoginResponseDTO> register(@Valid @RequestBody RegisterRequestDTO registerDTO) 
+            throws EmailAlreadyExistsException {
         log.info("Registration request received for: {}", registerDTO.getEmail());
         LoginResponseDTO response = authenticationService.register(registerDTO);
         log.info("Registration successful for: {}", registerDTO.getEmail());
