@@ -44,7 +44,6 @@ public class RegisterRequestDTO {
     /**
      * Apellido del usuario.
      */
-    @NotBlank(message = "Surname is required")
     @Size(min = 2, max = 50, message = "Surname must be between 2 and 50 characters")
     private String surname;
     
@@ -64,16 +63,18 @@ public class RegisterRequestDTO {
     
     /**
      * Fecha de nacimiento del usuario.
-     */
+     
     @Past(message = "Birth date must be in the past")
+    */
     private LocalDate birthDate;
     
     /**
      * Teléfono del usuario (formato español: +34XXXXXXXXX o XXXXXXXXX).
-     */
+     
     @Pattern(
         regexp = "^(\\+34)?[6-9][0-9]{8}$", 
         message = "Phone must be a valid Spanish phone number"
     )
+    */
     private String phone;
 }
