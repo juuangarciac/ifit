@@ -8,6 +8,8 @@ import com.uca.juangarcia.ifit.exception.dto.InvalidCredentialsException;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LoginRequestDTO;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LoginResponseDTO;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.RegisterRequestDTO;
+import com.uca.juangarcia.ifit.modules.auth.controllers.dto.RegisterResponseDTO;
+import com.uca.juangarcia.ifit.modules.auth.controllers.dto.VerifyUserRequestDTO;
 
 /**
  * Interfaz de servicio de autenticación.
@@ -56,7 +58,7 @@ public interface IAuthenticationService {
      * @return respuesta con tokens y perfil del usuario creado
      * @throws EmailAlreadyExistsException 
      */
-    LoginResponseDTO register(RegisterRequestDTO registerDTO) throws EmailAlreadyExistsException;
+    RegisterResponseDTO register(RegisterRequestDTO registerDTO) throws EmailAlreadyExistsException;
     
     /**
      * Refresca los tokens de autenticación usando un refresh token válido.
@@ -103,4 +105,12 @@ public interface IAuthenticationService {
      * @throws RuntimeException si hay error al comunicarse con Keycloak
      */
     void logout(String refreshToken);
+
+    /**
+     * Verifica el email del usuario usando un código de verificación.
+     * 
+     * @param request datos de verificación (email y código)
+     * @return respuesta de login con tokens si la verificación es exitosa
+     */
+    LoginResponseDTO verifyEmail(VerifyUserRequestDTO request) throws IllegalArgumentException, EmailNotFoundException, InvalidCredentialsException;
 }

@@ -2,13 +2,13 @@ package com.uca.juangarcia.ifit.modules.notification.service;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -17,8 +17,8 @@ import org.springframework.stereotype.Service;
 import com.uca.juangarcia.ifit.exception.dto.EmailNotFoundException;
 import com.uca.juangarcia.ifit.modules.notification.dto.EmailResponseDto;
 import com.uca.juangarcia.ifit.modules.notification.model.AppEmailDetails;
+import com.uca.juangarcia.ifit.modules.user.dto.AppUserResponseDto;
 import com.uca.juangarcia.ifit.modules.user.mapper.AppUserMapper;
-import com.uca.juangarcia.ifit.modules.user.model.AppUser;
 import com.uca.juangarcia.ifit.modules.user.service.AppUserService;
 
 import jakarta.mail.internet.MimeMessage;
@@ -68,27 +68,31 @@ public class AppEmailService {
      * @return A confirmation message indicating that the verification email has been sent.
      * @throws EmailNotFoundException 
      */
-    public EmailResponseDto sendVerificationEmail(String email) throws EmailNotFoundException {
+    public EmailResponseDto sendVerificationEmail(AppUserResponseDto user) throws EmailNotFoundException {
         try {
-            AppUser user = userMapper.toEntity(appUserService.findUserByEmail(email));
-            if (user == null) {
-                throw new EmailNotFoundException(email);
+            if (user == null || user.getEmail() == null) {
+                throw new EmailNotFoundException(user != null ? user.getEmail() : "unknown");
             }
-            AppEmailDetails details = new AppEmailDetails();
             
-            details.setRecipient(email);
+            AppEmailDetails details = new AppEmailDetails();
+            details.setRecipient(user.getEmail());
             details.setSubject("Email Verification");
 
-            String htmlTemplate = new String(Files.readAllBytes(Paths.get("src/main/resources/templates/email/verificationmail.html")), StandardCharsets.UTF_8);
+            Resource resource = new ClassPathResource("templates/email/verificationmail.html");
+            String htmlTemplate = new String(
+                resource.getInputStream().readAllBytes(), 
+                StandardCharsets.UTF_8
+            );
+            
             String htmlContent = htmlTemplate.replace("{{verificationCode}}", user.getVerificationCode());
             details.setMsgBody(htmlContent);
             
             sendEmail(details);
-            return new EmailResponseDto(true, "Verification email sent successfully to " + email);
+            return new EmailResponseDto(true, "Verification email sent successfully to " + user.getEmail());
 
         } catch (IOException e) {
             logger.error("Error reading email template: {}", e.getMessage(), e);
-            return new EmailResponseDto(false, "Error reading email template: " + e.getMessage());
+            return new EmailResponseDto(false, e.getMessage() + "Error reading email template: ");
         }
     }
 }    

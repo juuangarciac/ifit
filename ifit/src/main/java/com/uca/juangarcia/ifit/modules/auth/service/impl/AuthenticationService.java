@@ -19,16 +19,21 @@ import org.springframework.web.client.RestTemplate;
 
 import com.uca.juangarcia.ifit.exception.dto.EmailAlreadyExistsException;
 import com.uca.juangarcia.ifit.exception.dto.EmailNotFoundException;
+import com.uca.juangarcia.ifit.exception.dto.EmailNotVerifiedException;
 import com.uca.juangarcia.ifit.exception.dto.InvalidCredentialsException;
 import com.uca.juangarcia.ifit.exception.dto.KeycloakUserCreationException;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LoginRequestDTO;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LoginResponseDTO;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.RegisterRequestDTO;
+import com.uca.juangarcia.ifit.modules.auth.controllers.dto.RegisterResponseDTO;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.UserDTO;
+import com.uca.juangarcia.ifit.modules.auth.controllers.dto.VerifyUserRequestDTO;
 import com.uca.juangarcia.ifit.modules.auth.service.IAuthenticationService;
 import com.uca.juangarcia.ifit.modules.auth.service.IKeycloakService;
+import com.uca.juangarcia.ifit.modules.notification.service.AppEmailService;
 import com.uca.juangarcia.ifit.modules.user.dto.AppUserResponseDto;
 import com.uca.juangarcia.ifit.modules.user.dto.CreateAppUserRequestDto;
+import com.uca.juangarcia.ifit.modules.user.model.AppUser;
 import com.uca.juangarcia.ifit.modules.user.service.AppUserService;
 
 import lombok.RequiredArgsConstructor;
@@ -72,6 +77,7 @@ public class AuthenticationService implements IAuthenticationService {
     private String logoutUrl;  // Nueva propiedad
 
     private final AppUserService appUserService;
+    private final AppEmailService emailService;
     private final IKeycloakService keycloakService;
     private final RestTemplate restTemplate;
 
@@ -121,6 +127,12 @@ public class AuthenticationService implements IAuthenticationService {
             log.debug("Fetching user profile from database: {}", loginRequestDTO.getUsername());
             AppUserResponseDto appUser = appUserService.findUserByEmail(loginRequestDTO.getUsername());
             log.info("User profile loaded successfully for: {}", loginRequestDTO.getUsername());
+
+            // 2.5. Verificar que el email esté verificado en nuestra BD
+            if (!appUser.isVerified()) {
+                log.warn("Login attempt with unverified email: {}", loginRequestDTO.getUsername());
+                throw new EmailNotVerifiedException(loginRequestDTO.getUsername());
+            }
 
             // 3. Construir respuesta con tokens + perfil
             return LoginResponseDTO.builder()
@@ -178,24 +190,28 @@ public class AuthenticationService implements IAuthenticationService {
      * <p>Proceso de registro (transaccional):
      * <ol>
      *   <li>Verifica que el email no exista en BD</li>
-     *   <li>Crea usuario en Keycloak → obtiene keycloakUserId</li>
+     *   <li>Crea usuario en Keycloak con emailVerified=false</li>
      *   <li>Crea perfil en BD con referencia al keycloakUserId</li>
-     *   <li>Realiza login automático</li>
+     *   <li>Envía email de verificación con código</li>
      *   <li>Si algo falla → Rollback (elimina de Keycloak si fue creado)</li>
      * </ol>
+     * 
+     * <p><strong>Cambio importante:</strong>
+     * El usuario NO obtiene tokens hasta que verifique su email.
+     * Debe llamar al endpoint /verify-email con el código recibido.
      * 
      * <p><strong>Atomicidad garantizada:</strong>
      * La anotación @Transactional asegura que si falla la creación en BD,
      * se hace rollback eliminando el usuario de Keycloak.
      * 
      * @param registerDTO datos del nuevo usuario
-     * @return respuesta con tokens y perfil del usuario registrado
+     * @return RegisterResponseDTO respuesta indicando que debe verificar su email
      * @throws EmailAlreadyExistsException si el email ya está registrado
      * @throws RuntimeException si falla la creación en Keycloak o BD
      */
     @Override
     @Transactional
-    public LoginResponseDTO register(RegisterRequestDTO registerDTO) throws EmailAlreadyExistsException {
+    public RegisterResponseDTO register(RegisterRequestDTO registerDTO) throws EmailAlreadyExistsException {
         log.info("Starting registration process for user: {}", registerDTO.getEmail());
         
         String keycloakUserId = null;
@@ -240,14 +256,26 @@ public class AuthenticationService implements IAuthenticationService {
             AppUserResponseDto createdUser = appUserService.createUser(createUserDto);
             log.info("User profile created successfully with ID: {}", createdUser.getId());
 
-            // 4. Hacer login automático después del registro
-            log.info("Performing automatic login for newly registered user: {}", registerDTO.getEmail());
-            LoginRequestDTO loginRequest = new LoginRequestDTO(
-                    registerDTO.getEmail(),
-                    registerDTO.getPassword()
-            );
+            // 4. Enviar email de verificación automáticamente
+            log.info("Sending verification email to: {}", registerDTO.getEmail());
+            try {
+                emailService.sendVerificationEmail(createdUser);
+                log.info("Verification email sent successfully to: {}", registerDTO.getEmail());
+            } catch (Exception emailEx) {
+                log.error("Failed to send verification email to {}: {}", 
+                         registerDTO.getEmail(), 
+                         emailEx.getMessage());
+                // No hacer rollback por fallo de email, el usuario ya existe en BD y Keycloak
+                // El usuario puede solicitar reenvío del email más tarde
+            }
 
-            return login(loginRequest);
+            // 5. Retornar respuesta sin tokens (el usuario debe verificar primero)
+            return RegisterResponseDTO.builder()
+                .success(true)
+                .message("Usuario registrado exitosamente. Por favor, verifica tu email antes de iniciar sesión.")
+                .email(registerDTO.getEmail())
+                .requiresEmailVerification(true)
+                .build();
 
         } catch (KeycloakUserCreationException | EmailAlreadyExistsException e) {
             log.error("Registration failed for user {}: {}", registerDTO.getEmail(), e.getMessage());
@@ -401,5 +429,85 @@ public class AuthenticationService implements IAuthenticationService {
             log.error("Unexpected error during logout: {}", e.getMessage(), e);
             throw new RuntimeException("Logout service unavailable");
         }
+    }
+
+    /**
+     * Verifica el email de un usuario usando un código de verificación.
+     * 
+     * <p>Proceso de verificación:
+     * <ol>
+     *   <li>Valida el código de verificación en BD</li>
+     *   <li>Verifica que el email coincida con el usuario</li>
+     *   <li>Marca el email como verificado en BD</li>
+     *   <li>Marca el email como verificado en Keycloak</li>
+     *   <li>Realiza login automático con las credenciales</li>
+     *   <li>Devuelve tokens JWT</li>
+     * </ol>
+     * 
+     * <p><strong>Validaciones:</strong>
+     * <ul>
+     *   <li>El código de verificación debe existir</li>
+     *   <li>El email debe coincidir con el usuario del código</li>
+     *   <li>El usuario no debe estar ya verificado</li>
+     * </ul>
+     * 
+     * @param request objeto con email, código de verificación y contraseña
+     * @return respuesta con tokens y perfil del usuario verificado
+     * @throws IllegalArgumentException si el código es inválido o el email no coincide
+     * @throws EmailNotFoundException si no existe un usuario con ese código
+     * @throws InvalidCredentialsException si las credenciales son inválidas
+     */
+    @Override
+    @Transactional
+    public LoginResponseDTO verifyEmail(VerifyUserRequestDTO request) 
+            throws IllegalArgumentException, EmailNotFoundException, InvalidCredentialsException {
+        
+        log.info("Starting email verification for user: {}", request.email());
+
+        // 1. Validar el código de verificación en BD
+        log.info("Validating verification code for email: {}", request.email());
+        AppUserResponseDto user = appUserService.findUserByEmailAndValidateCode(request.email(), request.verificationCode());
+        
+        // 2. Verificar que el usuario no esté ya verificado
+        if (user.isVerified()) {
+            log.warn("User already verified: {}", user.getEmail());
+            // Si ya está verificado, simplemente hacer login
+            return login(new LoginRequestDTO(request.email(), request.password()));
+        }
+
+        // 3. Verificar que el email coincide con el usuario del código
+        if (!user.getVerificationCode().equals(request.verificationCode())) {
+            log.error("Verification code does not match for email: {}", request.email());
+            throw new IllegalArgumentException(
+                "El código de verificación no corresponde al email proporcionado"
+            );
+        }
+        
+        // 4. Marcar como verificado en BD
+        log.info("Marking email as verified in database for user: {}", user.getEmail());
+        appUserService.markEmailAsVerified(user.getEmail());
+        
+        // 5. Marcar como verificado en Keycloak
+        log.info("Marking email as verified in Keycloak for user: {}", user.getKeycloakUserId());
+        try {
+            keycloakService.markEmailAsVerified(user.getKeycloakUserId());
+            log.info("Email verification successful in Keycloak");
+        } catch (Exception e) {
+            log.error("Failed to update email verification in Keycloak: {}", e.getMessage());
+            // Continuar aunque falle Keycloak - el usuario ya está verificado en BD
+            // En el siguiente login se puede intentar sincronizar de nuevo
+        }
+        
+        // 6. Realizar login automático
+        log.info("Performing automatic login for verified user: {}", user.getEmail());
+        LoginRequestDTO loginRequest = new LoginRequestDTO(
+            request.email(),
+            request.password()
+        );
+        
+        LoginResponseDTO loginResponse = login(loginRequest);
+        log.info("Email verification and automatic login successful for: {}", user.getEmail());
+        
+        return loginResponse;
     }
 }

@@ -11,11 +11,13 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
-import com.uca.juangarcia.ifit.exception.dto.InvalidCredentialsException;
+
 import com.uca.juangarcia.ifit.exception.dto.CoachModelTypeNotFoundException;
 import com.uca.juangarcia.ifit.exception.dto.EmailAlreadyExistsException;
 import com.uca.juangarcia.ifit.exception.dto.EmailNotFoundException;
+import com.uca.juangarcia.ifit.exception.dto.EmailNotVerifiedException;
 import com.uca.juangarcia.ifit.exception.dto.ExperienceLevelNotFoundException;
+import com.uca.juangarcia.ifit.exception.dto.InvalidCredentialsException;
 import com.uca.juangarcia.ifit.exception.dto.QuestionnaireNotFoundException;
 import com.uca.juangarcia.ifit.exception.dto.QuestionnaireQuestionNotFoundException;
 import com.uca.juangarcia.ifit.exception.dto.UserIdNotFoundException;
@@ -29,6 +31,7 @@ public class HandlerExceptionController {
         IllegalArgumentException.class,
         HttpMessageNotReadableException.class,
         NullPointerException.class,
+        EmailNotVerifiedException.class
     })
     public ResponseEntity<ErrorResponse> handleBadRequestExceptions(Exception ex) {
         return ResponseEntity

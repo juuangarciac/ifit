@@ -9,12 +9,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.uca.juangarcia.ifit.exception.dto.EmailAlreadyExistsException;
+import com.uca.juangarcia.ifit.exception.dto.EmailNotFoundException;
 import com.uca.juangarcia.ifit.exception.dto.InvalidCredentialsException;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LoginRequestDTO;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LoginResponseDTO;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LogoutResponseDTO;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.RefreshTokenRequestDTO;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.RegisterRequestDTO;
+import com.uca.juangarcia.ifit.modules.auth.controllers.dto.RegisterResponseDTO;
+import com.uca.juangarcia.ifit.modules.auth.controllers.dto.VerifyUserRequestDTO;
 import com.uca.juangarcia.ifit.modules.auth.service.IAuthenticationService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -106,7 +109,7 @@ public class AuthenticationController {
      * <p>En caso de error, se hace rollback automático en Keycloak.
      * 
      * @param registerDTO datos del nuevo usuario
-     * @return respuesta con tokens y perfil del usuario creado (código 201)
+     * @return RegisterResponseDTO
      */
     @Operation(
         summary = "Registro de nuevo usuario",
@@ -119,10 +122,10 @@ public class AuthenticationController {
         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @PostMapping("/register")
-    public ResponseEntity<LoginResponseDTO> register(@Valid @RequestBody RegisterRequestDTO registerDTO) 
+    public ResponseEntity<RegisterResponseDTO> register(@Valid @RequestBody RegisterRequestDTO registerDTO) 
             throws EmailAlreadyExistsException {
         log.info("Registration request received for: {}", registerDTO.getEmail());
-        LoginResponseDTO response = authenticationService.register(registerDTO);
+        RegisterResponseDTO response = authenticationService.register(registerDTO);
         log.info("Registration successful for: {}", registerDTO.getEmail());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -194,5 +197,34 @@ public class AuthenticationController {
             .message("Session closed successfully")
             .success(true)
             .build());
+    }
+
+    /**
+     * Verifica un usuario recién registrado usando un código de verificación.
+     * 
+     * <p>Después de registrarse, el usuario recibe un código por email.
+     * Este endpoint valida ese código y activa la cuenta del usuario.
+     * 
+     * <p>Si la verificación es exitosa, se realiza login automático
+     * y se devuelven los tokens JWT habituales.
+     * 
+     * @param request objeto con email y código de verificación
+     * @return respuesta con tokens y perfil del usuario
+     */
+    @Operation(
+        summary = "Verificar usuario registrado",
+        description = "Verifica un usuario recién registrado usando un código enviado por email. "
+                    + "Si es exitoso, realiza login automático y retorna tokens JWT."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Usuario verificado y login exitoso"),
+        @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos o código incorrecto"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    @PostMapping("/verify")
+    public ResponseEntity<LoginResponseDTO> verify(@Valid @RequestBody VerifyUserRequestDTO request) 
+    throws IllegalArgumentException, EmailNotFoundException, InvalidCredentialsException {
+        LoginResponseDTO response = authenticationService.verifyEmail(request);
+        return ResponseEntity.ok(response);
     }
 }

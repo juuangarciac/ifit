@@ -2,7 +2,13 @@ package com.uca.juangarcia.ifit.modules.user.dto;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * DTO de respuesta para información de usuario de la aplicación.
@@ -22,6 +28,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * @version 1.0
  * @since 1.0
  */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "Información completa de un usuario")
 public class AppUserResponseDto{
 
@@ -55,118 +65,12 @@ public class AppUserResponseDto{
     @Schema(description = "Nivel de experiencia del usuario", example = "INTERMEDIATE", nullable = true)
     private String experienceLevelName;
 
-    /**
-     * Constructor compacto que valida que los campos requeridos no sean nulos.
-     * 
-     * @throws IllegalArgumentException si algún campo requerido es nulo
-     */
-    public AppUserResponseDto(Long id, String name, String email, boolean isRegistrationComplete,
-            boolean isVerified, LocalDateTime createdAt, LocalDateTime updatedAt,
-            String roleName, String coachModelTypeName, String experienceLevelName) {
-        if (id == null) {
-            throw new IllegalArgumentException("User ID cannot be null");
-        }
-        if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("User name cannot be null or blank");
-        }
-        if (email == null || email.isBlank()) {
-            throw new IllegalArgumentException("User email cannot be null or blank");
-        }
-        if (createdAt == null) {
-            throw new IllegalArgumentException("Created date cannot be null");
-        }
+    /* Json Ignore properties */
+    @JsonIgnore
+    @Schema(description = "ID del usuario en Keycloak")
+    private String keycloakUserId;
 
-        this.id = id;
-        this.name = name;
-        this.email = email;
-        this.isRegistrationComplete = isRegistrationComplete;
-        this.isVerified = isVerified;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.roleName = roleName;
-        this.coachModelTypeName = coachModelTypeName;
-        this.experienceLevelName = experienceLevelName;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public boolean isRegistrationComplete() {
-        return isRegistrationComplete;
-    }
-
-    public void setRegistrationComplete(boolean isRegistrationComplete) {
-        this.isRegistrationComplete = isRegistrationComplete;
-    }
-
-    public boolean isVerified() {
-        return isVerified;
-    }
-
-    public void setVerified(boolean isVerified) {
-        this.isVerified = isVerified;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public String getRoleName() {
-        return roleName;
-    }
-
-    public void setRoleName(String roleName) {
-        this.roleName = roleName;
-    }
-
-    public String getCoachModelTypeName() {
-        return coachModelTypeName;
-    }
-
-    public void setCoachModelTypeName(String coachModelTypeName) {
-        this.coachModelTypeName = coachModelTypeName;
-    }
-
-    public String getExperienceLevelName() {
-        return experienceLevelName;
-    }
-
-    public void setExperienceLevelName(String experienceLevelName) {
-        this.experienceLevelName = experienceLevelName;
-    }
-
-    
+    @JsonIgnore
+    @Schema(description = "Código de verificación del usuario")
+    private String verificationCode;
 }

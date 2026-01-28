@@ -125,6 +125,8 @@ class AppUserServiceTest {
             null,
             "USER",
             null,
+            null,
+            null,
             null
         );
 

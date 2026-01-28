@@ -187,4 +187,22 @@ public class KeycloakServiceImpl implements IKeycloakService {
         
         log.info("User updated successfully in Keycloak: {}", userId);
     }
+
+    /**
+     * Marca el email de un usuario como verificado en Keycloak.
+     * 
+     * @param userId ID del usuario cuyo email se marcará como verificado
+     */
+    @Override
+    public void markEmailAsVerified(String userId) {
+        log.info("Marking email as verified in Keycloak for user: {}", userId);
+        
+        UserResource userResource = KeycloakProvider.getUserResource().get(userId);
+        UserRepresentation userRepresentation = userResource.toRepresentation();
+        userRepresentation.setEmailVerified(true);
+        
+        userResource.update(userRepresentation);
+        
+        log.info("Email marked as verified in Keycloak for user: {}", userId);
+    }
 }

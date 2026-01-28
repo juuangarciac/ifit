@@ -54,10 +54,12 @@ public class AppUserMapper {
             user.getUpdatedAt(),
             user.getRole() != null ? user.getRole().getName() : null,
             user.getCoachModelType() != null ? user.getCoachModelType().getName() : null,
-            user.getExperienceLevel() != null ? user.getExperienceLevel().getName() : null
+            user.getExperienceLevel() != null ? user.getExperienceLevel().getName() : null,
+            user.getKeycloakId(),
+            user.getVerificationCode()
         );
     }
-
+    
     /**
      * Convierte un DTO de usuario a una entidad AppUser.
      * 

@@ -25,6 +25,8 @@ import com.uca.juangarcia.ifit.exception.dto.EmailNotFoundException;
 import com.uca.juangarcia.ifit.exception.dto.ExperienceLevelNotFoundException;
 import com.uca.juangarcia.ifit.exception.dto.UserIdNotFoundException;
 import com.uca.juangarcia.ifit.exception.model.ErrorResponse;
+import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LoginResponseDTO;
+import com.uca.juangarcia.ifit.modules.auth.controllers.dto.VerifyUserRequestDTO;
 import com.uca.juangarcia.ifit.modules.user.dto.AppUserResponseDto;
 import com.uca.juangarcia.ifit.modules.user.dto.CreateAppUserRequestDto;
 import com.uca.juangarcia.ifit.modules.user.dto.UpdateAppUserRequestDto;
@@ -476,4 +478,5 @@ public class AppUserController {
         boolean exists = userService.existsByEmail(email);
         return ResponseEntity.ok(exists);
     }
+
 }

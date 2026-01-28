@@ -260,6 +260,11 @@ public class AppUserService {
             logger.error("Failed to assign default role '{}' to user", defaultUserRole, e);
             throw new IllegalStateException("Could not assign default role to user", e);
         }
+        // Asignar codigo de verificación y estado inicial
+        user.setVerified(false);
+        user.setIsRegistrationComplete(false);
+        String verificationCode = String.format("%06d", (int)(Math.random() * 1_000_000));
+        user.setVerificationCode(verificationCode);
 
         // Guardar usuario
         AppUser savedUser = userRepository.save(user);
@@ -484,5 +489,80 @@ public class AppUserService {
         }
 
         return userRepository.findByEmail(email).isPresent();
+    }
+
+    /**
+     * Busca un usuario por email y valida su código de verificación.
+     * 
+     * @param email email del usuario
+     * @param verificationCode código de verificación esperado
+     * @return DTO del usuario si el código es válido
+     * @throws EmailNotFoundException si no existe el usuario
+     * @throws IllegalArgumentException si el código no coincide
+     */
+    public AppUserResponseDto findUserByEmailAndValidateCode(String email, String verificationCode) 
+            throws EmailNotFoundException {
+        
+        if (email == null || email.isBlank()) {
+            logger.error("Attempted to find user with null or blank email");
+            throw new IllegalArgumentException("Email cannot be null or blank");
+        }
+        
+        if (verificationCode == null || verificationCode.isBlank()) {
+            logger.error("Attempted to validate with null or blank verification code");
+            throw new IllegalArgumentException("Verification code cannot be null or blank");
+        }
+
+        logger.debug("Finding user by email and validating verification code: {}", email);
+        
+        // 1. Buscar usuario por email (único)
+        AppUser user = userRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    logger.error("User not found with email: {}", email);
+                    return new EmailNotFoundException(email);
+                });
+        
+        // 2. Validar que el código coincida
+        if (!verificationCode.equals(user.getVerificationCode())) {
+            logger.error("Invalid verification code for user: {}", email);
+            throw new IllegalArgumentException("Código de verificación incorrecto");
+        }
+        
+        logger.info("Verification code validated successfully for user: {}", email);
+        return userMapper.toResponseDto(user);
+    }
+
+    /**
+     * Marca el email de un usuario como verificado.
+     * 
+     * <p>Este método actualiza el estado de verificación del email del usuario
+     * y limpia el código de verificación para que no pueda ser reutilizado.
+     * 
+     * @param email email del usuario
+     * @return DTO de respuesta con los datos actualizados del usuario
+     * @throws EmailNotFoundException si no existe el usuario con el email especificado
+     */
+    @Transactional
+    public AppUserResponseDto markEmailAsVerified(String email) throws EmailNotFoundException {
+        if (email == null || email.isBlank()) {
+            logger.error("Attempted to mark email as verified with null or blank email");
+            throw new IllegalArgumentException("Email cannot be null or blank");
+        }
+
+        logger.debug("Marking email as verified for user: {}", email);
+
+        AppUser user = userRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    logger.error("User not found with email: {}", email);
+                    return new EmailNotFoundException("User not found with email: " + email);
+                });
+
+        user.setVerified(true);
+        user.setVerificationCode(null); // Limpiar el código de verificación
+        AppUser updatedUser = userRepository.save(user);
+
+        logger.info("Email marked as verified for user: {}", email);
+
+        return userMapper.toResponseDto(updatedUser);
     }
 }
