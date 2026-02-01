@@ -400,8 +400,7 @@ public class QuestionnaireService {
         }
         
         // Validar texto adicional si es requerido
-        if (selectedOption.getRequiresTextInput() && 
-            (additionalText == null || additionalText.trim().isEmpty())) {
+        if (selectedOption.getRequiresTextInput() && additionalText == null) {
             logger.warn("Additional text required but not provided for option {}", selectedOptionId);
             throw new IllegalArgumentException("Additional text is required for this option");
         }
