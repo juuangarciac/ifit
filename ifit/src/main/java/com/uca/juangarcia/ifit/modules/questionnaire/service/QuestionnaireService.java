@@ -137,6 +137,27 @@ public class QuestionnaireService {
         
         return questionnaireMapper.toDto(questionnaire);
     }
+
+    /**
+     * Obtiene un cuestionario por coach y nivel de experiencia.
+     * 
+     * @param coachId ID del coach seleccionado previamente por el usuario.
+     * @param experienceLevelId ID del nivel de experiencia seleccionado por el usuario
+     * @throws QuestionnaireNotFoundException si no encuentra el cuestionario
+     * 
+     * @return QuestionnaireDTO
+     */
+    public QuestionnaireDTO getQuestionnaireByCoachIdAndExperienceLevelId(Long coachId, Long experienceLevelId)
+    throws QuestionnaireNotFoundException{
+        logger.debug("Finding questionnaire by coachId: " + coachId + ", and experience id: " + experienceLevelId);
+        Questionnaire questionnaire = questionnaireRepository.findByCoachModelTypeAndExperienceLevel(coachId, experienceLevelId)
+            .orElseThrow(() -> {
+                logger.error("Questionnaire not found with coachId: " + coachId + ", and experienceLevelId: " + experienceLevelId);
+                return new QuestionnaireNotFoundException("Questionnaire not found with coachId: " + coachId + ", and experienceLevelId: " + experienceLevelId);
+            });
+
+        return questionnaireMapper.toDto(questionnaire);
+    }
     
     /**
      * Obtiene un cuestionario con su primera pregunta incluida.

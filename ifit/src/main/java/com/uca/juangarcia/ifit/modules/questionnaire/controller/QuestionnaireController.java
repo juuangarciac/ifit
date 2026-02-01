@@ -40,6 +40,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 /**
  * Controlador REST para la gestión de cuestionarios.
@@ -146,6 +148,46 @@ public class QuestionnaireController {
             throws QuestionnaireNotFoundException {
         QuestionnaireDTO questionnaire = questionnaireService.getQuestionnaireById(id);
         return ResponseEntity.ok(questionnaire);
+    }
+
+
+    @GetMapping("/coach/{coachName}/experience-level/{experienceName}")
+    @Operation(
+        summary = "Obtener cuestionario por coach y nivel de experiencia",
+        description = "Recupera un cuestionario específico con toda su información."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Cuestionario encontrado",
+            content = @Content(
+                mediaType = "application/json", 
+                schema = @Schema(implementation = QuestionnaireDTO.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Cuestionario no encontrado",
+            content = @Content(
+                mediaType = "application/json", 
+                schema = @Schema(implementation = ErrorResponse.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Error interno del servidor",
+            content = @Content(
+                mediaType = "application/json", 
+                schema = @Schema(implementation = ErrorResponse.class)
+            )
+        )
+    })
+    public ResponseEntity<QuestionnaireDTO> getQuestionnaireByCoachIdAndExperienceLevelId(
+        @PathVariable Long coachId,
+        @PathVariable Long experienceLevelId
+    ) throws QuestionnaireNotFoundException {
+        QuestionnaireDTO response = questionnaireService.getQuestionnaireByCoachIdAndExperienceLevelId(coachId, experienceLevelId);
+        return ResponseEntity.ok(response);
     }
     
     /**
