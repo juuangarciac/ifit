@@ -1,24 +1,25 @@
 package com.ifit.ronnie.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;  // ← EL CORRECTO
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ifit.ronnie.controller.DTO.MessageDTO;
 import com.ifit.ronnie.service.Eliud;
 import com.ifit.ronnie.service.Kael;
 import com.ifit.ronnie.service.Ronnie;
 import com.ifit.ronnie.service.Serena;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 /**
  * Controlador para gestionar la interacción con los coaches de IA.
@@ -59,7 +60,7 @@ public class AssistantController {
             responseCode = "200",
             description = "Respuesta del coach generada exitosamente",
             content = @Content(
-                mediaType = "text/plain",
+                mediaType = "application/json",
                 examples = @ExampleObject(
                     value = "¡Genial! Para ganar masa muscular, te recomiendo enfocarte en ejercicios compuestos como sentadillas, press de banca y peso muerto. Entrena 4-5 días a la semana con un déficit calórico moderado..."
                 )
@@ -74,24 +75,25 @@ public class AssistantController {
             description = "Error interno del servidor"
         )
     })
-    @GetMapping("/ronnie")
+    @PostMapping("/ronnie")
     public String chatWithRonnie(
-            @Parameter(
-                description = "ID de memoria para mantener el contexto de la conversación. " +
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                description = "MessageDTO que contiene memoryId y message para chatear con Ronnie. " +
                               "Usa el mismo memoryId para continuar una conversación previa.",
                 required = true,
-                example = "12345"
+                content = @Content(
+                    schema = @Schema(implementation = MessageDTO.class)
+                )
             )
-            @RequestParam int memoryId,
-            
-            @Parameter(
-                description = "Mensaje del usuario para el coach",
-                required = true,
-                example = "¿Cómo puedo aumentar mi masa muscular?"
-            )
-            @RequestParam String message
+            @Valid @RequestBody MessageDTO messageDto
     ) {
-        return ronnie.chat(memoryId, message);
+            System.out.println("=== RONNIE DEBUG ===");
+            System.out.println("memoryId: " + messageDto.getMemoryId());
+            System.out.println("message: '" + messageDto.getMessage() + "'");
+            System.out.println("message length: " + messageDto.getMessage().length());
+            System.out.println("===================");
+
+        return ronnie.chat(messageDto.getMemoryId(), messageDto.getMessage());
     }
 
     @Operation(
@@ -105,7 +107,7 @@ public class AssistantController {
             responseCode = "200",
             description = "Respuesta del coach generada exitosamente",
             content = @Content(
-                mediaType = "text/plain",
+                mediaType = "application/json",
                 examples = @ExampleObject(
                     value = "Namaste. Para mejorar tu flexibilidad, te sugiero comenzar con la secuencia del saludo al sol cada mañana. Combínalo con posturas de apertura de cadera como la paloma y el guerrero..."
                 )
@@ -120,23 +122,19 @@ public class AssistantController {
             description = "Error interno del servidor"
         )
     })
-    @GetMapping("/serena")
+    @PostMapping("/serena")
     public String chatWithSerena(
-            @Parameter(
-                description = "ID de memoria para mantener el contexto de la conversación",
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                description = "MessageDTO que contiene memoryId y message para chatear con Serena. " +
+                              "Usa el mismo memoryId para continuar una conversación previa.",
                 required = true,
-                example = "12346"
+                content = @Content(
+                    schema = @Schema(implementation = MessageDTO.class)
+                )
             )
-            @RequestParam int memoryId,
-            
-            @Parameter(
-                description = "Mensaje del usuario para el coach",
-                required = true,
-                example = "Quiero mejorar mi flexibilidad, ¿qué ejercicios de yoga me recomiendas?"
-            )
-            @RequestParam String message
+            @Valid @RequestBody MessageDTO messageDto
     ) {
-        return serena.chat(memoryId, message);
+        return serena.chat(messageDto.getMemoryId(), messageDto.getMessage());
     }
 
     @Operation(
@@ -150,7 +148,7 @@ public class AssistantController {
             responseCode = "200",
             description = "Respuesta del coach generada exitosamente",
             content = @Content(
-                mediaType = "text/plain",
+                mediaType = "application/json",
                 examples = @ExampleObject(
                     value = "Para preparar tu primera media maratón, necesitas construir una base sólida. Comienza con 3-4 carreras por semana: una larga, una de intervalos, una de tempo y una de recuperación..."
                 )
@@ -165,23 +163,19 @@ public class AssistantController {
             description = "Error interno del servidor"
         )
     })
-    @GetMapping("/eliud")
+    @PostMapping("/eliud")
     public String chatWithEliud(
-            @Parameter(
-                description = "ID de memoria para mantener el contexto de la conversación",
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                description = "MessageDTO que contiene memoryId y message para chatear con Eliud. " +
+                              "Usa el mismo memoryId para continuar una conversación previa.",
                 required = true,
-                example = "12347"
+                content = @Content(
+                    schema = @Schema(implementation = MessageDTO.class)
+                )
             )
-            @RequestParam int memoryId,
-            
-            @Parameter(
-                description = "Mensaje del usuario para el coach",
-                required = true,
-                example = "Quiero correr mi primera media maratón, ¿cómo debo entrenar?"
-            )
-            @RequestParam String message
+            @Valid @RequestBody MessageDTO messageDto
     ) {
-        return eliud.chat(memoryId, message);
+        return eliud.chat(messageDto.getMemoryId(), messageDto.getMessage());
     }
 
     @Operation(
@@ -195,7 +189,7 @@ public class AssistantController {
             responseCode = "200",
             description = "Respuesta del coach generada exitosamente",
             content = @Content(
-                mediaType = "text/plain",
+                mediaType = "application/json",
                 examples = @ExampleObject(
                     value = "¡Vamos a darle duro! Para quemar grasa con HIIT, te propongo un circuito de 20 minutos: 40 segundos de burpees, 20 de descanso, 40 segundos de mountain climbers..."
                 )
@@ -210,22 +204,18 @@ public class AssistantController {
             description = "Error interno del servidor"
         )
     })
-    @GetMapping("/kael")
+    @PostMapping("/kael")
     public String chatWithKael(
-            @Parameter(
-                description = "ID de memoria para mantener el contexto de la conversación",
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                description = "MessageDTO que contiene memoryId y message para chatear con Kael. " +
+                              "Usa el mismo memoryId para continuar una conversación previa.",
                 required = true,
-                example = "12348"
+                content = @Content(
+                    schema = @Schema(implementation = MessageDTO.class)
+                )
             )
-            @RequestParam int memoryId,
-            
-            @Parameter(
-                description = "Mensaje del usuario para el coach",
-                required = true,
-                example = "Necesito una rutina HIIT para quemar grasa rápidamente"
-            )
-            @RequestParam String message
+            @Valid @RequestBody MessageDTO messageDto
     ) {
-        return kael.chat(memoryId, message);
+        return kael.chat(messageDto.getMemoryId(), messageDto.getMessage());
     }
 }

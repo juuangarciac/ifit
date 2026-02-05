@@ -17,6 +17,7 @@ public class MessageService {
                 .stream()
                 .map(Integer::parseInt)
                 .max(Integer::compareTo)
-                .orElse(null);
+                .orElse(1);
+
     }
 }
