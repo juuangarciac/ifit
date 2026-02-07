@@ -73,6 +73,9 @@ public class ChatLanguageModelConfiguration {
         InMemoryEmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
         EmbeddingStoreIngestor.ingest(document, embeddingStore);
         
+        document = FileSystemDocumentLoader.loadDocument("src/main/resources/excercises.csv", new TextDocumentParser());
+        EmbeddingStoreIngestor.ingest(document, embeddingStore);
+        
         return EmbeddingStoreContentRetriever.from(embeddingStore);
     }
 

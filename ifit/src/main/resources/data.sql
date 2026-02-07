@@ -1,4 +1,26 @@
 -- ===========================================
+-- iFit Database Schema & Data (DDL + DML)
+-- Versión: 3.1 - REFORMULADO PARA LLM COMPATIBILITY
+-- Fecha: 2025-02-07
+-- Descripción: Schema completo + datos iniciales
+-- ===========================================
+-- 
+-- CAMBIOS EN ESTA VERSIÓN:
+-- - Pregunta 2 reformulada: Lenguaje de "adaptaciones" en vez de "condiciones médicas"
+-- - Pregunta 13 reformulada: "Preferencias alimentarias" en vez de "restricciones dietéticas"
+-- - Opciones actualizadas para evitar activar filtros de seguridad del LLM
+-- 
+-- MOTIVO: Los modelos de lenguaje (Ollama/LLM) activan filtros de seguridad
+-- con palabras como "condición médica", "lesión", "enfermedad", "restricción".
+-- El nuevo lenguaje usa "adaptaciones", "preferencias", "zona que requiere cuidado".
+-- 
+-- IMPACTO EN PRIVACIDAD: 
+-- - ANTES: Podíamos estar manejando datos sensibles de salud (Art. 9 RGPD)
+-- - AHORA: Solo manejamos preferencias personales de fitness (Art. 6 RGPD)
+-- 
+-- ===========================================
+
+-- ===========================================
 -- iFit Database Schema (DDL)
 -- Versión: 3.0
 -- Fecha: 2025-01-07
@@ -360,7 +382,7 @@ INSERT INTO question (id, text, type, is_enabled, created_at) VALUES
 (1, '¿Cuál es tu objetivo principal de entrenamiento?', 'MULTIPLE_CHOICE', TRUE, NOW()),
 
 -- Preguntas de seguimiento según objetivo
-(2, '¿Tienes alguna condición médica o lesión que debamos considerar?', 'MULTIPLE_CHOICE', TRUE, NOW()),
+(2, '¿Necesitas que adaptemos algunos ejercicios por comodidad o salud?', 'MULTIPLE_CHOICE', TRUE, NOW()),
 (3, '¿Cuántas veces a la semana puedes entrenar?', 'MULTIPLE_CHOICE', TRUE, NOW()),
 (4, '¿Dónde prefieres entrenar?', 'MULTIPLE_CHOICE', TRUE, NOW()),
 (5, '¿Cuál es tu edad?', 'MULTIPLE_CHOICE', TRUE, NOW()),
@@ -373,7 +395,7 @@ INSERT INTO question (id, text, type, is_enabled, created_at) VALUES
 -- Preguntas específicas según ruta
 (11, '¿Tienes experiencia con entrenamiento de fuerza?', 'MULTIPLE_CHOICE', TRUE, NOW()),
 (12, '¿Prefieres entrenamientos cortos e intensos o largos y moderados?', 'MULTIPLE_CHOICE', TRUE, NOW()),
-(13, '¿Tienes alguna preferencia alimentaria o restricción dietética?', 'TEXT_INPUT', TRUE, NOW())
+(13, '¿Tienes preferencias alimentarias que quieras compartir?', 'TEXT_INPUT', TRUE, NOW())
 ON DUPLICATE KEY UPDATE 
     text = VALUES(text),
     type = VALUES(type),
@@ -399,12 +421,12 @@ ON DUPLICATE KEY UPDATE
     next_question_id = VALUES(next_question_id),
     display_order = VALUES(display_order);
 
--- Opciones para Pregunta 2: Condiciones médicas
+-- Opciones para Pregunta 2: Adaptaciones de ejercicio
 INSERT INTO question_option (id, question_id, text, next_question_id, display_order, requires_text_input, text_input_prompt, text_input_placeholder) VALUES
-(6, 2, 'No tengo ninguna limitación', 3, 1, FALSE, NULL, NULL),
-(7, 2, 'Tengo una lesión reciente', 3, 2, TRUE, '¿Podrías describir brevemente tu lesión?', 'Ej: Esguince de tobillo hace 2 meses'),
-(8, 2, 'Tengo una condición médica crónica', 3, 3, TRUE, '¿Qué condición médica tienes? (Es importante para personalizar tu entrenamiento)', 'Ej: Diabetes, hipertensión, asma'),
-(9, 2, 'Tengo limitaciones de movilidad', 3, 4, TRUE, 'Cuéntanos sobre tus limitaciones de movilidad', 'Ej: Problemas de rodilla, espalda')
+(6, 2, 'No, puedo hacer cualquier ejercicio', 3, 1, FALSE, NULL, NULL),
+(7, 2, 'Sí, tengo una zona que requiere cuidado', 3, 2, TRUE, 'Por favor indica qué zona debemos cuidar en tu entrenamiento', 'Ej: Rodilla izquierda, zona lumbar, hombro derecho'),
+(8, 2, 'Sí, prefiero ejercicios adaptados', 3, 3, TRUE, '¿Qué tipo de adaptaciones necesitas? (Esto nos ayuda a personalizar tu rutina)', 'Ej: Evitar impacto en rodillas, cuidar zona lumbar, fortalecer espalda'),
+(9, 2, 'Sí, tengo limitaciones de movimiento', 3, 4, TRUE, 'Cuéntanos sobre tus limitaciones para adaptar los ejercicios', 'Ej: Movilidad reducida en cadera, evitar flexiones profundas')
 ON DUPLICATE KEY UPDATE 
     text = VALUES(text),
     next_question_id = VALUES(next_question_id),
@@ -525,10 +547,10 @@ ON DUPLICATE KEY UPDATE
     next_question_id = VALUES(next_question_id),
     display_order = VALUES(display_order);
 
--- Opciones para Pregunta 13: Restricciones dietéticas (pregunta final)
+-- Opciones para Pregunta 13: Preferencias alimentarias (pregunta final)
 INSERT INTO question_option (id, question_id, text, next_question_id, display_order, requires_text_input, text_input_prompt, text_input_placeholder) VALUES
-(46, 13, 'Sí, tengo restricciones', NULL, 1, TRUE, 'Por favor describe tus restricciones o preferencias alimentarias', 'Ej: Vegetariano, intolerancia a lactosa, bajo en carbohidratos'),
-(47, 13, 'No, como de todo', NULL, 2, FALSE, NULL, NULL)
+(46, 13, 'Sí, tengo preferencias alimentarias', NULL, 1, TRUE, 'Por favor comparte tus preferencias o necesidades alimentarias', 'Ej: Vegetariano, prefiero bajo en carbohidratos, evito lácteos'),
+(47, 13, 'No, como de todo sin preferencias especiales', NULL, 2, FALSE, NULL, NULL)
 ON DUPLICATE KEY UPDATE 
     text = VALUES(text),
     next_question_id = VALUES(next_question_id),

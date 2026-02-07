@@ -72,35 +72,35 @@ start_system() {
     
     # Iniciar servicios en orden
     echo -e "${YELLOW}⬆️  Iniciando servicios base...${NC}"
-    docker-compose up -d mysql keycloak ollama
+    docker-compose up -d mysql keycloak # ollama
     echo ""
     
     echo -e "${YELLOW}⏳ Esperando a que servicios base estén listos (30s)...${NC}"
     sleep 30
     echo ""
     
-    echo -e "${YELLOW}⬆️  Iniciando Eureka...${NC}"
-    docker-compose up -d eureka
-    echo ""
+    # echo -e "${YELLOW}⬆️  Iniciando Eureka...${NC}"
+    # docker-compose up -d eureka
+    # echo ""
     
-    echo -e "${YELLOW}⏳ Esperando a que Eureka esté listo (20s)...${NC}"
-    sleep 20
-    echo ""
+    # echo -e "${YELLOW}⏳ Esperando a que Eureka esté listo (20s)...${NC}"
+    # sleep 20
+    # echo ""
     
-    echo -e "${YELLOW}⬆️  Iniciando microservicios...${NC}"
-    docker-compose up -d gateway authapi ifit ronnie
-    echo ""
+    # echo -e "${YELLOW}⬆️  Iniciando microservicios...${NC}"
+    # docker-compose up -d gateway authapi ifit ronnie
+    # echo ""
     
     echo -e "${GREEN}✅ Sistema iniciado${NC}"
     echo ""
     echo "Servicios disponibles en:"
-    echo "  - Eureka:     http://localhost:8761"
-    echo "  - Gateway:    http://localhost:8080"
-    echo "  - AuthAPI:    http://localhost:8083"
-    echo "  - IFIT:       http://localhost:8081"
-    echo "  - RONNIE:     http://localhost:8082"
+    # echo "  - Eureka:     http://localhost:8761"
+    # echo "  - Gateway:    http://localhost:8080"
+    # echo "  - AuthAPI:    http://localhost:8083"
+    # echo "  - IFIT:       http://localhost:8081"
+    # echo "  - RONNIE:     http://localhost:8082"
     echo "  - Keycloak:   http://localhost:9090"
-    echo "  - Ollama:     http://localhost:11434"
+    # echo "  - Ollama:     http://localhost:11434"
     echo ""
     echo "Para ver logs: ./manage-ifit.sh logs"
     echo ""
@@ -226,7 +226,7 @@ health_check() {
     echo -e "${YELLOW}🏥 Verificando salud de servicios...${NC}"
     echo ""
     
-    services=("mysql:3306" "keycloak:9090" "ollama:11434" "eureka:8761" "gateway:8080" "authapi:8083" "ifit:8081" "ronnie:8082")
+    services=("mysql:3306" "keycloak:9090") # "ollama:11434" "eureka:8761" "gateway:8080" "authapi:8083" "ifit:8081" "ronnie:8082"
     
     for service in "${services[@]}"; do
         name=$(echo $service | cut -d: -f1)

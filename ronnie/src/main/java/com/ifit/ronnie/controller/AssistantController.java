@@ -3,7 +3,7 @@ package com.ifit.ronnie.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;  // ← EL CORRECTO
+import org.springframework.web.bind.annotation.RequestMapping; 
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ifit.ronnie.controller.DTO.MessageDTO;
@@ -13,6 +13,7 @@ import com.ifit.ronnie.service.Ronnie;
 import com.ifit.ronnie.service.Serena;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -77,7 +78,7 @@ public class AssistantController {
     })
     @PostMapping("/ronnie")
     public String chatWithRonnie(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            @Parameter(
                 description = "MessageDTO que contiene memoryId y message para chatear con Ronnie. " +
                               "Usa el mismo memoryId para continuar una conversación previa.",
                 required = true,
@@ -124,7 +125,7 @@ public class AssistantController {
     })
     @PostMapping("/serena")
     public String chatWithSerena(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            @Parameter(
                 description = "MessageDTO que contiene memoryId y message para chatear con Serena. " +
                               "Usa el mismo memoryId para continuar una conversación previa.",
                 required = true,
@@ -165,7 +166,7 @@ public class AssistantController {
     })
     @PostMapping("/eliud")
     public String chatWithEliud(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            @Parameter(
                 description = "MessageDTO que contiene memoryId y message para chatear con Eliud. " +
                               "Usa el mismo memoryId para continuar una conversación previa.",
                 required = true,
@@ -206,7 +207,7 @@ public class AssistantController {
     })
     @PostMapping("/kael")
     public String chatWithKael(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            @Parameter(
                 description = "MessageDTO que contiene memoryId y message para chatear con Kael. " +
                               "Usa el mismo memoryId para continuar una conversación previa.",
                 required = true,
