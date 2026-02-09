@@ -17,6 +17,8 @@ public class RoutineResponseDto {
     
     private Long userId;
     
+    private String message;
+
     private String description;
     
     @JsonProperty("trainingDays")
@@ -34,12 +36,12 @@ public class RoutineResponseDto {
     // Constructors
     
     public RoutineResponseDto() {}
-    
-    public RoutineResponseDto(Long id, Long userId, String description, Integer trainingDays,
-                             Boolean isActive, LocalDateTime createdAt, LocalDateTime updatedAt, 
-                             List<RoutineDayDto> days) {
+
+    public RoutineResponseDto(Long id, Long userId, String message, String description, Integer trainingDays,
+            Boolean isActive, LocalDateTime createdAt, LocalDateTime updatedAt, List<RoutineDayDto> days) {
         this.id = id;
         this.userId = userId;
+        this.message = message;
         this.description = description;
         this.trainingDays = trainingDays;
         this.isActive = isActive;
@@ -47,9 +49,7 @@ public class RoutineResponseDto {
         this.updatedAt = updatedAt;
         this.days = days;
     }
-    
-    // Getters and Setters
-    
+
     public Long getId() {
         return id;
     }
@@ -64,6 +64,14 @@ public class RoutineResponseDto {
     
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
     
     public String getDescription() {

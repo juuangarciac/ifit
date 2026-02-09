@@ -27,6 +27,8 @@ import com.uca.juangarcia.ifit.modules.training.repository.RoutineRepository;
 import com.uca.juangarcia.ifit.modules.user.model.AppUser;
 import com.uca.juangarcia.ifit.modules.user.repository.AppUserRepository;
 
+import io.swagger.v3.core.util.Json;
+
 /**
  * Servicio para la gestión de rutinas de entrenamiento.
  * 
@@ -325,7 +327,7 @@ public class RoutineService {
         return routineRepository.countByUserIdAndIsActive(userId, true);
     }
 
-        /**
+    /**
      * Genera una rutina personalizada basada en las respuestas del cuestionario.
      * 
      * @param userId ID del usuario (usado para memoryId en Ronnie)
@@ -333,9 +335,14 @@ public class RoutineService {
      * @return JSON string con la rutina generada por Ronnie
      * @throws RuntimeException si hay error obteniendo el resumen o generando la rutina
      */
-    public String generateRoutine(String userId, Long responseId) {
+    public RoutineResponseDto generateRoutine(String userId, Long responseId) {
         logger.info("Starting routine generation for userId: {}, responseId: {}", userId, responseId);
         
+        if (userId == null || userId.isBlank())
+                    throw new IllegalArgumentException("El userId no puede ser nulo o vacío");
+               
+        if (responseId == null)
+            throw new IllegalArgumentException("El responseId no puede ser nulo");
         // 1. Obtener resumen del cuestionario
         QuestionnaireResponseSummaryDTO summary = questionnaireService.getResponseSummary(responseId);
         
@@ -354,10 +361,15 @@ public class RoutineService {
         
         // 4. Llamar a Ronnie para generar la rutina
         String routineJson = ronnieClient.generateRoutine(memoryId, prompt);
-        
+        routineJson = Json.pretty(routineJson);
+
+        // 5. Convertir JSON a DTO de respuesta
+        RoutineResponseDto routineResponseDto = routineMapper.ronnieJsonToRoutineResponseDto(routineJson);
+        routineResponseDto.setUserId(Long.parseLong(userId)); // Asignar userId al DTO
+
         logger.info("Routine generated successfully for userId: {}", userId);
         
-        return routineJson;
+        return routineResponseDto;
     }
     
     /**

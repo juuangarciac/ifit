@@ -531,55 +531,20 @@ public class RoutineController {
         )
     })
     @PostMapping(value = "/generate", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> generateRoutine(
+    public ResponseEntity<RoutineResponseDto> generateRoutine(
             @Parameter(
                 description = "Objeto con userId y responseId para generar la rutina personalizada",
                 required = true,
                 content = @Content(schema = @Schema(implementation = GenerateRoutineRequestDTO.class))
             )
             @Valid @RequestBody GenerateRoutineRequestDTO request) {
-        
-        logger.info("Received routine generation request: {}", request);
-        
-        try {
-            // Validar que la petición tenga los datos necesarios
-            if (request.getUserId() == null || request.getUserId().isBlank()) {
-                logger.warn("Invalid request: userId is null or blank");
-                return ResponseEntity.badRequest()
-                    .body("{\"error\": \"userId is required\"}");
-            }
-            
-            if (request.getResponseId() == null) {
-                logger.warn("Invalid request: responseId is null");
-                return ResponseEntity.badRequest()
-                    .body("{\"error\": \"responseId is required\"}");
-            }
-            
-            // Generar la rutina
-            String routineJson = routineService.generateRoutine(
-                request.getUserId(),
-                request.getResponseId()
-            );
-            
-            logger.info("Routine generated successfully for userId: {}", request.getUserId());
-            
+                
             // Devolver el JSON directamente
             return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(routineJson);
-            
-        } catch (RuntimeException e) {
-            logger.error("Error generating routine for userId: {}, responseId: {}", 
-                        request.getUserId(), request.getResponseId(), e);
-            
-            // Determinar el tipo de error y devolver respuesta apropiada
-            if (e.getMessage().contains("not found")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("{\"error\": \"" + e.getMessage() + "\"}");
-            }
-            
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("{\"error\": \"Failed to generate routine: " + e.getMessage() + "\"}");
-        }
+                .body(routineService.generateRoutine(
+                    request.getUserId(),
+                    request.getResponseId()
+                ));
     }
 }
