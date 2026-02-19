@@ -13,6 +13,7 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.ollama.OllamaChatModel;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
@@ -38,6 +39,7 @@ public class ChatLanguageModelConfiguration {
                 .baseUrl(ollamaBaseUrl)
                 .modelName(modelName)
                 .timeout(Duration.ofSeconds(timeout))
+                .responseFormat(ResponseFormat.JSON)
                 .temperature(0.7)  // Creatividad del modelo (0.0 = determinista, 1.0 = muy creativo)
                 .build();
     }
