@@ -1,4 +1,4 @@
-package com.ifit.ronnie.controller.DTO;
+package com.ifit.ronnie.controller.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 
 @Schema(description = "DTO de request/response para chatear con un modelo de AI")
 public class MessageDTO {
-    
+
     /**
      * Id de memoria con el que se identifica una conversación en la base de datos
      */

@@ -7,9 +7,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ifit.ronnie.controller.DTO.MessageDTO;
-import com.ifit.ronnie.model.Routine;
-import com.ifit.ronnie.model.RoutineResponse;
+import com.ifit.ronnie.controller.dto.MessageDTO;
+import com.ifit.ronnie.controller.dto.routine.RonnieRoutineResponseDTO;
 import com.ifit.ronnie.service.Ronnie;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -57,10 +56,11 @@ public class RonnieController {
                         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
         })
         @PostMapping("/generate-routine")
-        public ResponseEntity<RoutineResponse> generateRoutine(
+        public ResponseEntity<RonnieRoutineResponseDTO> generateRoutine(
                         @Parameter(description = "MessageDTO que contiene memoryId y message con los datos del cuestionario para generar la rutina. Usa el mismo memoryId para mantener el contexto de la conversación.", required = true, content = @Content(schema = @Schema(implementation = MessageDTO.class))) @Valid @RequestBody MessageDTO messageDto) {
 
-                RoutineResponse routineResponse = ronnie.generateRoutine(messageDto.getMemoryId(), messageDto.getMessage());
+                RonnieRoutineResponseDTO routineResponse = ronnie.generateRoutine(messageDto.getMemoryId(),
+                                messageDto.getMessage());
                 return ResponseEntity.ok(routineResponse);
         }
 }

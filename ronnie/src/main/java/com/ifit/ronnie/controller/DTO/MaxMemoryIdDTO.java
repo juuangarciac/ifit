@@ -1,5 +1,4 @@
-package com.ifit.ronnie.controller.DTO;
-
+package com.ifit.ronnie.controller.dto;
 
 public class MaxMemoryIdDTO {
     private Integer maxMemoryId;
