@@ -37,19 +37,16 @@ public class RoutineExercise {
     @JoinColumn(name = "routine_day_id", nullable = false)
     private RoutineDay routineDay;
     
-    @Column(name = "exercise_id", nullable = false, length = 100)
-    private String exerciseId;
-    
     @Column(name = "exercise_name", nullable = false, length = 255)
     private String exerciseName;
     
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Integer sets;
     
-    @Column(nullable = false, length = 50)
+    @Column(nullable = true, length = 50)
     private String reps;
     
-    @Column(name = "rest_seconds", nullable = false)
+    @Column(name = "rest_seconds", nullable = true)
     private Integer restSeconds;
     
     @Column(length = 1000)
@@ -62,15 +59,12 @@ public class RoutineExercise {
     
     public RoutineExercise() {}
     
-    public RoutineExercise(RoutineDay routineDay, String exerciseId, String exerciseName, 
-                          Integer sets, String reps, Integer restSeconds, String notes) {
+    public RoutineExercise(RoutineDay routineDay, String exerciseName, Integer sets, String reps, Integer restSeconds) {
         this.routineDay = routineDay;
-        this.exerciseId = exerciseId;
         this.exerciseName = exerciseName;
         this.sets = sets;
         this.reps = reps;
         this.restSeconds = restSeconds;
-        this.notes = notes;
     }
     
     // Getters and Setters
@@ -89,14 +83,6 @@ public class RoutineExercise {
     
     public void setRoutineDay(RoutineDay routineDay) {
         this.routineDay = routineDay;
-    }
-    
-    public String getExerciseId() {
-        return exerciseId;
-    }
-    
-    public void setExerciseId(String exerciseId) {
-        this.exerciseId = exerciseId;
     }
     
     public String getExerciseName() {
@@ -174,8 +160,7 @@ public class RoutineExercise {
     
     @Override
     public String toString() {
-        return "RoutineExercise [id=" + id + ", exerciseId=" + exerciseId + 
-               ", exerciseName=" + exerciseName + ", sets=" + sets + ", reps=" + reps + 
+        return "RoutineExercise [id=" + id + ", exerciseName=" + exerciseName + ", sets=" + sets + ", reps=" + reps + 
                ", restSeconds=" + restSeconds + "]";
     }
 }
