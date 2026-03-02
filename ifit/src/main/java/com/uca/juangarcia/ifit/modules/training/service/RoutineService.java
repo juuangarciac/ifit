@@ -14,7 +14,7 @@ import com.uca.juangarcia.ifit.exception.dto.UserIdNotFoundException;
 import com.uca.juangarcia.ifit.modules.questionnaire.dto.AnswerDTO;
 import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireResponseSummaryDTO;
 import com.uca.juangarcia.ifit.modules.questionnaire.service.QuestionnaireService;
-import com.uca.juangarcia.ifit.modules.training.client.RonnieClient;
+import com.uca.juangarcia.ifit.modules.training.client.IFitAIClient;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.CreateRoutineRequestDto;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.RoutineResponseDto;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.UpdateRoutineRequestDto;
@@ -62,7 +62,7 @@ public class RoutineService {
     private final RoutineMapper routineMapper;
     private final RoutineDayMapper dayMapper;
     private final QuestionnaireService questionnaireService;
-    private final RonnieClient ronnieClient;
+    private final IFitAIClient aiClient;
 
     /**
      * Constructor con inyección de dependencias.
@@ -72,13 +72,13 @@ public class RoutineService {
             AppUserRepository userRepository,
             RoutineMapper routineMapper,
             RoutineDayMapper dayMapper, QuestionnaireService questionnaireService,
-            RonnieClient ronnieClient) {
+            IFitAIClient aiClient) {
         this.routineRepository = routineRepository;
         this.userRepository = userRepository;
         this.routineMapper = routineMapper;
         this.dayMapper = dayMapper;
         this.questionnaireService = questionnaireService;
-        this.ronnieClient = ronnieClient;
+        this.aiClient = aiClient;
     }
 
     /**
@@ -110,7 +110,6 @@ public class RoutineService {
                 routine.addDay(day);
             });
         }
-
         // Guardar rutina
         Routine savedRoutine = routineRepository.save(routine);
 
@@ -334,10 +333,11 @@ public class RoutineService {
      * @param userId     ID del usuario (usado para memoryId en Ronnie)
      * @param responseId ID de la respuesta del cuestionario completado
      * @return JSON string con la rutina generada por Ronnie
+     * @throws UserIdNotFoundException 
      * @throws RuntimeException si hay error obteniendo el resumen o generando la
      *                          rutina
      */
-    public RoutineResponseDto generateRoutine(String userId, Long responseId) {
+    public RoutineResponseDto generateRoutine(String userId, Long responseId) throws UserIdNotFoundException {
         logger.info("Starting routine generation for userId: {}, responseId: {}", userId, responseId);
 
         if (userId == null || userId.isBlank())
@@ -345,24 +345,34 @@ public class RoutineService {
 
         if (responseId == null)
             throw new IllegalArgumentException("El responseId no puede ser nulo");
-        // 1. Obtener resumen del cuestionario
+
+        // 1. Obtener perfil del usuario y respuestas al cuestionario
+        AppUser user = userRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new UserIdNotFoundException(Long.parseLong(userId)));
+
+
         QuestionnaireResponseSummaryDTO summary = questionnaireService.getResponseSummary(responseId);
 
         logger.debug("Retrieved questionnaire summary: {} answers", summary.getAnswers().size());
 
         // 2. Construir el prompt personalizado
-        String prompt = buildRoutinePrompt(summary);
+        String prompt = buildRoutinePrompt(user, summary);
 
         logger.debug("Prompt built successfully. Length: {} characters", prompt.length());
 
-        // 3. Generar memoryId a partir del userId
-        // Convertir el userId (String) a un int para usarlo como memoryId
-        int memoryId = generateMemoryId(userId);
+        // 3. Obtener memoryId
+        int memoryId = aiClient.getMaxMemoryId().getMaxMemoryId(); // Incrementar el max memoryId para obtener uno nuevo
 
         logger.debug("Generated memoryId: {} from userId: {}", memoryId, userId);
 
         // 4. Llamar a Ronnie para generar la rutina
-        RoutineResponseDto routineResponseDto = ronnieClient.generateRoutine(memoryId, prompt);
+        RoutineResponseDto routineResponseDto = aiClient.generateRoutine(
+            memoryId, 
+            user.getCoachModelType()
+                .getName()
+                .toLowerCase()
+            , prompt);
+            
         routineResponseDto.setUserId(Long.parseLong(userId)); // Asignar userId al DTO
 
         logger.info("Routine generated successfully for userId: {}", userId);
@@ -371,73 +381,39 @@ public class RoutineService {
     }
 
     /**
-     * Construye un prompt detallado para el coach de IA basado en las respuestas
-     * del cuestionario.
+     * Construye un prompt personalizado para Ronnie basado en el perfil del usuario y las
+     * respuestas al cuestionario.
      * 
-     * Este método replica la lógica del método BuildRoutinePrompt de C#, adaptado a
-     * Java.
-     * El prompt incluye:
-     * - Perfil del usuario
-     * - Todas las respuestas del cuestionario con detalles
-     * - Instrucciones específicas para generar la rutina
-     * 
-     * @param summary Resumen completo de respuestas del cuestionario
-     * @return String con el prompt formateado
+     * @param user
+     * @param summary
+     * @return
+     * @throws UserIdNotFoundException
      */
-    private String buildRoutinePrompt(QuestionnaireResponseSummaryDTO summary) {
-        StringBuilder promptBuilder = new StringBuilder();
+    private String buildRoutinePrompt(AppUser user, QuestionnaireResponseSummaryDTO summary) throws UserIdNotFoundException {
+    
+        StringBuilder sb = new StringBuilder();
 
-        // Introducción del prompt
-        promptBuilder.append(
-                "Por favor, genera una rutina de entrenamiento personalizada basada en la siguiente información del usuario:\n");
-        promptBuilder.append("\n");
+        sb.append("PERFIL DEL USUARIO:\n");
+        sb.append("Usuario: ").append(summary.getUserName()).append("\n");
+        sb.append("Nivel de experiencia: ")
+            .append(user.getExperienceLevel().getName())
+            .append(" - ")
+            .append(user.getExperienceLevel().getDescription())
+            .append("\n");
 
-        // Información del usuario del cuestionario
-        promptBuilder.append("=== PERFIL DEL USUARIO ===\n");
-        promptBuilder.append("Usuario: ").append(summary.getUserName()).append("\n");
-        promptBuilder.append("Cuestionario: ").append(summary.getQuestionnaireName()).append("\n");
-        promptBuilder.append("\n");
+        sb.append("Cuestionario: ").append(summary.getQuestionnaireName()).append("\n\n");
 
-        // Respuestas del cuestionario
-        promptBuilder.append("=== RESPUESTAS AL CUESTIONARIO ===\n");
+        sb.append("RESPUESTAS AL CUESTIONARIO:\n");
         for (AnswerDTO answer : summary.getAnswers()) {
-            promptBuilder.append("• ").append(answer.getQuestionText()).append("\n");
-            promptBuilder.append("  Respuesta: ").append(answer.getSelectedOption()).append("\n");
+            sb.append("- ").append(answer.getQuestionText()).append("\n");
+            sb.append("  Respuesta: ").append(answer.getSelectedOption()).append("\n");
 
-            // Incluir texto adicional si existe
             if (answer.getAdditionalText() != null && !answer.getAdditionalText().isBlank()) {
-                promptBuilder.append("  Detalles: ").append(answer.getAdditionalText()).append("\n");
+                sb.append("  Detalle: ").append(answer.getAdditionalText()).append("\n");
             }
-
-            promptBuilder.append("\n");
+            sb.append("\n");
         }
 
-        // Instrucciones específicas para el coach
-        promptBuilder.append("=== INSTRUCCIONES ===\n");
-        promptBuilder.append("Con base en esta información, por favor genera una rutina que incluya:\n");
-        promptBuilder.append("1. Planificación semanal completa (días de entrenamiento y descanso)\n");
-        promptBuilder.append("2. Ejercicios específicos para cada día\n");
-        promptBuilder.append("3. Series, repeticiones y/o duración de cada ejercicio\n");
-        promptBuilder.append("4. Consideraciones especiales (calentamiento, enfriamiento, progresión)\n");
-        promptBuilder.append("5. Recomendaciones adicionales según el perfil del usuario\n");
-        promptBuilder.append("\n");
-        promptBuilder.append("Adapta la rutina al nivel de experiencia, objetivos y disponibilidad del usuario.\n");
-
-        return promptBuilder.toString();
-    }
-
-    /**
-     * Genera un memoryId único basado en el userId.
-     * 
-     * El memoryId se usa en Ronnie para mantener el contexto de conversación.
-     * Usamos el hashCode del userId para generar un int único pero reproducible.
-     * 
-     * @param userId ID del usuario (String)
-     * @return int que representa el memoryId
-     */
-    private int generateMemoryId(String userId) {
-        // Usar hashCode() para convertir el String userId a int
-        // Esto garantiza que el mismo userId siempre genere el mismo memoryId
-        return Math.abs(userId.hashCode());
+        return sb.toString();
     }
 }

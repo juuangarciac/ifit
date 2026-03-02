@@ -501,7 +501,6 @@ public class RoutineController {
                                     "description": "Trabajamos en pecho, hombros y tríceps...",
                                     "exercises": [
                                         {
-                                            "exerciseId": "push_ups_001",
                                             "exerciseName": "Flexiones de pecho",
                                             "sets": 3,
                                             "reps": "8-12",
@@ -537,7 +536,7 @@ public class RoutineController {
                 required = true,
                 content = @Content(schema = @Schema(implementation = GenerateRoutineRequestDTO.class))
             )
-            @Valid @RequestBody GenerateRoutineRequestDTO request) {
+            @Valid @RequestBody GenerateRoutineRequestDTO request) throws UserIdNotFoundException {
                 
             // Devolver el JSON directamente
             return ResponseEntity.ok()

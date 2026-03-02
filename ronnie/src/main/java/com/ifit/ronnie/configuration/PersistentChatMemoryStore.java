@@ -7,10 +7,10 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.ifit.ronnie.mapper.ChatMessageMapper;
-import com.ifit.ronnie.model.Message;
-import com.ifit.ronnie.repository.MessageTypeRepository;
-import com.ifit.ronnie.repository.MessageRepository;
+import com.ifit.ronnie.modules.message.mapper.ChatMessageMapper;
+import com.ifit.ronnie.modules.message.model.Message;
+import com.ifit.ronnie.modules.message.repository.MessageRepository;
+import com.ifit.ronnie.modules.message.repository.MessageTypeRepository;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;

@@ -25,7 +25,6 @@ public class RoutineExerciseMapper {
         
         return new RoutineExerciseDto(
             exercise.getId(),
-            exercise.getExerciseId(),
             exercise.getExerciseName(),
             exercise.getSets(),
             exercise.getReps(),
@@ -46,7 +45,7 @@ public class RoutineExerciseMapper {
         
         RoutineExercise exercise = new RoutineExercise();
         exercise.setId(dto.getId());
-        exercise.setExerciseId(dto.getExerciseId());
+
         exercise.setExerciseName(dto.getExerciseName());
         exercise.setSets(dto.getSets());
         exercise.setReps(dto.getReps());
@@ -64,8 +63,7 @@ public class RoutineExerciseMapper {
         if (exercise == null || dto == null) {
             return;
         }
-        
-        exercise.setExerciseId(dto.getExerciseId());
+
         exercise.setExerciseName(dto.getExerciseName());
         exercise.setSets(dto.getSets());
         exercise.setReps(dto.getReps());

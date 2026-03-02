@@ -40,7 +40,7 @@ public class ChatLanguageModelConfiguration {
                 .modelName(modelName)
                 .timeout(Duration.ofSeconds(timeout))
                 .responseFormat(ResponseFormat.JSON)
-                .temperature(0.7)  // Creatividad del modelo (0.0 = determinista, 1.0 = muy creativo)
+                .temperature(0.1)
                 .build();
     }
 
@@ -66,19 +66,20 @@ public class ChatLanguageModelConfiguration {
     EmbeddingStoreIngestor.ingest(document, embeddingStore);
     
     return EmbeddingStoreContentRetriever.from(embeddingStore);
-}
+    }
 
     @Bean("ronnieEmbeddingStoreContentRetriever")
-        ContentRetriever ronnieEmbeddingStoreContentRetriever(){
-        Document document = FileSystemDocumentLoader.loadDocument("src/main/resources/langchain4j/assistants-personality/ronnie.txt", new TextDocumentParser());
+    ContentRetriever ronnieEmbeddingStoreContentRetriever(){
+        Document personality = FileSystemDocumentLoader.loadDocument("src/main/resources/langchain4j/assistants-personality/ronnie.txt", new TextDocumentParser());
         
         InMemoryEmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
-        EmbeddingStoreIngestor.ingest(document, embeddingStore);
+        EmbeddingStoreIngestor.ingest(personality, embeddingStore);
         
-        document = FileSystemDocumentLoader.loadDocument("src/main/resources/excercises.csv", new TextDocumentParser());
-        EmbeddingStoreIngestor.ingest(document, embeddingStore);
-        
-        return EmbeddingStoreContentRetriever.from(embeddingStore);
+        return EmbeddingStoreContentRetriever.builder()
+                .embeddingStore(embeddingStore)
+                .maxResults(5)
+                .minScore(0.6)
+                .build();
     }
 
     @Bean("serenaEmbeddingStoreContentRetriever")

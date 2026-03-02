@@ -121,7 +121,6 @@ public RoutineResponseDto ronnieJsonToRoutineResponseDto(String ronnieJson) {
             
             for (JsonNode exerciseNode : exercisesNode) {
                 RoutineExerciseDto exerciseDto = new RoutineExerciseDto();
-                exerciseDto.setExerciseId(exerciseNode.get("exerciseId").asText());
                 exerciseDto.setExerciseName(exerciseNode.get("exerciseName").asText());
                 exerciseDto.setSets(exerciseNode.get("sets").asInt());
                 exerciseDto.setReps(exerciseNode.get("reps").asText());
