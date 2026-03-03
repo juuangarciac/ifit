@@ -5,7 +5,7 @@ import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.spring.AiService;
 import dev.langchain4j.service.spring.AiServiceWiringMode;
 
-@AiService(wiringMode = AiServiceWiringMode.EXPLICIT, chatModel = "ollamaModel", chatMemoryProvider = "messageWindowChatMemory", contentRetriever = "ronnieEmbeddingStoreContentRetriever")
+@AiService(wiringMode = AiServiceWiringMode.EXPLICIT, chatModel = "groqChatLanguageModel", chatMemoryProvider = "messageWindowChatMemory", contentRetriever = "ronnieEmbeddingStoreContentRetriever")
 public interface RonnieService {
     String chat(@MemoryId int memoryId, @UserMessage String userMessage);
 }

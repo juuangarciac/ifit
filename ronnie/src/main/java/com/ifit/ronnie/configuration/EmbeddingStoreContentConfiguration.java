@@ -1,10 +1,5 @@
 package com.ifit.ronnie.configuration;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.Duration;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,38 +10,14 @@ import dev.langchain4j.data.document.parser.TextDocumentParser;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.request.ResponseFormat;
-import dev.langchain4j.model.ollama.OllamaChatModel;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 
+
 @Configuration
-public class ChatLanguageModelConfiguration {
-
-    /* Ollama Model configurations */
-    @Value("${ollama.base-url}")
-    private String ollamaBaseUrl;
-
-    @Value("${ollama.model-name}")
-    private String modelName;
-
-    @Value("${ollama.timeout:120}")
-    private int timeout;
-
-    @Bean("ollamaModel")
-    ChatLanguageModel ollamaChatLanguageModel(){
-        return OllamaChatModel.builder()
-                .baseUrl(ollamaBaseUrl)
-                .modelName(modelName)
-                .timeout(Duration.ofSeconds(timeout))
-                .responseFormat(ResponseFormat.JSON)
-                .temperature(0.3)
-                .build();
-    }
-
+public class EmbeddingStoreContentConfiguration {
     /* ChatMemoryProvider configurations */
     @Value("${chat.memory.max-messages}")
     private int maxMessages;
@@ -104,5 +75,4 @@ public class ChatLanguageModelConfiguration {
 
     return EmbeddingStoreContentRetriever.from(embeddingStore);
     }
-    
 }
