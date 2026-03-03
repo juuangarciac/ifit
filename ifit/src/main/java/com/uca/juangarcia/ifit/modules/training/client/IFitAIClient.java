@@ -18,6 +18,7 @@ import com.uca.juangarcia.ifit.modules.training.client.dto.IFitAIRoutineResponse
 import com.uca.juangarcia.ifit.modules.training.controller.dto.RonnieMessageDTO;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.RoutineResponseDto;
 
+
 /**
  * Cliente HTTP para comunicarse con el microservicio Ronnie.
  * 
@@ -46,8 +47,8 @@ public class IFitAIClient {
      * @return JSON string con la rutina generada
      * @throws RuntimeException si hay error en la comunicación
      */
-    public RoutineResponseDto generateRoutine(int memoryId, String coachName, String prompt) {
-        String url = ronnieBaseUrl + "/" + coachName + "/generate-routine";
+    public RoutineResponseDto generateRoutine(int memoryId, String prompt) {
+        String url = ronnieBaseUrl + "/master/generate-routine";
 
         logger.debug("Calling Ronnie service at: {}", url);
         logger.debug("MemoryId: {}, Prompt length: {} characters", memoryId, prompt.length());

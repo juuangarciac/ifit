@@ -1,0 +1,648 @@
+{
+   "beginner":[
+      {
+         "exerciseName":"Sentadilla con peso corporal",
+         "sets":3,
+         "reps":15,
+         "restSeconds":60,
+         "notes":"Mantén la espalda recta y las rodillas alineadas con los pies. Ideal para aprender el patrón de movimiento básico.",
+         "orderIndex":1
+      },
+      {
+         "exerciseName":"Flexiones de rodillas",
+         "sets":3,
+         "reps":10,
+         "restSeconds":60,
+         "notes":"Versión modificada de la flexión. Perfecta para desarrollar fuerza en pecho y tríceps desde cero.",
+         "orderIndex":2
+      },
+      {
+         "exerciseName":"Plancha estática (30s)",
+         "sets":3,
+         "reps":1,
+         "restSeconds":45,
+         "notes":"Apoya en antebrazos. Cuerpo recto como tabla. Activa el core sin impacto articular.",
+         "orderIndex":3
+      },
+      {
+         "exerciseName":"Puente de glúteos",
+         "sets":3,
+         "reps":15,
+         "restSeconds":45,
+         "notes":"Tumbado boca arriba, sube las caderas. Excelente activador de glúteos y lumbares.",
+         "orderIndex":4
+      },
+      {
+         "exerciseName":"Marcha en el sitio",
+         "sets":3,
+         "reps":20,
+         "restSeconds":30,
+         "notes":"Levanta rodillas al ritmo moderado. Calentamiento cardiovascular ideal para principiantes.",
+         "orderIndex":5
+      },
+      {
+         "exerciseName":"Zancada estática",
+         "sets":3,
+         "reps":10,
+         "restSeconds":60,
+         "notes":"Da un paso largo y baja la rodilla trasera. Trabaja cuádriceps y equilibrio.",
+         "orderIndex":6
+      },
+      {
+         "exerciseName":"Superman (extensión lumbar)",
+         "sets":3,
+         "reps":12,
+         "restSeconds":45,
+         "notes":"Tumbado boca abajo, eleva brazos y piernas. Fortalece la cadena posterior baja.",
+         "orderIndex":7
+      },
+      {
+         "exerciseName":"Elevación de talones de pie",
+         "sets":3,
+         "reps":20,
+         "restSeconds":30,
+         "notes":"Sube y baja sobre la punta de los pies. Trabaja gastrocnemio y sóleo.",
+         "orderIndex":8
+      },
+      {
+         "exerciseName":"Curl de bíceps con mancuernas ligeras",
+         "sets":3,
+         "reps":15,
+         "restSeconds":60,
+         "notes":"Usa peso que permitas 15 reps limpias. Controla la bajada (excéntrico).",
+         "orderIndex":9
+      },
+      {
+         "exerciseName":"Press de hombros sentado",
+         "sets":3,
+         "reps":12,
+         "restSeconds":60,
+         "notes":"Empuja las mancuernas hacia arriba sin arquear la espalda. Trabaja deltoides.",
+         "orderIndex":10
+      },
+      {
+         "exerciseName":"Remo con mancuerna a una mano",
+         "sets":3,
+         "reps":12,
+         "restSeconds":60,
+         "notes":"Apóyate en un banco. Lleva el codo hacia atrás. Activa dorsal y romboides.",
+         "orderIndex":11
+      },
+      {
+         "exerciseName":"Extensión de tríceps sobre la cabeza",
+         "sets":3,
+         "reps":12,
+         "restSeconds":60,
+         "notes":"Con mancuerna ligera. Mantén los codos fijos. No arquees la espalda.",
+         "orderIndex":12
+      },
+      {
+         "exerciseName":"Abducción lateral de cadera tumbado",
+         "sets":3,
+         "reps":15,
+         "restSeconds":45,
+         "notes":"Eleva la pierna estirada hacia el lado. Activa glúteo medio y tensor fascia lata.",
+         "orderIndex":13
+      },
+      {
+         "exerciseName":"Crunch abdominal",
+         "sets":3,
+         "reps":20,
+         "restSeconds":45,
+         "notes":"Eleva solo los hombros del suelo. No tires del cuello. Exhala al subir.",
+         "orderIndex":14
+      },
+      {
+         "exerciseName":"Sentadilla con silla",
+         "sets":3,
+         "reps":12,
+         "restSeconds":60,
+         "notes":"Usa la silla como guía. Perfecto para adultos mayores o muy principiantes.",
+         "orderIndex":15
+      },
+      {
+         "exerciseName":"Flexión de pecho en pared",
+         "sets":3,
+         "reps":15,
+         "restSeconds":45,
+         "notes":"La versión más fácil de la flexión. Ideal para empezar a desarrollar fuerza en empuje.",
+         "orderIndex":16
+      },
+      {
+         "exerciseName":"Paso lateral con banda elástica",
+         "sets":3,
+         "reps":15,
+         "restSeconds":45,
+         "notes":"Con banda en tobillos, da pasos laterales. Activa glúteo medio y estabilizadores.",
+         "orderIndex":17
+      },
+      {
+         "exerciseName":"Rotación de hombros con banda",
+         "sets":3,
+         "reps":15,
+         "restSeconds":30,
+         "notes":"Mejora la movilidad y calienta el manguito rotador antes de entrenar.",
+         "orderIndex":18
+      },
+      {
+         "exerciseName":"Elevación de piernas tumbado",
+         "sets":3,
+         "reps":12,
+         "restSeconds":45,
+         "notes":"Espalda baja pegada al suelo. Eleva las piernas sin que toquen. Core y flexores de cadera.",
+         "orderIndex":19
+      },
+      {
+         "exerciseName":"Caminar en cinta o al aire libre (30 min)",
+         "sets":1,
+         "reps":1,
+         "restSeconds":0,
+         "notes":"Cardio base de bajo impacto. Construye resistencia aeróbica de forma gradual.",
+         "orderIndex":20
+      },
+      {
+         "exerciseName":"Sentadilla lateral",
+         "sets":3,
+         "reps":10,
+         "restSeconds":60,
+         "notes":"Da un paso al lado y dobla esa rodilla. Trabaja aductores, abductores y cuádriceps.",
+         "orderIndex":21
+      },
+      {
+         "exerciseName":"Press de pecho con mancuernas en banco",
+         "sets":3,
+         "reps":12,
+         "restSeconds":60,
+         "notes":"Controla el descenso. Usa peso ligero para aprender el rango de movimiento completo.",
+         "orderIndex":22
+      },
+      {
+         "exerciseName":"Extensión de cuádriceps en máquina",
+         "sets":3,
+         "reps":15,
+         "restSeconds":60,
+         "notes":"Ajusta bien el pivote. Sube despacio, baja más despacio. Sin peso excesivo al inicio.",
+         "orderIndex":23
+      },
+      {
+         "exerciseName":"Curl femoral en máquina",
+         "sets":3,
+         "reps":15,
+         "restSeconds":60,
+         "notes":"Trabaja los isquiotibiales de forma aislada. Básico y seguro para principiantes.",
+         "orderIndex":24
+      },
+      {
+         "exerciseName":"Remo en máquina (cable bajo)",
+         "sets":3,
+         "reps":12,
+         "restSeconds":60,
+         "notes":"Espalda recta, tira hacia el ombligo. Ideal para aprender el patrón de jalón horizontal.",
+         "orderIndex":25
+      },
+      {
+         "exerciseName":"Jalón al pecho en polea",
+         "sets":3,
+         "reps":12,
+         "restSeconds":60,
+         "notes":"Agarre ancho. Lleva la barra a la barbilla. Trabaja dorsal y bíceps.",
+         "orderIndex":26
+      },
+      {
+         "exerciseName":"Bicicleta estática suave (20 min)",
+         "sets":1,
+         "reps":1,
+         "restSeconds":0,
+         "notes":"Cardio de bajo impacto. Resistencia baja-media. Perfecto para recuperación activa.",
+         "orderIndex":27
+      }
+   ],
+   "intermediate":[
+      {
+         "exerciseName":"Sentadilla con barra (back squat)",
+         "sets":4,
+         "reps":8,
+         "restSeconds":90,
+         "notes":"Barra sobre trapecios. Profundidad hasta muslos paralelos al suelo. Control total del movimiento.",
+         "orderIndex":1
+      },
+      {
+         "exerciseName":"Press de banca con barra",
+         "sets":4,
+         "reps":8,
+         "restSeconds":90,
+         "notes":"Agarre ligeramente más ancho que los hombros. Baja la barra al pecho con control.",
+         "orderIndex":2
+      },
+      {
+         "exerciseName":"Peso muerto convencional",
+         "sets":4,
+         "reps":6,
+         "restSeconds":120,
+         "notes":"Barra pegada a las piernas, espalda neutra, caderas en bisagra. Movimiento rey de fuerza.",
+         "orderIndex":3
+      },
+      {
+         "exerciseName":"Dominadas asistidas",
+         "sets":4,
+         "reps":8,
+         "restSeconds":90,
+         "notes":"Usa banda elástica o máquina. Trabaja dorsal, bíceps y core. Progresión hacia dominadas libres.",
+         "orderIndex":4
+      },
+      {
+         "exerciseName":"Flexiones declinadas",
+         "sets":3,
+         "reps":12,
+         "restSeconds":75,
+         "notes":"Pies elevados. Más énfasis en la parte superior del pecho y deltoides anterior.",
+         "orderIndex":5
+      },
+      {
+         "exerciseName":"Zancada caminando con mancuernas",
+         "sets":3,
+         "reps":12,
+         "restSeconds":75,
+         "notes":"Alterna piernas avanzando. Mayor demanda de equilibrio y coordinación que la estática.",
+         "orderIndex":6
+      },
+      {
+         "exerciseName":"Hip thrust con barra",
+         "sets":4,
+         "reps":10,
+         "restSeconds":90,
+         "notes":"Apoya la parte alta de la espalda en banco. Empuja con las caderas hacia arriba. Glúteo máximo.",
+         "orderIndex":7
+      },
+      {
+         "exerciseName":"Remo con barra (bent-over row)",
+         "sets":4,
+         "reps":8,
+         "restSeconds":90,
+         "notes":"Espalda inclinada ~45°. Tira hacia el abdomen. Uno de los mejores ejercicios de espalda.",
+         "orderIndex":8
+      },
+      {
+         "exerciseName":"Press militar con barra de pie",
+         "sets":4,
+         "reps":8,
+         "restSeconds":90,
+         "notes":"Empuja la barra sobre la cabeza sin arquear la zona lumbar. Fuerza total de hombros y core.",
+         "orderIndex":9
+      },
+      {
+         "exerciseName":"Sentadilla búlgara",
+         "sets":3,
+         "reps":10,
+         "restSeconds":90,
+         "notes":"Pie trasero elevado en banco. Mayor rango de movimiento y trabajo unilateral de pierna.",
+         "orderIndex":10
+      },
+      {
+         "exerciseName":"Face pull con cable",
+         "sets":3,
+         "reps":15,
+         "restSeconds":60,
+         "notes":"Tira hacia la cara con codos elevados. Trabaja deltoides posterior y manguito rotador.",
+         "orderIndex":11
+      },
+      {
+         "exerciseName":"Plancha con desplazamiento de hombros",
+         "sets":3,
+         "reps":12,
+         "restSeconds":60,
+         "notes":"En plancha alta, toca hombro alterno. Aumenta la demanda anti-rotación del core.",
+         "orderIndex":12
+      },
+      {
+         "exerciseName":"Renegade row",
+         "sets":3,
+         "reps":8,
+         "restSeconds":75,
+         "notes":"En posición de flexión, remos alternos. Combina empuje, jalón y estabilidad de core.",
+         "orderIndex":13
+      },
+      {
+         "exerciseName":"Step-up con mancuernas",
+         "sets":3,
+         "reps":12,
+         "restSeconds":75,
+         "notes":"Sube a un banco con peso. Trabaja glúteos y cuádriceps de forma funcional.",
+         "orderIndex":14
+      },
+      {
+         "exerciseName":"Curl martillo con mancuernas",
+         "sets":3,
+         "reps":12,
+         "restSeconds":60,
+         "notes":"Agarre neutro (pulgar arriba). Trabaja braquial y braquiorradial además del bíceps.",
+         "orderIndex":15
+      },
+      {
+         "exerciseName":"Extensión de tríceps en polea alta",
+         "sets":3,
+         "reps":12,
+         "restSeconds":60,
+         "notes":"Empuja hacia abajo con los codos fijos. Contrae al final del movimiento.",
+         "orderIndex":16
+      },
+      {
+         "exerciseName":"Sentadilla goblet",
+         "sets":3,
+         "reps":12,
+         "restSeconds":75,
+         "notes":"Sostén una mancuerna o kettlebell frente al pecho. Mejora la técnica y trabaja el core.",
+         "orderIndex":17
+      },
+      {
+         "exerciseName":"Swing con kettlebell",
+         "sets":4,
+         "reps":15,
+         "restSeconds":60,
+         "notes":"Potencia de caderas, no sentadilla. Cardio + fuerza posterior. Técnica es clave.",
+         "orderIndex":18
+      },
+      {
+         "exerciseName":"Press de pecho inclinado con mancuernas",
+         "sets":4,
+         "reps":10,
+         "restSeconds":90,
+         "notes":"Mayor énfasis en pecho superior. Controla la trayectoria en arco de las mancuernas.",
+         "orderIndex":19
+      },
+      {
+         "exerciseName":"Sentadilla frontal",
+         "sets":4,
+         "reps":6,
+         "restSeconds":120,
+         "notes":"Barra en clavículas. Más demanda de movilidad y core que la sentadilla trasera.",
+         "orderIndex":20
+      },
+      {
+         "exerciseName":"Elevaciones laterales con mancuernas",
+         "sets":3,
+         "reps":15,
+         "restSeconds":60,
+         "notes":"Codos ligeramente flexionados. Sube hasta la altura del hombro. Deltoides medial.",
+         "orderIndex":21
+      },
+      {
+         "exerciseName":"Good morning con barra",
+         "sets":3,
+         "reps":10,
+         "restSeconds":90,
+         "notes":"Bisagra de cadera con barra. Isquiotibiales y lumbares bajo tensión. Carga moderada.",
+         "orderIndex":22
+      },
+      {
+         "exerciseName":"Fondos en paralelas (dips)",
+         "sets":4,
+         "reps":10,
+         "restSeconds":90,
+         "notes":"Torso inclinado para más pecho, erguido para tríceps. Progresión con lastres.",
+         "orderIndex":23
+      },
+      {
+         "exerciseName":"Remo en máquina T-bar",
+         "sets":4,
+         "reps":10,
+         "restSeconds":90,
+         "notes":"Agarre neutro o prono. Gran activador de la espalda media y baja.",
+         "orderIndex":24
+      },
+      {
+         "exerciseName":"Burpee clásico",
+         "sets":4,
+         "reps":10,
+         "restSeconds":75,
+         "notes":"Flexión + salto. Alta intensidad. Combina fuerza y cardio. Excelente metabólico.",
+         "orderIndex":25
+      },
+      {
+         "exerciseName":"Salto a cajón (box jump)",
+         "sets":4,
+         "reps":8,
+         "restSeconds":75,
+         "notes":"Aterriza con ambos pies, rodillas semiflexionadas. Potencia y coordinación de tren inferior.",
+         "orderIndex":26
+      },
+      {
+         "exerciseName":"Mountain climbers",
+         "sets":4,
+         "reps":20,
+         "restSeconds":60,
+         "notes":"En plancha alta, lleva rodillas alternamente al pecho. Cardio + core de alta demanda.",
+         "orderIndex":27
+      }
+   ],
+   "advanced":[
+      {
+         "exerciseName":"Sentadilla con pausa",
+         "sets":5,
+         "reps":5,
+         "restSeconds":180,
+         "notes":"Aguanta 2-3 segundos en el punto más bajo. Elimina el rebote y aumenta la demanda muscular.",
+         "orderIndex":1
+      },
+      {
+         "exerciseName":"Peso muerto rumano",
+         "sets":4,
+         "reps":8,
+         "restSeconds":120,
+         "notes":"Piernas casi extendidas, bisagra pura de cadera. Máxima tensión en isquiotibiales.",
+         "orderIndex":2
+      },
+      {
+         "exerciseName":"Dominadas con lastre",
+         "sets":5,
+         "reps":5,
+         "restSeconds":180,
+         "notes":"Cinturón con disco o mancuerna. Aumenta la sobrecarga progresiva del ejercicio más completo de jalón.",
+         "orderIndex":3
+      },
+      {
+         "exerciseName":"Press de banca con cadenas o bandas",
+         "sets":5,
+         "reps":5,
+         "restSeconds":180,
+         "notes":"La resistencia aumenta al subir. Desarrolla velocidad y fuerza en el recorrido completo.",
+         "orderIndex":4
+      },
+      {
+         "exerciseName":"Sentadilla olímpica (squat profundo)",
+         "sets":5,
+         "reps":4,
+         "restSeconds":180,
+         "notes":"Rodillas muy abiertas, máxima profundidad. Requiere movilidad de tobillo y cadera avanzada.",
+         "orderIndex":5
+      },
+      {
+         "exerciseName":"Clean and press (halterofilia)",
+         "sets":5,
+         "reps":3,
+         "restSeconds":180,
+         "notes":"Levanta la barra del suelo a hombros y luego sobre la cabeza en un movimiento fluido.",
+         "orderIndex":6
+      },
+      {
+         "exerciseName":"Snatch con barra",
+         "sets":5,
+         "reps":3,
+         "restSeconds":240,
+         "notes":"El levantamiento más técnico del deporte. Requiere meses de práctica técnica antes de cargar.",
+         "orderIndex":7
+      },
+      {
+         "exerciseName":"Peso muerto sumo",
+         "sets":5,
+         "reps":5,
+         "restSeconds":180,
+         "notes":"Stance amplio, agarre interior. Mayor activación de aductores y cadera que el convencional.",
+         "orderIndex":8
+      },
+      {
+         "exerciseName":"Pistol squat (sentadilla a una pierna)",
+         "sets":4,
+         "reps":5,
+         "restSeconds":120,
+         "notes":"Sentadilla completa en una sola pierna. Máxima demanda de fuerza, movilidad y equilibrio.",
+         "orderIndex":9
+      },
+      {
+         "exerciseName":"Flexión con palmada (clapping push-up)",
+         "sets":4,
+         "reps":8,
+         "restSeconds":120,
+         "notes":"Explosividad en el empuje. Desarrolla potencia en tren superior. Caída controlada.",
+         "orderIndex":10
+      },
+      {
+         "exerciseName":"L-sit en paralelas o suelo",
+         "sets":4,
+         "reps":1,
+         "restSeconds":120,
+         "notes":"Piernas extendidas suspendidas. Fuerza de compresión de core e isquiotibiales extrema.",
+         "orderIndex":11
+      },
+      {
+         "exerciseName":"Front lever (progresión)",
+         "sets":4,
+         "reps":1,
+         "restSeconds":180,
+         "notes":"Cuerpo horizontal suspendido de una barra. Requiere meses/años de progresión sistemática.",
+         "orderIndex":12
+      },
+      {
+         "exerciseName":"Handstand push-up",
+         "sets":4,
+         "reps":5,
+         "restSeconds":150,
+         "notes":"Flexión invertida contra la pared. Máxima fuerza de hombros y equilibrio invertido.",
+         "orderIndex":13
+      },
+      {
+         "exerciseName":"Dragon flag",
+         "sets":4,
+         "reps":5,
+         "restSeconds":120,
+         "notes":"Tumbado, mantén el cuerpo recto y bájalo lentamente. Core de élite. Conocido por Rocky IV.",
+         "orderIndex":14
+      },
+      {
+         "exerciseName":"Muscle-up en barra",
+         "sets":4,
+         "reps":4,
+         "restSeconds":180,
+         "notes":"Dominada explosiva que transiciona a fondos. Combina jalón y empuje en un solo gesto.",
+         "orderIndex":15
+      },
+      {
+         "exerciseName":"Sentadilla Zercher",
+         "sets":4,
+         "reps":6,
+         "restSeconds":150,
+         "notes":"Barra en el pliegue de los codos. Alta demanda de core y postura. Poco común, muy efectivo.",
+         "orderIndex":16
+      },
+      {
+         "exerciseName":"Peso muerto con barra hexagonal (trap bar)",
+         "sets":5,
+         "reps":5,
+         "restSeconds":180,
+         "notes":"Postura más vertical, menos estrés lumbar. Permite cargas máximas de forma más segura.",
+         "orderIndex":17
+      },
+      {
+         "exerciseName":"Salto de longitud con sentadilla",
+         "sets":4,
+         "reps":6,
+         "restSeconds":120,
+         "notes":"Salta lo más lejos posible y aterriza en sentadilla. Potencia explosiva y estabilización.",
+         "orderIndex":18
+      },
+      {
+         "exerciseName":"Thruster con barra",
+         "sets":4,
+         "reps":6,
+         "restSeconds":150,
+         "notes":"Sentadilla frontal + press militar en uno. Base del deporte CrossFit. Altísima demanda metabólica.",
+         "orderIndex":19
+      },
+      {
+         "exerciseName":"Farmer's walk con mancuernas pesadas",
+         "sets":4,
+         "reps":1,
+         "restSeconds":120,
+         "notes":"Camina cargando pesos máximos. Trabaja grip, trapecios, core y condicionamiento total.",
+         "orderIndex":20
+      },
+      {
+         "exerciseName":"Remo Pendlay",
+         "sets":5,
+         "reps":5,
+         "restSeconds":150,
+         "notes":"Barra parte desde el suelo en cada rep. Elimina el impulso. Fuerza pura de espalda.",
+         "orderIndex":21
+      },
+      {
+         "exerciseName":"Press de banca con agarre cerrado",
+         "sets":4,
+         "reps":6,
+         "restSeconds":150,
+         "notes":"Agarre estrecho. Tríceps como motor principal. Cuidado con la posición de muñecas.",
+         "orderIndex":22
+      },
+      {
+         "exerciseName":"Sentadilla hack con barra",
+         "sets":4,
+         "reps":6,
+         "restSeconds":150,
+         "notes":"Barra detrás de los talones. Cuádriceps extremo. Requiere movilidad y práctica técnica.",
+         "orderIndex":23
+      },
+      {
+         "exerciseName":"Peso muerto rumano unilateral con mancuernas",
+         "sets":4,
+         "reps":8,
+         "restSeconds":120,
+         "notes":"Máximo trabajo unilateral de isquios y glúteos. Equilibrio y propiocepción avanzados.",
+         "orderIndex":24
+      },
+      {
+         "exerciseName":"Fondos con lastre en paralelas",
+         "sets":5,
+         "reps":5,
+         "restSeconds":180,
+         "notes":"Más de 1.5x el peso corporal total. Solo para atletas con base sólida en fondos.",
+         "orderIndex":25
+      },
+      {
+         "exerciseName":"Sprint en cuesta (hill sprint)",
+         "sets":6,
+         "reps":1,
+         "restSeconds":120,
+         "notes":"10-15 segundos de máxima velocidad cuesta arriba. Potencia, fuerza y cardio de élite.",
+         "orderIndex":26
+      }
+   ]
+}

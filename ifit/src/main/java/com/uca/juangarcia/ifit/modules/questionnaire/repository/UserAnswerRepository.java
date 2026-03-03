@@ -39,4 +39,7 @@ public interface UserAnswerRepository extends JpaRepository<UserAnswer, Long> {
      */
     @Query("SELECT COUNT(ua) FROM UserAnswer ua WHERE ua.response.id = :responseId")
     Long countByResponseId(@Param("responseId") Long responseId);
+
+    @Query("SELECT ua FROM UserAnswer ua WHERE ua.response.id = :responseId ORDER BY ua.id DESC")
+    List<UserAnswer> findByResponseIdOrderByIdDesc(Long responseId);
 }

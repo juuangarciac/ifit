@@ -503,6 +503,61 @@ public class QuestionnaireController {
         );
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * Retrocede a la pregunta anterior en una sesión de cuestionario.
+     * Elimina la última respuesta registrada y devuelve esa pregunta de nuevo.
+     * 
+     * Endpoint: {@code POST /ifit/api/v1/questionnaires/responses/{responseId}/previous}
+     * 
+     * @param responseId ID de la sesión de cuestionario
+     * @return La pregunta anterior con sus opciones
+     */
+    @PostMapping("/responses/{responseId}/previous")
+    @Operation(
+        summary = "Volver a la pregunta anterior",
+        description = "Deshace la última respuesta registrada y devuelve esa pregunta para que el usuario pueda corregirla."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Pregunta anterior obtenida exitosamente",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = QuestionnaireResponseDTO.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "El cuestionario ya está completado o no hay preguntas anteriores",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ErrorResponse.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Sesión no encontrada",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ErrorResponse.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Error interno del servidor",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ErrorResponse.class)
+            )
+        )
+    })
+    public ResponseEntity<QuestionnaireResponseDTO> goToPreviousQuestion(
+        @PathVariable Long responseId
+    ) {
+        QuestionnaireResponseDTO response = questionnaireService.goToPreviousQuestion(responseId);
+        return ResponseEntity.ok(response);
+    }
     
     /**
      * Obtiene el resumen completo de una sesión de cuestionario.

@@ -366,12 +366,7 @@ public class RoutineService {
         logger.debug("Generated memoryId: {} from userId: {}", memoryId, userId);
 
         // 4. Llamar a Ronnie para generar la rutina
-        RoutineResponseDto routineResponseDto = aiClient.generateRoutine(
-            memoryId, 
-            user.getCoachModelType()
-                .getName()
-                .toLowerCase()
-            , prompt);
+        RoutineResponseDto routineResponseDto = aiClient.generateRoutine(memoryId, prompt);
             
         routineResponseDto.setUserId(Long.parseLong(userId)); // Asignar userId al DTO
 

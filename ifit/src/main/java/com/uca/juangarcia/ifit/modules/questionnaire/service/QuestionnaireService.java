@@ -374,6 +374,45 @@ public class QuestionnaireService {
     }
     
     /**
+     * Permite al usuario volver a la pregunta anterior en el cuestionario.
+     * @param responseId
+     * @return
+     */
+    @Transactional
+    public QuestionnaireResponseDTO goToPreviousQuestion(Long responseId) {
+        QuestionnaireResponse response = responseRepository.findById(responseId)
+            .orElseThrow(() -> new RuntimeException("Response not found: " + responseId));
+
+        if (response.getIsCompleted()) {
+            throw new IllegalStateException("Cannot go back on a completed questionnaire");
+        }
+
+        // Buscar la última respuesta registrada (ordenar por id DESC o answeredAt DESC)
+        List<UserAnswer> answers = userAnswerRepository.findByResponseIdOrderByIdDesc(responseId);
+
+        if (answers.isEmpty()) {
+            throw new IllegalStateException("Already at the first question, cannot go back");
+        }
+
+        UserAnswer lastAnswer = answers.get(0);
+        Question previousQuestion = lastAnswer.getQuestion();
+
+        // Eliminar la última respuesta para "deshacerla"
+        userAnswerRepository.delete(lastAnswer);
+
+        long remaining = userAnswerRepository.countByResponseId(responseId);
+
+        logger.info("Went back to question {} in response {}", previousQuestion.getId(), responseId);
+
+        return QuestionnaireResponseDTO.builder()
+            .responseId(responseId)
+            .currentQuestion(toQuestionDTO(previousQuestion))
+            .isCompleted(false)
+            .totalQuestionsAnswered((int) remaining)
+            .build();
+    }
+
+    /**
      * Registra la respuesta del usuario a una pregunta y devuelve la siguiente pregunta.
      * 
      * @param responseId ID de la sesión de cuestionario

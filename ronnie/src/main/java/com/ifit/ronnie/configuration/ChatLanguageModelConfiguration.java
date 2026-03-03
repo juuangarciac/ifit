@@ -1,5 +1,8 @@
 package com.ifit.ronnie.configuration;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -40,7 +43,7 @@ public class ChatLanguageModelConfiguration {
                 .modelName(modelName)
                 .timeout(Duration.ofSeconds(timeout))
                 .responseFormat(ResponseFormat.JSON)
-                .temperature(0.1)
+                .temperature(0.3)
                 .build();
     }
 
@@ -58,33 +61,21 @@ public class ChatLanguageModelConfiguration {
     }
 
     /* Personality configurations */
-    @Bean("masterEmbeddingStoreContentRetriever")
-    ContentRetriever masterEmbeddingStoreContentRetriever(){
-    Document document = FileSystemDocumentLoader.loadDocument("src/main/resources/langchain4j/assistants-personality/master.txt", new TextDocumentParser());
-    
-    InMemoryEmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
-    EmbeddingStoreIngestor.ingest(document, embeddingStore);
-    
-    return EmbeddingStoreContentRetriever.from(embeddingStore);
-    }
-
     @Bean("ronnieEmbeddingStoreContentRetriever")
     ContentRetriever ronnieEmbeddingStoreContentRetriever(){
-        Document personality = FileSystemDocumentLoader.loadDocument("src/main/resources/langchain4j/assistants-personality/ronnie.txt", new TextDocumentParser());
+        Document personality = FileSystemDocumentLoader
+        .loadDocument("src/main/resources/langchain4j/assistants-personality/ronnie.txt", new TextDocumentParser());
         
         InMemoryEmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
         EmbeddingStoreIngestor.ingest(personality, embeddingStore);
         
-        return EmbeddingStoreContentRetriever.builder()
-                .embeddingStore(embeddingStore)
-                .maxResults(5)
-                .minScore(0.6)
-                .build();
+        return EmbeddingStoreContentRetriever.from(embeddingStore);
     }
 
     @Bean("serenaEmbeddingStoreContentRetriever")
     ContentRetriever serenaEmbeddingStoreContentRetriever(){
-        Document document = FileSystemDocumentLoader.loadDocument("src/main/resources/langchain4j/assistants-personality/serena.txt", new TextDocumentParser());
+        Document document = FileSystemDocumentLoader
+            .loadDocument("src/main/resources/langchain4j/assistants-personality/serena.txt", new TextDocumentParser());
         
         InMemoryEmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
         EmbeddingStoreIngestor.ingest(document, embeddingStore);
@@ -94,7 +85,8 @@ public class ChatLanguageModelConfiguration {
 
     @Bean("eliudEmbeddingStoreContentRetriever")
     ContentRetriever eliudEmbeddingStoreContentRetriever(){
-    Document document = FileSystemDocumentLoader.loadDocument("src/main/resources/langchain4j/assistants-personality/eliud.txt", new TextDocumentParser());
+    Document document = FileSystemDocumentLoader
+        .loadDocument("src/main/resources/langchain4j/assistants-personality/eliud.txt", new TextDocumentParser());
 
     InMemoryEmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
     EmbeddingStoreIngestor.ingest(document, embeddingStore);
@@ -104,7 +96,8 @@ public class ChatLanguageModelConfiguration {
 
     @Bean("kaelEmbeddingStoreContentRetriever")
     ContentRetriever kaelEmbeddingStoreContentRetriever(){
-    Document document = FileSystemDocumentLoader.loadDocument("src/main/resources/langchain4j/assistants-personality/kael.txt", new TextDocumentParser());
+    Document document = FileSystemDocumentLoader
+        .loadDocument("src/main/resources/langchain4j/assistants-personality/kael.txt", new TextDocumentParser());
 
     InMemoryEmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
     EmbeddingStoreIngestor.ingest(document, embeddingStore);

@@ -1,12 +1,10 @@
 package com.ifit.ronnie.modules.coach.kael;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ifit.ronnie.modules.coach.dto.RoutineResponseDTO;
 import com.ifit.ronnie.modules.message.controller.dto.MessageDTO;
 import com.ifit.ronnie.modules.message.model.Message;
 
@@ -40,23 +38,5 @@ public class KaelController {
                         @Parameter(description = "MessageDTO que contiene memoryId y message para chatear con Kael. Usa el mismo memoryId para continuar una conversación previa.", required = true, content = @Content(schema = @Schema(implementation = Message.class))) @Valid @RequestBody MessageDTO messageDto) {
 
                 return kaelService.chat(messageDto.getMemoryId(), messageDto.getMessage());
-        }
-
-        @Operation(summary = "Generar rutina con Kael", description = "Genera una rutina de entrenamiento personalizada con Kael. "
-                        +
-                        "Kael analiza el cuestionario del usuario y genera una rutina estructurada " +
-                        "basada en ejercicios de su base de datos, adaptada al nivel, objetivos y disponibilidad.")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Rutina generada exitosamente", content = @Content(mediaType = "application/json", examples = @ExampleObject(value = "{\"message\": \"¡Rutina personalizada generada!\", \"routine\": {...}}"))),
-                        @ApiResponse(responseCode = "400", description = "Parámetros inválidos"),
-                        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
-        })
-        @PostMapping("/generate-routine")
-        public ResponseEntity<RoutineResponseDTO> generateRoutine(
-                        @Parameter(description = "MessageDTO que contiene memoryId y message con los datos del cuestionario para generar la rutina. Usa el mismo memoryId para mantener el contexto de la conversación.", required = true, content = @Content(schema = @Schema(implementation = MessageDTO.class))) @Valid @RequestBody MessageDTO messageDto) {
-
-                RoutineResponseDTO routineResponse = kaelService.generateRoutine(messageDto.getMemoryId(),
-                                messageDto.getMessage());
-                return ResponseEntity.ok(routineResponse);
         }
 }
