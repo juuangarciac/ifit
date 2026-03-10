@@ -546,4 +546,63 @@ public class RoutineController {
                     request.getResponseId()
                 ));
     }
+
+    @Operation(
+        summary = "Obtener día específico de una rutina",
+        description = "Retorna los detalles de un día específico de una rutina, incluyendo los ejercicios programados para ese día. " +
+                     "Útil para mostrar la información detallada del día seleccionado en la interfaz de usuario."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Día de rutina obtenido exitosamente",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = RoutineDayDto.class))
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Día de rutina no encontrado",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+        )
+    })
+    @GetMapping("/{routineId}/day/{day}")
+    public ResponseEntity<RoutineDayDto> getRoutineDayByRoutineIdAndDay(
+            @Parameter(description = "ID de la rutina", required = true)
+            @PathVariable Long routineId,
+            
+            @Parameter(description = "Número del día (1-7)", required = true)
+            @PathVariable Integer day
+    ) throws RoutineNotFoundException {
+        RoutineDayDto routineDay = routineService.getRoutineDayByRoutineIdAndDay(routineId, day);
+        return ResponseEntity.ok(routineDay);
+    }
+
+
+    @Operation(
+        summary = "Marcar día de rutina como completado",
+        description = "Marca un día específico de una rutina como completado. Esto puede ser utilizado para llevar un seguimiento del progreso del usuario y mostrar visualmente qué días han sido completados en la interfaz de usuario."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Día de rutina marcado como completado exitosamente",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = RoutineResponseDto.class))
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Día de rutina no encontrado",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+        )
+    })
+    @PostMapping("/{routineId}/day/{day}/complete")
+    public ResponseEntity<RoutineResponseDto> setRoutineDayAsCompleted(
+        @Parameter(description = "ID de la rutina", required = true)
+        @PathVariable
+        Long routineId, 
+        @Parameter(description = "Número del día a marcar como completado (1-7)", required = true)
+        @PathVariable
+        Integer day) 
+    throws RoutineNotFoundException {
+        RoutineResponseDto updatedRoutine = routineService.setRoutineDayAsCompleted(routineId, day);
+        return ResponseEntity.ok(updatedRoutine);
+    }
 }

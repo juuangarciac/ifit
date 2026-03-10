@@ -16,6 +16,7 @@ import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireResponseSu
 import com.uca.juangarcia.ifit.modules.questionnaire.service.QuestionnaireService;
 import com.uca.juangarcia.ifit.modules.training.client.IFitAIClient;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.CreateRoutineRequestDto;
+import com.uca.juangarcia.ifit.modules.training.controller.dto.RoutineDayDto;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.RoutineResponseDto;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.UpdateRoutineRequestDto;
 import com.uca.juangarcia.ifit.modules.training.exception.RoutineNotFoundException;
@@ -23,6 +24,7 @@ import com.uca.juangarcia.ifit.modules.training.mapper.RoutineDayMapper;
 import com.uca.juangarcia.ifit.modules.training.mapper.RoutineMapper;
 import com.uca.juangarcia.ifit.modules.training.model.Routine;
 import com.uca.juangarcia.ifit.modules.training.model.RoutineDay;
+import com.uca.juangarcia.ifit.modules.training.repository.RoutineDayRepository;
 import com.uca.juangarcia.ifit.modules.training.repository.RoutineRepository;
 import com.uca.juangarcia.ifit.modules.user.model.AppUser;
 import com.uca.juangarcia.ifit.modules.user.repository.AppUserRepository;
@@ -31,10 +33,10 @@ import io.swagger.v3.core.util.Json;
 
 /**
  * Servicio para la gestión de rutinas de entrenamiento.
- * 
+ *
  * <p>
- * Este servicio proporciona operaciones CRUD y funcionalidades específicas
- * para gestionar rutinas de entrenamiento, incluyendo:
+ * Este servicio proporciona operaciones CRUD y funcionalidades específicas para
+ * gestionar rutinas de entrenamiento, incluyendo:
  * <ul>
  * <li>Creación de nuevas rutinas con días y ejercicios</li>
  * <li>Búsqueda y consulta de rutinas por usuario</li>
@@ -42,11 +44,11 @@ import io.swagger.v3.core.util.Json;
  * <li>Activación/desactivación de rutinas</li>
  * <li>Eliminación de rutinas</li>
  * </ul>
- * 
+ *
  * <p>
- * Todas las operaciones de escritura se ejecutan dentro de transacciones
- * para garantizar la integridad de los datos.
- * 
+ * Todas las operaciones de escritura se ejecutan dentro de transacciones para
+ * garantizar la integridad de los datos.
+ *
  * @author Juan Garcia
  * @version 1.0
  * @since 1.0
@@ -58,6 +60,7 @@ public class RoutineService {
     private static final Logger logger = LoggerFactory.getLogger(RoutineService.class);
 
     private final RoutineRepository routineRepository;
+    private final RoutineDayRepository routineDayRepository;
     private final AppUserRepository userRepository;
     private final RoutineMapper routineMapper;
     private final RoutineDayMapper dayMapper;
@@ -69,11 +72,13 @@ public class RoutineService {
      */
     public RoutineService(
             RoutineRepository routineRepository,
+            RoutineDayRepository routineDayRepository,
             AppUserRepository userRepository,
             RoutineMapper routineMapper,
             RoutineDayMapper dayMapper, QuestionnaireService questionnaireService,
             IFitAIClient aiClient) {
         this.routineRepository = routineRepository;
+        this.routineDayRepository = routineDayRepository;
         this.userRepository = userRepository;
         this.routineMapper = routineMapper;
         this.dayMapper = dayMapper;
@@ -83,7 +88,7 @@ public class RoutineService {
 
     /**
      * Crea una nueva rutina de entrenamiento.
-     * 
+     *
      * @param requestDto datos de la rutina a crear
      * @return DTO con los datos de la rutina creada
      * @throws UserIdNotFoundException si el usuario no existe
@@ -119,7 +124,7 @@ public class RoutineService {
 
     /**
      * Obtiene todas las rutinas del sistema.
-     * 
+     *
      * @return lista de todas las rutinas
      */
     public List<RoutineResponseDto> findAllRoutines() {
@@ -130,7 +135,7 @@ public class RoutineService {
 
     /**
      * Obtiene rutinas con paginación.
-     * 
+     *
      * @param pageable configuración de paginación
      * @return página de rutinas
      */
@@ -143,7 +148,7 @@ public class RoutineService {
 
     /**
      * Obtiene una rutina por su ID.
-     * 
+     *
      * @param id identificador de la rutina
      * @return DTO con los datos de la rutina
      * @throws RoutineNotFoundException si no existe la rutina
@@ -159,7 +164,7 @@ public class RoutineService {
 
     /**
      * Obtiene todas las rutinas de un usuario específico.
-     * 
+     *
      * @param userId identificador del usuario
      * @return lista de rutinas del usuario
      * @throws UserIdNotFoundException si el usuario no existe
@@ -178,8 +183,8 @@ public class RoutineService {
 
     /**
      * Obtiene rutinas de un usuario con paginación.
-     * 
-     * @param userId   identificador del usuario
+     *
+     * @param userId identificador del usuario
      * @param pageable configuración de paginación
      * @return página de rutinas del usuario
      * @throws UserIdNotFoundException si el usuario no existe
@@ -376,25 +381,25 @@ public class RoutineService {
     }
 
     /**
-     * Construye un prompt personalizado para Ronnie basado en el perfil del usuario y las
-     * respuestas al cuestionario.
-     * 
+     * Construye un prompt personalizado para Ronnie basado en el perfil del
+     * usuario y las respuestas al cuestionario.
+     *
      * @param user
      * @param summary
      * @return
      * @throws UserIdNotFoundException
      */
     private String buildRoutinePrompt(AppUser user, QuestionnaireResponseSummaryDTO summary) throws UserIdNotFoundException {
-    
+
         StringBuilder sb = new StringBuilder();
 
         sb.append("PERFIL DEL USUARIO:\n");
         sb.append("Usuario: ").append(summary.getUserName()).append("\n");
         sb.append("Nivel de experiencia: ")
-            .append(user.getExperienceLevel().getName())
-            .append(" - ")
-            .append(user.getExperienceLevel().getDescription())
-            .append("\n");
+                .append(user.getExperienceLevel().getName())
+                .append(" - ")
+                .append(user.getExperienceLevel().getDescription())
+                .append("\n");
 
         sb.append("Cuestionario: ").append(summary.getQuestionnaireName()).append("\n\n");
 
@@ -410,5 +415,50 @@ public class RoutineService {
         }
 
         return sb.toString();
+    }
+
+    /**
+     * Obtiene un día específico de una rutina por su número de día.
+     *
+     * @param routineId
+     * @param day
+     * @return
+     * @throws RoutineNotFoundException
+     */
+    public RoutineDayDto getRoutineDayByRoutineIdAndDay(Long routineId, Integer day) throws RoutineNotFoundException {
+        logger.info("Buscando día {} de rutina con ID: {}", day, routineId);
+
+        RoutineDay routineDay = routineDayRepository.findRoutineDayByRoutineIdAndDay(routineId, day)
+                .orElseThrow(() -> new RoutineNotFoundException(
+                "Día " + day + " de rutina con ID " + routineId + " no encontrado"));
+
+        return dayMapper.toDto(routineDay);
+    }
+
+    public RoutineResponseDto setRoutineDayAsCompleted(Long routineId, Integer day) throws RoutineNotFoundException {
+
+        logger.info("Marcando día {} de rutina con ID: {} como completado", day, routineId);
+
+        Routine routine = routineRepository.findById(routineId)
+                .orElseThrow(() -> new RoutineNotFoundException("Rutina con ID " + routineId + " no encontrada"));
+
+        RoutineDay routineDay = routineDayRepository.findRoutineDayByRoutineIdAndDay(routineId, day)
+                .orElseThrow(() -> new RoutineNotFoundException(
+                "Día " + day + " de rutina con ID " + routineId + " no encontrado"));
+
+        RoutineDay maxDay = routineDayRepository.findByRoutineIdOrderByDayNumberAsc(routineId)
+                .stream()
+                .max((d1, d2) -> Integer.compare(d1.getDayNumber(), d2.getDayNumber()))
+                .orElseThrow(() -> new RoutineNotFoundException(
+                "No se encontraron días para la rutina con ID " + routineId));
+
+        if (day.equals(maxDay.getDayNumber())) {
+            routine.setCurrentDay(1);
+        } else {
+            routine.setCurrentDay(day + 1);
+        }
+        routineRepository.save(routine);
+
+        return routineMapper.toResponseDto(routine);
     }
 }
