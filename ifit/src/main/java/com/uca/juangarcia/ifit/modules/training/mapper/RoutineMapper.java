@@ -2,7 +2,9 @@ package com.uca.juangarcia.ifit.modules.training.mapper;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
@@ -47,9 +49,10 @@ public class RoutineMapper {
             routine.getDescription(),
             routine.getTrainingDays(),
             routine.isActive(),
+            routine.getCurrentDay(),
             routine.getCreatedAt(),
             routine.getUpdatedAt(),
-            dayMapper.toDtoList(routine.getDays())
+            dayMapper.toDtoSet(routine.getDays())
         );
     }
     
@@ -106,7 +109,7 @@ public RoutineResponseDto ronnieJsonToRoutineResponseDto(String ronnieJson) {
         
         // Parsear los días
         JsonNode daysNode = routineNode.get("days");
-        List<RoutineDayDto> days = new ArrayList<>();
+        Set<RoutineDayDto> days = new HashSet<>();
         
         for (JsonNode dayNode : daysNode) {
             RoutineDayDto dayDto = new RoutineDayDto();

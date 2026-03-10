@@ -2,6 +2,7 @@ package com.uca.juangarcia.ifit.modules.training.client.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.RoutineResponseDto;
@@ -74,7 +75,7 @@ public class IFitAIRoutineResponseDTO {
         routineResponseDto.setIsActive(false);
         routineResponseDto.setCreatedAt(LocalDateTime.now());
         routineResponseDto.setUpdatedAt(null);
-        routineResponseDto.setDays(this.days.stream().map(IFitAIRoutineDayDTO::toRoutineDayDto).toList());
+        routineResponseDto.setDays(this.days.stream().map(IFitAIRoutineDayDTO::toRoutineDayDto).collect(Collectors.toSet()));
         return routineResponseDto;
     }
 }

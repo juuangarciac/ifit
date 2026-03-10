@@ -1,6 +1,7 @@
 package com.uca.juangarcia.ifit.modules.training.mapper;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
@@ -71,13 +72,13 @@ public class RoutineDayMapper {
     /**
      * Convierte una lista de entidades a lista de DTOs.
      */
-    public List<RoutineDayDto> toDtoList(List<RoutineDay> days) {
+    public Set<RoutineDayDto> toDtoSet(Set<RoutineDay> days) {
         if (days == null) {
             return null;
         }
         
         return days.stream()
             .map(this::toDto)
-            .collect(Collectors.toList());
+            .collect(Collectors.toSet());
     }
 }

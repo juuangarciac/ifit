@@ -29,7 +29,7 @@ public interface RoutineRepository extends JpaRepository<Routine, Long> {
     /**
      * Encuentra todas las rutinas activas de un usuario.
      */
-    List<Routine> findByUserIdAndIsActive(Long userId, boolean isActive);
+    Routine findByUserIdAndIsActive(Long userId, boolean isActive);
     
     /**
      * Encuentra rutinas de un usuario con paginación.

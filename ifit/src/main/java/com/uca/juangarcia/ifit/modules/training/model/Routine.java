@@ -1,8 +1,8 @@
 package com.uca.juangarcia.ifit.modules.training.model;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import com.uca.juangarcia.ifit.modules.user.model.AppUser;
 
@@ -59,9 +59,12 @@ public class Routine {
     
     @Column(name = "is_active", columnDefinition = "boolean default true")
     private boolean isActive = true;
-    
+
+    @Column(name = "current_day", columnDefinition = "integer default 1")
+    private Integer currentDay;
+
     @OneToMany(mappedBy = "routine", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<RoutineDay> days = new ArrayList<>();
+    private Set<RoutineDay> days = new HashSet<>();
     
     // Constructors
     
@@ -74,7 +77,16 @@ public class Routine {
         this.description = description;
         this.trainingDays = trainingDays;
         this.createdAt = LocalDateTime.now();
-        this.isActive = true;
+    }
+
+    public Routine(LocalDateTime createdAt, Integer currentDay, String description, Long id, Integer trainingDays, LocalDateTime updatedAt, AppUser user) {
+        this.createdAt = createdAt;
+        this.currentDay = currentDay;
+        this.description = description;
+        this.id = id;
+        this.trainingDays = trainingDays;
+        this.updatedAt = updatedAt;
+        this.user = user;
     }
     
     // Getters and Setters
@@ -134,12 +146,20 @@ public class Routine {
     public void setActive(boolean isActive) {
         this.isActive = isActive;
     }
+
+    public Integer getCurrentDay() {
+        return currentDay;
+    }
+
+    public void setCurrentDay(Integer currentDay) {
+        this.currentDay = currentDay;
+    }
     
-    public List<RoutineDay> getDays() {
+    public Set<RoutineDay> getDays() {
         return days;
     }
     
-    public void setDays(List<RoutineDay> days) {
+    public void setDays(Set<RoutineDay> days) {
         this.days = days;
     }
     

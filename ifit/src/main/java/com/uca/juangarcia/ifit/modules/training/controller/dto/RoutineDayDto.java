@@ -27,7 +27,6 @@ public class RoutineDayDto {
     
     private String description;
     
-    @NotEmpty(message = "El día debe tener al menos un ejercicio")
     @Valid
     private List<RoutineExerciseDto> exercises;
     

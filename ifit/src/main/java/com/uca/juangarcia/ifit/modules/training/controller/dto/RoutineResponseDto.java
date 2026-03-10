@@ -1,7 +1,7 @@
 package com.uca.juangarcia.ifit.modules.training.controller.dto;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -26,25 +26,28 @@ public class RoutineResponseDto {
     
     @JsonProperty("isActive")
     private Boolean isActive;
-    
+
+    @JsonProperty("currentDay")
+    private Integer currentDay;
+
     private LocalDateTime createdAt;
     
     private LocalDateTime updatedAt;
     
-    private List<RoutineDayDto> days;
+    private Set<RoutineDayDto> days;
     
     // Constructors
     
     public RoutineResponseDto() {}
 
-    public RoutineResponseDto(Long id, Long userId, String message, String description, Integer trainingDays,
-            Boolean isActive, LocalDateTime createdAt, LocalDateTime updatedAt, List<RoutineDayDto> days) {
+    public RoutineResponseDto(Long id, Long userId, String message, String description, Integer trainingDays, Boolean isActive, Integer currentDay, LocalDateTime createdAt, LocalDateTime updatedAt, Set<RoutineDayDto> days) {
         this.id = id;
         this.userId = userId;
         this.message = message;
         this.description = description;
         this.trainingDays = trainingDays;
         this.isActive = isActive;
+        this.currentDay = currentDay;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.days = days;
@@ -98,6 +101,14 @@ public class RoutineResponseDto {
         this.isActive = isActive;
     }
     
+    public Integer getCurrentDay() {
+        return currentDay;
+    }
+
+    public void setCurrentDay(Integer currentDay) {
+        this.currentDay = currentDay;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -114,11 +125,11 @@ public class RoutineResponseDto {
         this.updatedAt = updatedAt;
     }
     
-    public List<RoutineDayDto> getDays() {
+    public Set<RoutineDayDto> getDays() {
         return days;
     }
     
-    public void setDays(List<RoutineDayDto> days) {
+    public void setDays(Set<RoutineDayDto> days) {
         this.days = days;
     }
 }
