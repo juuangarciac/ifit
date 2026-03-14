@@ -54,7 +54,7 @@ import io.swagger.v3.core.util.Json;
  * @since 1.0
  */
 @Service
-@Transactional(readOnly = true)
+@Transactional
 public class RoutineService {
 
     private static final Logger logger = LoggerFactory.getLogger(RoutineService.class);
@@ -425,6 +425,7 @@ public class RoutineService {
      * @return
      * @throws RoutineNotFoundException
      */
+    @Transactional
     public RoutineDayDto getRoutineDayByRoutineIdAndDay(Long routineId, Integer day) throws RoutineNotFoundException {
         logger.info("Buscando día {} de rutina con ID: {}", day, routineId);
 
@@ -438,7 +439,7 @@ public class RoutineService {
     public RoutineResponseDto setRoutineDayAsCompleted(Long routineId, Integer day) throws RoutineNotFoundException {
 
         logger.info("Marcando día {} de rutina con ID: {} como completado", day, routineId);
-
+        
         Routine routine = routineRepository.findById(routineId)
                 .orElseThrow(() -> new RoutineNotFoundException("Rutina con ID " + routineId + " no encontrada"));
 
@@ -446,18 +447,19 @@ public class RoutineService {
                 .orElseThrow(() -> new RoutineNotFoundException(
                 "Día " + day + " de rutina con ID " + routineId + " no encontrado"));
 
-        RoutineDay maxDay = routineDayRepository.findByRoutineIdOrderByDayNumberAsc(routineId)
-                .stream()
-                .max((d1, d2) -> Integer.compare(d1.getDayNumber(), d2.getDayNumber()))
-                .orElseThrow(() -> new RoutineNotFoundException(
-                "No se encontraron días para la rutina con ID " + routineId));
+        List<RoutineDay> routineDays = routineDayRepository.findByRoutineId(routineId);
 
+        RoutineDay maxDay = routineDays.get(routineDays.size() - 1);
+        
         if (day.equals(maxDay.getDayNumber())) {
             routine.setCurrentDay(1);
         } else {
             routine.setCurrentDay(day + 1);
         }
-        routineRepository.save(routine);
+
+        routine = routineRepository.save(routine);
+        logger.info("Día {} de rutina con ID: {} marcado como completado. Current day updated to: {}",
+                day, routineId, routine.getCurrentDay());
 
         return routineMapper.toResponseDto(routine);
     }

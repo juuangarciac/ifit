@@ -24,7 +24,8 @@ public interface RoutineDayRepository extends JpaRepository<RoutineDay, Long> {
     /**
      * Encuentra todos los días de una rutina específica.
      */
-    List<RoutineDay> findByRoutineIdOrderByDayNumberAsc(Long routineId);
+    @Query("SELECT rd FROM RoutineDay rd WHERE rd.routine.id = :routineId ORDER BY rd.dayNumber ASC")
+    List<RoutineDay> findByRoutineId(Long routineId);
     
     /**
      * Elimina todos los días de una rutina.
