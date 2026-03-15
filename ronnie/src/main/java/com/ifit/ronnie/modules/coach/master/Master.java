@@ -10,7 +10,9 @@ import dev.langchain4j.service.spring.AiService;
 import dev.langchain4j.service.spring.AiServiceWiringMode;
 
 
-@AiService(wiringMode = AiServiceWiringMode.EXPLICIT, chatModel = "groqChatLanguageModel", chatMemoryProvider = "messageWindowChatMemory")
+@AiService(wiringMode = AiServiceWiringMode.EXPLICIT, 
+    chatModel = "groqJsonChatLanguageModel", 
+    chatMemoryProvider = "messageWindowChatMemory")
 public interface Master {
 
     @SystemMessage("""

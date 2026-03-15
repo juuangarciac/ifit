@@ -38,8 +38,13 @@ public class RonnieController {
         })
         @PostMapping("/chat")
         public String chatWithRonnie(
-                        @Parameter(description = "MessageDTO que contiene memoryId y message para chatear con Ronnie. Usa el mismo memoryId para continuar una conversación previa.", required = true, content = @Content(schema = @Schema(implementation = MessageDTO.class))) @Valid @RequestBody MessageDTO messageDto) {
+                        @Parameter(description = "MessageDTO que contiene memoryId y message para chatear con Ronnie. Usa el mismo memoryId para continuar una conversación previa.", 
+                        required = true, 
+                        content = @Content(schema = @Schema(implementation = MessageDTO.class))) 
+                        @Valid 
+                        @RequestBody MessageDTO messageDto) {
 
-                return ronnie.chat(messageDto.getMemoryId(), messageDto.getMessage());
+                return ronnie.chat(messageDto.getMemoryId(), 
+                                        messageDto.getMessage());
         }
 }

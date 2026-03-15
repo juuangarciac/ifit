@@ -6,7 +6,10 @@ import dev.langchain4j.service.spring.AiService;
 import dev.langchain4j.service.spring.AiServiceWiringMode;
 
 
-@AiService(wiringMode = AiServiceWiringMode.EXPLICIT, chatModel = "groqChatLanguageModel", chatMemoryProvider = "messageWindowChatMemory", contentRetriever = "serenaEmbeddingStoreContentRetriever")
+@AiService(wiringMode = AiServiceWiringMode.EXPLICIT, 
+    chatModel = "groqChatLanguageModel", 
+    chatMemoryProvider = "messageWindowChatMemory", 
+    contentRetriever = "serenaEmbeddingStoreContentRetriever")
 public interface SerenaService {
     String chat(@MemoryId int memoryId, @UserMessage String userMessage);
 }

@@ -32,6 +32,17 @@ public class GroqModelConfiguration {
                 .apiKey(groqApiKey)
                 .modelName(modelName)
                 .timeout(Duration.ofSeconds(timeout))
+                .temperature(0.3)
+                .build();
+    }
+
+    @Bean("groqJsonChatLanguageModel")
+    ChatLanguageModel groqJsonChatLanguageModel(){
+        return OpenAiChatModel.builder()
+                .baseUrl(groqBaseUrl)
+                .apiKey(groqApiKey)
+                .modelName(modelName)
+                .timeout(Duration.ofSeconds(timeout))
                 .responseFormat("json_object")
                 .temperature(0.3)
                 .build();
