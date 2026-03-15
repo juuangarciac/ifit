@@ -1,6 +1,7 @@
 package com.ifit.ronnie.modules.coach.ronnie;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,14 +38,20 @@ public class RonnieController {
                         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
         })
         @PostMapping("/chat")
-        public String chatWithRonnie(
+        public ResponseEntity<MessageDTO> chatWithRonnie(
                         @Parameter(description = "MessageDTO que contiene memoryId y message para chatear con Ronnie. Usa el mismo memoryId para continuar una conversación previa.", 
                         required = true, 
                         content = @Content(schema = @Schema(implementation = MessageDTO.class))) 
                         @Valid 
                         @RequestBody MessageDTO messageDto) {
 
-                return ronnie.chat(messageDto.getMemoryId(), 
+                String chatResponse = ronnie.chat(messageDto.getMemoryId(), 
                                         messageDto.getMessage());
+                
+                MessageDTO responseDto = new MessageDTO();
+                responseDto.setMessage(chatResponse);
+                responseDto.setMemoryId(messageDto.getMemoryId());
+
+                return ResponseEntity.ok(responseDto);
         }
 }

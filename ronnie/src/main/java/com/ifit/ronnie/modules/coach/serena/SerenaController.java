@@ -1,6 +1,7 @@
 package com.ifit.ronnie.modules.coach.serena;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,13 +34,18 @@ public class SerenaController {
                         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
         })
         @PostMapping("/chat")
-        public String chatWithSerena(
+        public ResponseEntity<MessageDTO> chatWithSerena(
                         @Parameter(description = "MessageDTO que contiene memoryId y message para chatear con Serena. Usa el mismo memoryId para continuar una conversación previa.", 
                         required = true, 
                         content = @Content(schema = @Schema(implementation = MessageDTO.class))) 
                         @Valid 
                         @RequestBody MessageDTO messageDto) {
 
-                return serenaService.chat(messageDto.getMemoryId(), messageDto.getMessage());
+                String chatResponse = serenaService.chat(messageDto.getMemoryId(), messageDto.getMessage());
+                MessageDTO responseDto = new MessageDTO();
+                responseDto.setMessage(chatResponse);
+                responseDto.setMemoryId(messageDto.getMemoryId());
+
+                return ResponseEntity.ok(responseDto);
         }
 }

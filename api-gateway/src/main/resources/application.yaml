@@ -22,7 +22,16 @@ spring:
           predicates:
             - Path=/ifit/api/v1/auth/**
           filters:
+            - StripPrefix=3 
+             
+         # Ruta para servicios de AI (Ronnie y otros coaches)
+        - id: RONNIE
+          uri: lb://RONNIE
+          predicates:
+            - Path=/ifit/api/v1/ronnie/**, /ifit/api/v1/serena/**, /ifit/api/v1/kael/**, /ifit/api/v1/eliud/**, /ifit/api/v1/messages/**
+          filters:
             - StripPrefix=3  
+            - TokenRelay
 
         # Ruta privada para endpoints protegidos
         - id: IFIT-PRIVATE
@@ -32,15 +41,7 @@ spring:
           filters:
             - StripPrefix=3  
             - TokenRelay     
-        
-        # Ruta para servicios de AI (Ronnie y otros coaches)
-        - id: RONNIE
-          uri: lb://RONNIE
-          predicates:
-            - Path=/ifit/api/v1/chat/**, /ifit/api/v1/messages/**
-          filters:
-            - StripPrefix=3  
-            - TokenRelay 
+         
 server:
   port: 8080
 
