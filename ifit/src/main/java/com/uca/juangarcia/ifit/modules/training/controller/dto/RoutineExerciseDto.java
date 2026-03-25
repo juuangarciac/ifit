@@ -15,15 +15,12 @@ public class RoutineExerciseDto {
     
     private Long id;
     
-    @NotBlank(message = "El nombre del ejercicio no puede estar vacío")
     private String exerciseName;
     
-    @Min(value = 1, message = "Debe haber al menos 1 serie")
     private Integer sets;
     
     private String reps;
     
-    @Min(value = 0, message = "El descanso debe ser 0 o mayor")
     private Integer restSeconds;
     
     private String notes;

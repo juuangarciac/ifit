@@ -3,6 +3,11 @@ package com.uca.juangarcia.ifit.modules.training.model;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
+import org.hibernate.annotations.SQLOrder;
+import org.hibernate.annotations.SortNatural;
 
 import com.uca.juangarcia.ifit.modules.user.model.AppUser;
 
@@ -63,8 +68,10 @@ public class Routine {
     @Column(name = "current_day", columnDefinition = "integer default 1")
     private Integer currentDay;
 
-    @OneToMany(mappedBy = "routine", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Set<RoutineDay> days = new HashSet<>();
+    @OneToMany(mappedBy = "routine", cascade = CascadeType.ALL, orphanRemoval = true)
+    @SQLOrder("dayNumber ASC")
+    @SortNatural
+    private SortedSet<RoutineDay> days = new TreeSet<>();
     
     // Constructors
     
@@ -155,11 +162,11 @@ public class Routine {
         this.currentDay = currentDay;
     }
     
-    public Set<RoutineDay> getDays() {
+    public SortedSet<RoutineDay> getDays() {
         return days;
     }
     
-    public void setDays(Set<RoutineDay> days) {
+    public void setDays(SortedSet<RoutineDay> days) {
         this.days = days;
     }
     

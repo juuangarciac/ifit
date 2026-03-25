@@ -21,13 +21,10 @@ public class RoutineResponseDto {
 
     private String description;
     
-    @JsonProperty("trainingDays")
     private Integer trainingDays;
     
-    @JsonProperty("isActive")
     private Boolean isActive;
 
-    @JsonProperty("currentDay")
     private Integer currentDay;
 
     private LocalDateTime createdAt;

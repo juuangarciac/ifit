@@ -2,12 +2,6 @@ package com.uca.juangarcia.ifit.modules.training.controller.dto;
 
 import java.util.List;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-
 /**
  * DTO para representar un día dentro de una rutina de entrenamiento.
  * 
@@ -18,16 +12,12 @@ public class RoutineDayDto {
     
     private Long id;
     
-    @NotNull(message = "El número de día no puede ser nulo")
-    @Min(value = 1, message = "El número de día debe ser al menos 1")
     private Integer dayNumber;
     
-    @NotBlank(message = "El nombre del día no puede estar vacío")
     private String dayName;
     
     private String description;
     
-    @Valid
     private List<RoutineExerciseDto> exercises;
     
     // Constructors

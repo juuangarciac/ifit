@@ -29,8 +29,6 @@ import com.uca.juangarcia.ifit.modules.training.repository.RoutineRepository;
 import com.uca.juangarcia.ifit.modules.user.model.AppUser;
 import com.uca.juangarcia.ifit.modules.user.repository.AppUserRepository;
 
-import io.swagger.v3.core.util.Json;
-
 /**
  * Servicio para la gestión de rutinas de entrenamiento.
  *
@@ -106,6 +104,7 @@ public class RoutineService {
         routine.setUser(user);
         routine.setDescription(requestDto.getDescription());
         routine.setTrainingDays(requestDto.getTrainingDays());
+        routine.setCurrentDay(1); 
         routine.setActive(true);
 
         // Agregar días con sus ejercicios
