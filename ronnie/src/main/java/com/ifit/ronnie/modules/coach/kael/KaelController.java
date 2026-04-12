@@ -1,13 +1,12 @@
 package com.ifit.ronnie.modules.coach.kael;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ifit.ronnie.modules.message.controller.dto.MessageDTO;
+import com.ifit.ronnie.modules.message.controller.dto.MessageDto;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -21,8 +20,11 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/kael")
 public class KaelController {
-     @Autowired
-        private KaelService kaelService;
+    private final KaelService kaelService;
+
+    public KaelController(KaelService kaelService) {
+        this.kaelService = kaelService;
+    }
 
         @Operation(summary = "Chat con Kael", description = "Interactúa con Kael, el coach especializado en musculación y fuerza. "
                         +
@@ -34,18 +36,16 @@ public class KaelController {
                         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
         })
         @PostMapping("/chat")
-        public ResponseEntity<MessageDTO> chatWithKael(
-                        @Parameter(description = "MessageDTO que contiene memoryId y message para chatear con Kael. Usa el mismo memoryId para continuar una conversación previa.", 
+        public ResponseEntity<MessageDto> chatWithKael(
+                        @Parameter(description = "MessageDto que contiene memoryId y message para chatear con Kael. Usa el mismo memoryId para continuar una conversación previa.", 
                         required = true, 
-                        content = @Content(schema = @Schema(implementation = MessageDTO.class))) 
+                        content = @Content(schema = @Schema(implementation = MessageDto.class))) 
                         @Valid 
-                        @RequestBody MessageDTO messageDto) {
+                        @RequestBody MessageDto messageDto) {
 
-                String chatResponse = kaelService.chat(messageDto.getMemoryId(), messageDto.getMessage());
-                
-                MessageDTO responseDto = new MessageDTO();
-                responseDto.setMessage(chatResponse);
-                responseDto.setMemoryId(messageDto.getMemoryId());
+                String chatResponse = kaelService.chat(messageDto.memoryId(), messageDto.message());
+
+                MessageDto responseDto = new MessageDto(messageDto.memoryId(), chatResponse);
 
                 return ResponseEntity.ok(responseDto);
         }

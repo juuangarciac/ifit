@@ -17,23 +17,21 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import com.uca.juangarcia.ifit.exception.dto.EmailAlreadyExistsException;
-import com.uca.juangarcia.ifit.exception.dto.EmailNotFoundException;
-import com.uca.juangarcia.ifit.exception.dto.EmailNotVerifiedException;
-import com.uca.juangarcia.ifit.exception.dto.InvalidCredentialsException;
-import com.uca.juangarcia.ifit.exception.dto.KeycloakUserCreationException;
-import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LoginRequestDTO;
-import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LoginResponseDTO;
-import com.uca.juangarcia.ifit.modules.auth.controllers.dto.RegisterRequestDTO;
-import com.uca.juangarcia.ifit.modules.auth.controllers.dto.RegisterResponseDTO;
-import com.uca.juangarcia.ifit.modules.auth.controllers.dto.UserDTO;
-import com.uca.juangarcia.ifit.modules.auth.controllers.dto.VerifyUserRequestDTO;
-import com.uca.juangarcia.ifit.modules.auth.service.IAuthenticationService;
-import com.uca.juangarcia.ifit.modules.auth.service.IKeycloakService;
+import com.uca.juangarcia.ifit.exception.EmailAlreadyExistsException;
+import com.uca.juangarcia.ifit.exception.EmailNotFoundException;
+import com.uca.juangarcia.ifit.exception.EmailNotVerifiedException;
+import com.uca.juangarcia.ifit.exception.InvalidCredentialsException;
+import com.uca.juangarcia.ifit.exception.KeycloakUserCreationException;
+import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LoginRequestDto;
+import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LoginResponseDto;
+import com.uca.juangarcia.ifit.modules.auth.controllers.dto.RegisterRequestDto;
+import com.uca.juangarcia.ifit.modules.auth.controllers.dto.RegisterResponseDto;
+import com.uca.juangarcia.ifit.modules.auth.controllers.dto.UserDto;
+import com.uca.juangarcia.ifit.modules.auth.controllers.dto.VerifyUserRequestDto;
+import com.uca.juangarcia.ifit.modules.auth.service.impl.KeycloakServiceImpl;
 import com.uca.juangarcia.ifit.modules.notification.service.AppEmailService;
 import com.uca.juangarcia.ifit.modules.user.dto.AppUserResponseDto;
 import com.uca.juangarcia.ifit.modules.user.dto.CreateAppUserRequestDto;
-import com.uca.juangarcia.ifit.modules.user.model.AppUser;
 import com.uca.juangarcia.ifit.modules.user.service.AppUserService;
 
 import lombok.RequiredArgsConstructor;
@@ -62,7 +60,8 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class AuthenticationService implements IAuthenticationService {
+@Transactional(readOnly = true)
+public class AuthenticationService {
 
     @Value("${keycloak.client-id}")
     private String clientId;
@@ -78,7 +77,7 @@ public class AuthenticationService implements IAuthenticationService {
 
     private final AppUserService appUserService;
     private final AppEmailService emailService;
-    private final IKeycloakService keycloakService;
+    private final KeycloakServiceImpl keycloakService;
     private final RestTemplate restTemplate;
 
     /**
@@ -95,8 +94,7 @@ public class AuthenticationService implements IAuthenticationService {
      * @return respuesta con tokens y perfil del usuario
      * @throws InvalidCredentialsException si las credenciales son inválidas o el usuario no existe en BD
      */
-    @Override
-    public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) throws InvalidCredentialsException {
+    public LoginResponseDto login(LoginRequestDto loginRequestDTO) throws InvalidCredentialsException {
         log.info("Attempting login for user: {}", loginRequestDTO.getUsername());
         
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
@@ -135,7 +133,7 @@ public class AuthenticationService implements IAuthenticationService {
             }
 
             // 3. Construir respuesta con tokens + perfil
-            return LoginResponseDTO.builder()
+            return LoginResponseDto.builder()
                     .accessToken((String) responseBody.get("access_token"))
                     .refreshToken((String) responseBody.get("refresh_token"))
                     .expiresIn((Integer) responseBody.get("expires_in"))
@@ -205,13 +203,12 @@ public class AuthenticationService implements IAuthenticationService {
      * se hace rollback eliminando el usuario de Keycloak.
      * 
      * @param registerDTO datos del nuevo usuario
-     * @return RegisterResponseDTO respuesta indicando que debe verificar su email
+     * @return RegisterResponseDto respuesta indicando que debe verificar su email
      * @throws EmailAlreadyExistsException si el email ya está registrado
      * @throws RuntimeException si falla la creación en Keycloak o BD
      */
-    @Override
     @Transactional
-    public RegisterResponseDTO register(RegisterRequestDTO registerDTO) throws EmailAlreadyExistsException {
+    public RegisterResponseDto register(RegisterRequestDto registerDTO) throws EmailAlreadyExistsException {
         log.info("Starting registration process for user: {}", registerDTO.getEmail());
         
         String keycloakUserId = null;
@@ -226,7 +223,7 @@ public class AuthenticationService implements IAuthenticationService {
 
             // 2. Crear usuario en Keycloak
             log.info("Creating user in Keycloak: {}", registerDTO.getEmail());
-            UserDTO keycloakUserDTO = UserDTO.builder()
+            UserDto keycloakUserDto = UserDto.builder()
                     .username(registerDTO.getEmail())
                     .email(registerDTO.getEmail())
                     .firstName(registerDTO.getName())
@@ -234,7 +231,7 @@ public class AuthenticationService implements IAuthenticationService {
                     .password(registerDTO.getPassword())
                     .build();
 
-            keycloakUserId = keycloakService.createUser(keycloakUserDTO);
+            keycloakUserId = keycloakService.createUser(keycloakUserDto);
             log.info("User created in Keycloak with ID: {}", keycloakUserId);
 
             // 3. Crear perfil en BD con referencia a Keycloak
@@ -270,7 +267,7 @@ public class AuthenticationService implements IAuthenticationService {
             }
 
             // 5. Retornar respuesta sin tokens (el usuario debe verificar primero)
-            return RegisterResponseDTO.builder()
+            return RegisterResponseDto.builder()
                 .success(true)
                 .message("Usuario registrado exitosamente. Por favor, verifica tu email antes de iniciar sesión.")
                 .email(registerDTO.getEmail())
@@ -335,8 +332,7 @@ public class AuthenticationService implements IAuthenticationService {
      * @return respuesta con NUEVOS tokens
      * @throws RuntimeException si el refresh token es inválido o expiró
      */
-    @Override
-    public LoginResponseDTO refreshToken(String refreshToken) {
+    public LoginResponseDto refreshToken(String refreshToken) {
         log.info("Refreshing authentication tokens");
         
         // Construir request para Keycloak
@@ -366,7 +362,7 @@ public class AuthenticationService implements IAuthenticationService {
 
             // Construir respuesta con nuevos tokens
             // NOTA: No incluimos appUser porque no hacemos consulta a BD
-            return LoginResponseDTO.builder()
+            return LoginResponseDto.builder()
                     .accessToken((String) responseBody.get("access_token"))
                     .refreshToken((String) responseBody.get("refresh_token"))
                     .expiresIn((Integer) responseBody.get("expires_in"))
@@ -400,7 +396,6 @@ public class AuthenticationService implements IAuthenticationService {
      * @param refreshToken el refresh token a invalidar
      * @throws RuntimeException si hay error al comunicarse con Keycloak
      */
-    @Override
     public void logout(String refreshToken) {
         log.info("Processing user logout");
         
@@ -457,9 +452,8 @@ public class AuthenticationService implements IAuthenticationService {
      * @throws EmailNotFoundException si no existe un usuario con ese código
      * @throws InvalidCredentialsException si las credenciales son inválidas
      */
-    @Override
     @Transactional
-    public LoginResponseDTO verifyEmail(VerifyUserRequestDTO request) 
+    public LoginResponseDto verifyEmail(VerifyUserRequestDto request) 
             throws IllegalArgumentException, EmailNotFoundException, InvalidCredentialsException {
         
         log.info("Starting email verification for user: {}", request.email());
@@ -472,7 +466,7 @@ public class AuthenticationService implements IAuthenticationService {
         if (user.isVerified()) {
             log.warn("User already verified: {}", user.getEmail());
             // Si ya está verificado, simplemente hacer login
-            return login(new LoginRequestDTO(request.email(), request.password()));
+            return login(new LoginRequestDto(request.email(), request.password()));
         }
 
         // 3. Verificar que el email coincide con el usuario del código
@@ -500,12 +494,12 @@ public class AuthenticationService implements IAuthenticationService {
         
         // 6. Realizar login automático
         log.info("Performing automatic login for verified user: {}", user.getEmail());
-        LoginRequestDTO loginRequest = new LoginRequestDTO(
+        LoginRequestDto loginRequest = new LoginRequestDto(
             request.email(),
             request.password()
         );
         
-        LoginResponseDTO loginResponse = login(loginRequest);
+        LoginResponseDto loginResponse = login(loginRequest);
         log.info("Email verification and automatic login successful for: {}", user.getEmail());
         
         return loginResponse;
