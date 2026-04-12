@@ -22,8 +22,16 @@ spring:
           predicates:
             - Path=/ifit/api/v1/auth/**
           filters:
-            - StripPrefix=3 
-             
+            - StripPrefix=3
+
+        # Imágenes del catálogo de ejercicios — públicas, sin token
+        - id: IFIT-EXERCISE-IMAGES
+          uri: lb://IFIT
+          predicates:
+            - Path=/ifit/exercise-images/**
+          filters:
+            - StripPrefix=1
+
          # Ruta para servicios de AI (Ronnie y otros coaches)
         - id: RONNIE
           uri: lb://RONNIE
