@@ -16,17 +16,17 @@ import jakarta.validation.constraints.Size;
  */
 public class CreateRoutineRequestDto {
     
-    @NotNull(message = "El ID del usuario no puede ser nulo")
+    @NotNull(message = "User ID cannot be null")
     private Long userId;
-    
-    @Size(max = 1000, message = "La descripción no puede exceder 1000 caracteres")
+
+    @Size(max = 1000, message = "Description cannot exceed 1000 characters")
     private String description;
-    
-    @NotNull(message = "Los días de entrenamiento no pueden ser nulos")
-    @Min(value = 1, message = "Debe haber al menos 1 día de entrenamiento")
+
+    @NotNull(message = "Training days cannot be null")
+    @Min(value = 1, message = "Must have at least 1 training day")
     private Integer trainingDays;
-    
-    @NotEmpty(message = "La rutina debe tener al menos un día")
+
+    @NotEmpty(message = "Routine must have at least one day")
     @Valid
     private List<RoutineDayDto> days;
     

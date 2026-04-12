@@ -26,7 +26,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginResponseDTO {
+public class LoginResponseDto {
     
     /**
      * Token JWT de acceso para autenticar requests a la API.

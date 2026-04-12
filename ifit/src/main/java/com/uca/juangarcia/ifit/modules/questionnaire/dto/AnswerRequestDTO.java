@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 /**
  * DTO for submitting an answer to a question
  */
-public class AnswerRequestDTO {
+public class AnswerRequestDto {
     
     @NotNull(message = "Question ID is required")
     private Long questionId;
@@ -16,10 +16,10 @@ public class AnswerRequestDTO {
     private String additionalText;
     
     // Constructors
-    public AnswerRequestDTO() {
+    public AnswerRequestDto() {
     }
     
-    public AnswerRequestDTO(Long questionId, Long selectedOptionId, String additionalText) {
+    public AnswerRequestDto(Long questionId, Long selectedOptionId, String additionalText) {
         this.questionId = questionId;
         this.selectedOptionId = selectedOptionId;
         this.additionalText = additionalText;

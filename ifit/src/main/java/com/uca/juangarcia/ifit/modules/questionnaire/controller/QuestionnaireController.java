@@ -15,21 +15,20 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.uca.juangarcia.ifit.exception.dto.CoachModelTypeNotFoundException;
-import com.uca.juangarcia.ifit.exception.dto.ExperienceLevelNotFoundException;
-import com.uca.juangarcia.ifit.exception.dto.QuestionNotFoundException;
-import com.uca.juangarcia.ifit.exception.dto.QuestionnaireNotFoundException;
-import com.uca.juangarcia.ifit.exception.dto.UserIdNotFoundException;
+import com.uca.juangarcia.ifit.exception.CoachModelTypeNotFoundException;
+import com.uca.juangarcia.ifit.exception.ExperienceLevelNotFoundException;
+import com.uca.juangarcia.ifit.exception.QuestionNotFoundException;
+import com.uca.juangarcia.ifit.exception.QuestionnaireNotFoundException;
+import com.uca.juangarcia.ifit.exception.UserIdNotFoundException;
 import com.uca.juangarcia.ifit.exception.model.ErrorResponse;
-import com.uca.juangarcia.ifit.modules.questionnaire.dto.AnswerRequestDTO;
+import com.uca.juangarcia.ifit.modules.questionnaire.dto.AnswerRequestDto;
 import com.uca.juangarcia.ifit.modules.questionnaire.dto.CreateQuestionnaireRequestDto;
-import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireDTO;
-import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireResponseDTO;
-import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireResponseSummaryDTO;
+import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireDto;
+import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireResponseDto;
+import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireResponseSummaryDto;
 import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireSummaryDto;
 import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireWithFirstQuestionDto;
 import com.uca.juangarcia.ifit.modules.questionnaire.dto.UpdateQuestionnaireRequestDto;
-import com.uca.juangarcia.ifit.modules.questionnaire.model.QuestionnaireResponse;
 import com.uca.juangarcia.ifit.modules.questionnaire.service.QuestionnaireService;
 import com.uca.juangarcia.ifit.modules.user.model.AppUser;
 
@@ -123,7 +122,7 @@ public class QuestionnaireController {
             description = "Cuestionario encontrado",
             content = @Content(
                 mediaType = "application/json", 
-                schema = @Schema(implementation = QuestionnaireDTO.class)
+                schema = @Schema(implementation = QuestionnaireDto.class)
             )
         ),
         @ApiResponse(
@@ -143,14 +142,14 @@ public class QuestionnaireController {
             )
         )
     })
-    public ResponseEntity<QuestionnaireDTO> getQuestionnaireById(@PathVariable Long id) 
+    public ResponseEntity<QuestionnaireDto> getQuestionnaireById(@PathVariable Long id) 
             throws QuestionnaireNotFoundException {
-        QuestionnaireDTO questionnaire = questionnaireService.getQuestionnaireById(id);
+        QuestionnaireDto questionnaire = questionnaireService.getQuestionnaireById(id);
         return ResponseEntity.ok(questionnaire);
     }
 
 
-    @GetMapping("/coach/{coachName}/experience-level/{experienceName}")
+    @GetMapping("/coach/{coachId}/experience-level/{experienceLevelId}")
     @Operation(
         summary = "Obtener cuestionario por coach y nivel de experiencia",
         description = "Recupera un cuestionario específico con toda su información."
@@ -161,7 +160,7 @@ public class QuestionnaireController {
             description = "Cuestionario encontrado",
             content = @Content(
                 mediaType = "application/json", 
-                schema = @Schema(implementation = QuestionnaireDTO.class)
+                schema = @Schema(implementation = QuestionnaireDto.class)
             )
         ),
         @ApiResponse(
@@ -181,11 +180,11 @@ public class QuestionnaireController {
             )
         )
     })
-    public ResponseEntity<QuestionnaireDTO> getQuestionnaireByCoachIdAndExperienceLevelId(
+    public ResponseEntity<QuestionnaireDto> getQuestionnaireByCoachIdAndExperienceLevelId(
         @PathVariable Long coachId,
         @PathVariable Long experienceLevelId
     ) throws QuestionnaireNotFoundException {
-        QuestionnaireDTO response = questionnaireService.getQuestionnaireByCoachIdAndExperienceLevelId(coachId, experienceLevelId);
+        QuestionnaireDto response = questionnaireService.getQuestionnaireByCoachIdAndExperienceLevelId(coachId, experienceLevelId);
         return ResponseEntity.ok(response);
     }
     
@@ -259,7 +258,7 @@ public class QuestionnaireController {
             description = "Cuestionario creado exitosamente",
             content = @Content(
                 mediaType = "application/json", 
-                schema = @Schema(implementation = QuestionnaireDTO.class)
+                schema = @Schema(implementation = QuestionnaireDto.class)
             )
         ),
         @ApiResponse(
@@ -287,10 +286,10 @@ public class QuestionnaireController {
             )
         )
     })
-    public ResponseEntity<QuestionnaireDTO> createQuestionnaire(
+    public ResponseEntity<QuestionnaireDto> createQuestionnaire(
             @Valid @RequestBody CreateQuestionnaireRequestDto dto) 
             throws CoachModelTypeNotFoundException, ExperienceLevelNotFoundException, QuestionNotFoundException {
-        QuestionnaireDTO created = questionnaireService.createQuestionnaire(dto);
+        QuestionnaireDto created = questionnaireService.createQuestionnaire(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
     
@@ -315,7 +314,7 @@ public class QuestionnaireController {
             description = "Cuestionario actualizado exitosamente",
             content = @Content(
                 mediaType = "application/json", 
-                schema = @Schema(implementation = QuestionnaireDTO.class)
+                schema = @Schema(implementation = QuestionnaireDto.class)
             )
         ),
         @ApiResponse(
@@ -343,12 +342,12 @@ public class QuestionnaireController {
             )
         )
     })
-    public ResponseEntity<QuestionnaireDTO> updateQuestionnaire(
+    public ResponseEntity<QuestionnaireDto> updateQuestionnaire(
             @PathVariable Long id,
             @Valid @RequestBody UpdateQuestionnaireRequestDto dto) 
             throws QuestionnaireNotFoundException, CoachModelTypeNotFoundException, 
                    ExperienceLevelNotFoundException, QuestionNotFoundException {
-        QuestionnaireDTO updated = questionnaireService.updateQuestionnaire(id, dto);
+        QuestionnaireDto updated = questionnaireService.updateQuestionnaire(id, dto);
         return ResponseEntity.ok(updated);
     }
     
@@ -414,7 +413,7 @@ public class QuestionnaireController {
             description = "Sesión de cuestionario iniciada",
             content = @Content(
                 mediaType = "application/json", 
-                schema = @Schema(implementation = QuestionnaireResponseDTO.class)
+                schema = @Schema(implementation = QuestionnaireResponseDto.class)
             )
         ),
         @ApiResponse(
@@ -434,11 +433,11 @@ public class QuestionnaireController {
             )
         )
     })
-    public ResponseEntity<QuestionnaireResponseDTO> startQuestionnaire(
+    public ResponseEntity<QuestionnaireResponseDto> startQuestionnaire(
         @PathVariable Long userId,
         @PathVariable Long questionnaireId
     ) throws UserIdNotFoundException, QuestionnaireNotFoundException {
-        QuestionnaireResponseDTO response = questionnaireService
+        QuestionnaireResponseDto response = questionnaireService
             .startQuestionnaire(userId, questionnaireId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -463,7 +462,7 @@ public class QuestionnaireController {
             description = "Respuesta registrada exitosamente",
             content = @Content(
                 mediaType = "application/json", 
-                schema = @Schema(implementation = QuestionnaireResponseDTO.class)
+                schema = @Schema(implementation = QuestionnaireResponseDto.class)
             )
         ),
         @ApiResponse(
@@ -491,11 +490,11 @@ public class QuestionnaireController {
             )
         )
     })
-    public ResponseEntity<QuestionnaireResponseDTO> answerQuestion(
+    public ResponseEntity<QuestionnaireResponseDto> answerQuestion(
         @PathVariable Long responseId,
-        @Valid @RequestBody AnswerRequestDTO answerRequest
+        @Valid @RequestBody AnswerRequestDto answerRequest
     ) {
-        QuestionnaireResponseDTO response = questionnaireService.answerQuestion(
+        QuestionnaireResponseDto response = questionnaireService.answerQuestion(
             responseId,
             answerRequest.getQuestionId(),
             answerRequest.getSelectedOptionId(),
@@ -524,7 +523,7 @@ public class QuestionnaireController {
             description = "Pregunta anterior obtenida exitosamente",
             content = @Content(
                 mediaType = "application/json",
-                schema = @Schema(implementation = QuestionnaireResponseDTO.class)
+                schema = @Schema(implementation = QuestionnaireResponseDto.class)
             )
         ),
         @ApiResponse(
@@ -552,10 +551,10 @@ public class QuestionnaireController {
             )
         )
     })
-    public ResponseEntity<QuestionnaireResponseDTO> goToPreviousQuestion(
+    public ResponseEntity<QuestionnaireResponseDto> goToPreviousQuestion(
         @PathVariable Long responseId
     ) {
-        QuestionnaireResponseDTO response = questionnaireService.goToPreviousQuestion(responseId);
+        QuestionnaireResponseDto response = questionnaireService.goToPreviousQuestion(responseId);
         return ResponseEntity.ok(response);
     }
     
@@ -578,7 +577,7 @@ public class QuestionnaireController {
             description = "Resumen obtenido exitosamente",
             content = @Content(
                 mediaType = "application/json", 
-                schema = @Schema(implementation = QuestionnaireResponseSummaryDTO.class)
+                schema = @Schema(implementation = QuestionnaireResponseSummaryDto.class)
             )
         ),
         @ApiResponse(
@@ -598,10 +597,10 @@ public class QuestionnaireController {
             )
         )
     })
-    public ResponseEntity<QuestionnaireResponseSummaryDTO> getResponseSummary(
+    public ResponseEntity<QuestionnaireResponseSummaryDto> getResponseSummary(
         @PathVariable Long responseId
     ) {
-        QuestionnaireResponseSummaryDTO summary = questionnaireService
+        QuestionnaireResponseSummaryDto summary = questionnaireService
             .getResponseSummary(responseId);
         return ResponseEntity.ok(summary);
     }
@@ -625,7 +624,7 @@ public class QuestionnaireController {
             description = "Lista de sesiones obtenida",
             content = @Content(
                 mediaType = "application/json", 
-                schema = @Schema(implementation = QuestionnaireResponse.class)
+                schema = @Schema(implementation = QuestionnaireResponseDto.class)
             )
         ),
         @ApiResponse(
@@ -637,12 +636,10 @@ public class QuestionnaireController {
             )
         )
     })
-    public ResponseEntity<List<QuestionnaireResponse>> getMyResponses(
+    public ResponseEntity<List<QuestionnaireResponseDto>> getMyResponses(
         @AuthenticationPrincipal AppUser user
     ) {
-        List<QuestionnaireResponse> responses = questionnaireService
-            .getUserResponses(user.getId());
-        return ResponseEntity.ok(responses);
+        return ResponseEntity.ok(questionnaireService.getUserResponses(user.getId()));
     }
     
     /**
@@ -664,7 +661,7 @@ public class QuestionnaireController {
             description = "Lista de sesiones completadas obtenida",
             content = @Content(
                 mediaType = "application/json", 
-                schema = @Schema(implementation = QuestionnaireResponse.class)
+                schema = @Schema(implementation = QuestionnaireResponseDto.class)
             )
         ),
         @ApiResponse(
@@ -676,12 +673,10 @@ public class QuestionnaireController {
             )
         )
     })
-    public ResponseEntity<List<QuestionnaireResponse>> getMyCompletedResponses(
+    public ResponseEntity<List<QuestionnaireResponseDto>> getMyCompletedResponses(
         @AuthenticationPrincipal AppUser user
     ) {
-        List<QuestionnaireResponse> responses = questionnaireService
-            .getUserCompletedResponses(user.getId());
-        return ResponseEntity.ok(responses);
+        return ResponseEntity.ok(questionnaireService.getUserCompletedResponses(user.getId()));
     }
     
     /**
@@ -703,7 +698,7 @@ public class QuestionnaireController {
             description = "Lista de sesiones activas obtenida",
             content = @Content(
                 mediaType = "application/json", 
-                schema = @Schema(implementation = QuestionnaireResponse.class)
+                schema = @Schema(implementation = QuestionnaireResponseDto.class)
             )
         ),
         @ApiResponse(
@@ -715,11 +710,9 @@ public class QuestionnaireController {
             )
         )
     })
-    public ResponseEntity<List<QuestionnaireResponse>> getMyActiveResponses(
+    public ResponseEntity<List<QuestionnaireResponseDto>> getMyActiveResponses(
         @AuthenticationPrincipal AppUser user
     ) {
-        List<QuestionnaireResponse> responses = questionnaireService
-            .getUserActiveResponses(user.getId());
-        return ResponseEntity.ok(responses);
+        return ResponseEntity.ok(questionnaireService.getUserActiveResponses(user.getId()));
     }
 }

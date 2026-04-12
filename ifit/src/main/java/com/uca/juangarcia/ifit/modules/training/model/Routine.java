@@ -2,8 +2,9 @@ package com.uca.juangarcia.ifit.modules.training.model;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
-import java.util.SortedSet;
+import java.util.Set;
 import java.util.TreeSet;
 
 import org.hibernate.annotations.SQLOrder;
@@ -70,8 +71,7 @@ public class Routine {
 
     @OneToMany(mappedBy = "routine", cascade = CascadeType.ALL, orphanRemoval = true)
     @SQLOrder("dayNumber ASC")
-    @SortNatural
-    private SortedSet<RoutineDay> days = new TreeSet<>();
+    private List<RoutineDay> days;
     
     // Constructors
     
@@ -162,11 +162,11 @@ public class Routine {
         this.currentDay = currentDay;
     }
     
-    public SortedSet<RoutineDay> getDays() {
+    public List<RoutineDay> getDays() {
         return days;
     }
     
-    public void setDays(SortedSet<RoutineDay> days) {
+    public void setDays(List<RoutineDay> days) {
         this.days = days;
     }
     

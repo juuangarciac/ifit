@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
-import com.uca.juangarcia.ifit.exception.dto.ExperienceLevelNotFoundException;
+import com.uca.juangarcia.ifit.exception.ExperienceLevelNotFoundException;
 import com.uca.juangarcia.ifit.modules.user.dto.CreateExperienceLevelDto;
 import com.uca.juangarcia.ifit.modules.user.dto.ExperienceLevelDto;
 import com.uca.juangarcia.ifit.modules.user.dto.UpdateExperienceLevelDto;

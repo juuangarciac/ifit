@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sed -i 's/^package com\\\\.uca\\\\.juangarcia\\\\.ifit\\\\.exception\\\\.dto;/package com.uca.juangarcia.ifit.exception;/' ifit/src/main/java/com/uca/juangarcia/ifit/exception/*.java)",
+      "Bash(sed -i 's/^package com\\\\.uca\\\\.juangarcia\\\\.ifit\\\\.modules\\\\.training\\\\.exception;/package com.uca.juangarcia.ifit.exception;/' ifit/src/main/java/com/uca/juangarcia/ifit/exception/RoutineNotFoundException.java)",
+      "Bash(find ifit/src -name \"*.java\" -exec sed -i 's/import com\\\\.uca\\\\.juangarcia\\\\.ifit\\\\.exception\\\\.dto\\\\./import com.uca.juangarcia.ifit.exception./g' {} \\\\;)",
+      "Bash(find ifit/src -name \"*.java\" -exec sed -i 's/import com\\\\.uca\\\\.juangarcia\\\\.ifit\\\\.modules\\\\.training\\\\.exception\\\\.RoutineNotFoundException/import com.uca.juangarcia.ifit.exception.RoutineNotFoundException/g' {} \\\\;)",
+      "Bash(ls ifit/src/main/java/com/uca/juangarcia/ifit/exception/*.java)",
+      "Bash(xargs -I{} basename {})",
+      "Bash(sed -i 's|import com.uca.juangarcia.ifit.modules.auth.service.IAuthenticationService;|import com.uca.juangarcia.ifit.modules.auth.service.impl.AuthenticationService;|' __TRACKED_VAR__/controllers/AuthenticationController.java)",
+      "Bash(sed -i 's|private final IAuthenticationService authenticationService;|private final AuthenticationService authenticationService;|' __TRACKED_VAR__/controllers/AuthenticationController.java)",
+      "Bash(sed -i 's|import org.springframework.beans.factory.annotation.Autowired;||' __TRACKED_VAR__/controllers/KeycloakController.java)",
+      "Bash(sed -i 's|import com.uca.juangarcia.ifit.modules.auth.service.IKeycloakService;|import com.uca.juangarcia.ifit.modules.auth.service.impl.KeycloakServiceImpl;|' __TRACKED_VAR__/controllers/KeycloakController.java)",
+      "Bash(python3 -c ':*)",
+      "Bash(python3 -)"
+    ]
+  }
+}

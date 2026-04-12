@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.RoutineResponseDto;
 
-public class IFitAIRoutineResponseDTO {
+public class IFitAIRoutineResponseDto {
 
     private String message;
 
@@ -15,13 +15,13 @@ public class IFitAIRoutineResponseDTO {
 
     private Integer trainingDays;
 
-    private List<IFitAIRoutineDayDTO> days;
+    private List<IFitAIRoutineDayDto> days;
 
-    public IFitAIRoutineResponseDTO() {
+    public IFitAIRoutineResponseDto() {
     }
 
-    public IFitAIRoutineResponseDTO(String message, String description, Integer trainingDays,
-            List<IFitAIRoutineDayDTO> days) {
+    public IFitAIRoutineResponseDto(String message, String description, Integer trainingDays,
+            List<IFitAIRoutineDayDto> days) {
         this.message = message;
         this.description = description;
         this.trainingDays = trainingDays;
@@ -52,11 +52,11 @@ public class IFitAIRoutineResponseDTO {
         this.trainingDays = trainingDays;
     }
 
-    public List<IFitAIRoutineDayDTO> getDays() {
+    public List<IFitAIRoutineDayDto> getDays() {
         return days;
     }
 
-    public void setDays(List<IFitAIRoutineDayDTO> days) {
+    public void setDays(List<IFitAIRoutineDayDto> days) {
         this.days = days;
     }
 
@@ -75,7 +75,7 @@ public class IFitAIRoutineResponseDTO {
         routineResponseDto.setIsActive(false);
         routineResponseDto.setCreatedAt(LocalDateTime.now());
         routineResponseDto.setUpdatedAt(null);
-        routineResponseDto.setDays(this.days.stream().map(IFitAIRoutineDayDTO::toRoutineDayDto).collect(Collectors.toSet()));
+        routineResponseDto.setDays(this.days.stream().map(IFitAIRoutineDayDto::toRoutineDayDto).collect(Collectors.toList()));
         return routineResponseDto;
     }
 }

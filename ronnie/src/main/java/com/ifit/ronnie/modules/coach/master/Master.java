@@ -1,6 +1,6 @@
 package com.ifit.ronnie.modules.coach.master;
 
-import com.ifit.ronnie.modules.coach.dto.RoutineResponseDTO;
+import com.ifit.ronnie.modules.coach.dto.RoutineResponseDto;
 
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.SystemMessage;
@@ -43,7 +43,7 @@ public interface Master {
                 Genera la rutina basándote en los datos del cliente del siguiente JSON:
                 {questionnaireData}
             """)
-    RoutineResponseDTO generateRoutine(
+    RoutineResponseDto generateRoutine(
         @MemoryId int memoryId,
         @V("questionnaireData") String questionnaireData,
         @V("exerciseCatalog") String exerciseCatalog

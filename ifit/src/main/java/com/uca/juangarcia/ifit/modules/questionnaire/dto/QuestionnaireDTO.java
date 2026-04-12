@@ -24,7 +24,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * @since 1.0
  */
 @Schema(description = "Información completa de un cuestionario")
-public record QuestionnaireDTO(
+public record QuestionnaireDto(
     
     @Schema(description = "ID único del cuestionario", example = "1")
     Long id,
@@ -63,7 +63,7 @@ public record QuestionnaireDTO(
      * 
      * @throws IllegalArgumentException si algún campo requerido es nulo
      */
-    public QuestionnaireDTO {
+    public QuestionnaireDto {
         if (id == null) {
             throw new IllegalArgumentException("Questionnaire ID cannot be null");
         }

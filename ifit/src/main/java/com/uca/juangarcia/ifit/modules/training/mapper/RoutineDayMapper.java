@@ -72,13 +72,13 @@ public class RoutineDayMapper {
     /**
      * Convierte una lista de entidades a lista de DTOs.
      */
-    public Set<RoutineDayDto> toDtoSet(Set<RoutineDay> days) {
+    public List<RoutineDayDto> toDtoList(List<RoutineDay> days) {
         if (days == null) {
             return null;
         }
         
         return days.stream()
             .map(this::toDto)
-            .collect(Collectors.toSet());
+            .collect(Collectors.toList());
     }
 }

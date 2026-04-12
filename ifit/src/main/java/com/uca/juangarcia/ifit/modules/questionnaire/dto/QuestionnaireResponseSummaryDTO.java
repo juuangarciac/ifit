@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * DTO for Questionnaire Response Summary - Complete view of a user's questionnaire completion
  */
-public class QuestionnaireResponseSummaryDTO {
+public class QuestionnaireResponseSummaryDto {
     
     private Long responseId;
     private Long userId;
@@ -14,18 +14,18 @@ public class QuestionnaireResponseSummaryDTO {
     private Long questionnaireId;
     private String questionnaireName;
     private String questionnaireDescription;
-    private List<AnswerDTO> answers;
+    private List<AnswerDto> answers;
     private LocalDateTime startedAt;
     private LocalDateTime completedAt;
     private Boolean isCompleted;
     
     // Constructors
-    public QuestionnaireResponseSummaryDTO() {
+    public QuestionnaireResponseSummaryDto() {
     }
     
-    public QuestionnaireResponseSummaryDTO(Long responseId, Long userId, String userName,
+    public QuestionnaireResponseSummaryDto(Long responseId, Long userId, String userName,
                                           Long questionnaireId, String questionnaireName, 
-                                          String questionnaireDescription, List<AnswerDTO> answers,
+                                          String questionnaireDescription, List<AnswerDto> answers,
                                           LocalDateTime startedAt, LocalDateTime completedAt, 
                                           Boolean isCompleted) {
         this.responseId = responseId;
@@ -52,7 +52,7 @@ public class QuestionnaireResponseSummaryDTO {
         private Long questionnaireId;
         private String questionnaireName;
         private String questionnaireDescription;
-        private List<AnswerDTO> answers;
+        private List<AnswerDto> answers;
         private LocalDateTime startedAt;
         private LocalDateTime completedAt;
         private Boolean isCompleted;
@@ -87,7 +87,7 @@ public class QuestionnaireResponseSummaryDTO {
             return this;
         }
         
-        public Builder answers(List<AnswerDTO> answers) {
+        public Builder answers(List<AnswerDto> answers) {
             this.answers = answers;
             return this;
         }
@@ -107,8 +107,8 @@ public class QuestionnaireResponseSummaryDTO {
             return this;
         }
         
-        public QuestionnaireResponseSummaryDTO build() {
-            return new QuestionnaireResponseSummaryDTO(responseId, userId, userName, questionnaireId,
+        public QuestionnaireResponseSummaryDto build() {
+            return new QuestionnaireResponseSummaryDto(responseId, userId, userName, questionnaireId,
                 questionnaireName, questionnaireDescription, answers, startedAt, completedAt, isCompleted);
         }
     }
@@ -162,11 +162,11 @@ public class QuestionnaireResponseSummaryDTO {
         this.questionnaireDescription = questionnaireDescription;
     }
     
-    public List<AnswerDTO> getAnswers() {
+    public List<AnswerDto> getAnswers() {
         return answers;
     }
     
-    public void setAnswers(List<AnswerDTO> answers) {
+    public void setAnswers(List<AnswerDto> answers) {
         this.answers = answers;
     }
     

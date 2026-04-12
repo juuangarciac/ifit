@@ -13,9 +13,9 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import com.uca.juangarcia.ifit.modules.training.client.dto.IFitAIMaxMemoryIdResponseDTO;
-import com.uca.juangarcia.ifit.modules.training.client.dto.IFitAIRoutineResponseDTO;
-import com.uca.juangarcia.ifit.modules.training.controller.dto.RonnieMessageDTO;
+import com.uca.juangarcia.ifit.modules.training.client.dto.IFitAIMaxMemoryIdResponseDto;
+import com.uca.juangarcia.ifit.modules.training.client.dto.IFitAIRoutineResponseDto;
+import com.uca.juangarcia.ifit.modules.training.controller.dto.RonnieMessageDto;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.RoutineResponseDto;
 
 
@@ -55,22 +55,22 @@ public class IFitAIClient {
 
         try {
             // Preparar request body
-            RonnieMessageDTO messageDto = new RonnieMessageDTO(memoryId, prompt);
+            RonnieMessageDto messageDto = new RonnieMessageDto(memoryId, prompt);
 
             // Configurar headers
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            HttpEntity<RonnieMessageDTO> requestEntity = new HttpEntity<>(messageDto, headers);
+            HttpEntity<RonnieMessageDto> requestEntity = new HttpEntity<>(messageDto, headers);
 
             // Realizar llamada HTTP
-            ResponseEntity<IFitAIRoutineResponseDTO> response = restTemplate.exchange(
+            ResponseEntity<IFitAIRoutineResponseDto> response = restTemplate.exchange(
                     url,
                     HttpMethod.POST,
                     requestEntity,
-                    IFitAIRoutineResponseDTO.class);
+                    IFitAIRoutineResponseDto.class);
 
-             IFitAIRoutineResponseDTO responseBody = response.getBody();
+             IFitAIRoutineResponseDto responseBody = response.getBody();
 
             logger.info("Routine generated successfully. Response length: {} characters",
                     responseBody != null ? responseBody.toString().length() : 0);
@@ -97,19 +97,19 @@ public class IFitAIClient {
      * Obtiene el ID máximo de memoria desde el servicio de Ronnie para mantener el contexto de conversación.
      * @return DTO con el ID máximo de memoria
      */
-    public IFitAIMaxMemoryIdResponseDTO getMaxMemoryId() {
+    public IFitAIMaxMemoryIdResponseDto getMaxMemoryId() {
         String url = ronnieBaseUrl + "/messages/max-memory-id";
 
         logger.debug("Calling Ronnie service for max memory ID at: {}", url);
 
         try {
-            ResponseEntity<IFitAIMaxMemoryIdResponseDTO> response = restTemplate.exchange(
+            ResponseEntity<IFitAIMaxMemoryIdResponseDto> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     null,
-                    IFitAIMaxMemoryIdResponseDTO.class);
+                    IFitAIMaxMemoryIdResponseDto.class);
 
-            IFitAIMaxMemoryIdResponseDTO responseBody = response.getBody();
+            IFitAIMaxMemoryIdResponseDto responseBody = response.getBody();
 
             logger.info("Max memory ID retrieved successfully: {}", responseBody != null ? responseBody.toString() : "null");
 

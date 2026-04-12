@@ -32,7 +32,7 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RegisterRequestDTO {
+public class RegisterRequestDto {
     
     /**
      * Nombre del usuario.

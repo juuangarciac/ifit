@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.uca.juangarcia.ifit.exception.dto.CoachModelTypeNotFoundException;
+import com.uca.juangarcia.ifit.exception.CoachModelTypeNotFoundException;
 import com.uca.juangarcia.ifit.modules.coach.dto.CoachModelTypeResponseDto;
 import com.uca.juangarcia.ifit.modules.coach.dto.CreateCoachModelTypeRequestDto;
 import com.uca.juangarcia.ifit.modules.coach.dto.UpdateCoachModelTypeRequestDto;
@@ -35,6 +35,7 @@ import com.uca.juangarcia.ifit.modules.coach.repository.CoachModelTypeRepository
  * @version 1.0
  * @since 1.0
  */
+@Transactional(readOnly = true)
 @Service
 public class CoachModelTypeService {
     
@@ -63,7 +64,6 @@ public class CoachModelTypeService {
      * 
      * @return lista de DTOs con información de los modelos habilitados
      */
-    @Transactional(readOnly = true)
     public List<CoachModelTypeResponseDto> getAllEnabled() {
         logger.debug("Fetching all enabled coach model types");
         
@@ -84,7 +84,6 @@ public class CoachModelTypeService {
      * 
      * @return lista de DTOs con información de todos los modelos
      */
-    @Transactional(readOnly = true)
     public List<CoachModelTypeResponseDto> getAll() {
         logger.debug("Fetching all coach model types");
         
@@ -104,7 +103,6 @@ public class CoachModelTypeService {
      * @return DTO con la información del modelo
      * @throws CoachModelTypeNotFoundException si no existe un modelo con el ID proporcionado
      */
-    @Transactional(readOnly = true)
     public CoachModelTypeResponseDto getById(Long id) throws CoachModelTypeNotFoundException {
         logger.debug("Fetching coach model type with id: {}", id);
         
@@ -129,7 +127,6 @@ public class CoachModelTypeService {
      * @return DTO con la información del modelo
      * @throws CoachModelTypeNotFoundException si no existe un modelo con ese nombre
      */
-    @Transactional(readOnly = true)
     public CoachModelTypeResponseDto getByName(String name) throws CoachModelTypeNotFoundException{
         logger.debug("Fetching coach model type with name: {}", name);
         
@@ -296,7 +293,6 @@ public class CoachModelTypeService {
      * @param id identificador del modelo a verificar
      * @return true si existe, false en caso contrario
      */
-    @Transactional(readOnly = true)
     public boolean existsById(Long id) {
         return repository.existsById(id);
     }
@@ -306,7 +302,6 @@ public class CoachModelTypeService {
      * 
      * @return número total de modelos (habilitados y deshabilitados)
      */
-    @Transactional(readOnly = true)
     public long count() {
         return repository.count();
     }
@@ -316,7 +311,6 @@ public class CoachModelTypeService {
      * 
      * @return número de modelos habilitados
      */
-    @Transactional(readOnly = true)
     public long countEnabled() {
         return repository.findByEnabledTrue().size();
     }

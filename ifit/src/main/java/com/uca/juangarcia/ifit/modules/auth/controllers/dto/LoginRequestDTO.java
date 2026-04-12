@@ -7,7 +7,7 @@ import lombok.Value;
 @Value
 @RequiredArgsConstructor
 @Builder
-public class LoginRequestDTO {
+public class LoginRequestDto {
     private String username;
     private String password;
 }

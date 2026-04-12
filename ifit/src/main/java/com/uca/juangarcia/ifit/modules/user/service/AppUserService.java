@@ -11,14 +11,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.uca.juangarcia.ifit.exception.dto.CoachModelTypeNotFoundException;
-import com.uca.juangarcia.ifit.exception.dto.EmailAlreadyExistsException;
-import com.uca.juangarcia.ifit.exception.dto.EmailNotFoundException;
-import com.uca.juangarcia.ifit.exception.dto.ExperienceLevelNotFoundException;
-import com.uca.juangarcia.ifit.exception.dto.UserIdNotFoundException;
-import com.uca.juangarcia.ifit.modules.coach.mapper.CoachModelTypeMapper;
+import com.uca.juangarcia.ifit.exception.CoachModelTypeNotFoundException;
+import com.uca.juangarcia.ifit.exception.EmailAlreadyExistsException;
+import com.uca.juangarcia.ifit.exception.EmailNotFoundException;
+import com.uca.juangarcia.ifit.exception.ExperienceLevelNotFoundException;
+import com.uca.juangarcia.ifit.exception.UserIdNotFoundException;
 import com.uca.juangarcia.ifit.modules.coach.model.CoachModelType;
-import com.uca.juangarcia.ifit.modules.coach.service.CoachModelTypeService;
+import com.uca.juangarcia.ifit.modules.coach.repository.CoachModelTypeRepository;
 import com.uca.juangarcia.ifit.modules.user.dto.AppUserResponseDto;
 import com.uca.juangarcia.ifit.modules.user.dto.CreateAppUserRequestDto;
 import com.uca.juangarcia.ifit.modules.user.dto.ExperienceLevelDto;
@@ -58,10 +57,9 @@ public class AppUserService {
 
     private final AppUserRepository userRepository;
     private final AppRoleService appRoleService;
-    private final CoachModelTypeService coachModelTypeService;
+    private final CoachModelTypeRepository coachModelTypeRepository;
     private final ExperienceLevelService experienceLevelService;
     private final AppUserMapper userMapper;
-    private final CoachModelTypeMapper coachModelTypeMapper;
     private final ExperienceLevelMapper experienceLevelMapper;
     private final PasswordEncoder passwordEncoder;
 
@@ -86,18 +84,16 @@ public class AppUserService {
     public AppUserService(
             AppUserRepository userRepository,
             AppRoleService appRoleService,
-            CoachModelTypeService coachModelTypeService,
+            CoachModelTypeRepository coachModelTypeRepository,
             ExperienceLevelService experienceLevelService,
             AppUserMapper userMapper,
-            CoachModelTypeMapper coachModelTypeMapper,
             ExperienceLevelMapper experienceLevelMapper,
             PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.appRoleService = appRoleService;
-        this.coachModelTypeService = coachModelTypeService;
+        this.coachModelTypeRepository = coachModelTypeRepository;
         this.experienceLevelService = experienceLevelService;
         this.userMapper = userMapper;
-        this.coachModelTypeMapper = coachModelTypeMapper;
         this.experienceLevelMapper = experienceLevelMapper;
         this.passwordEncoder = passwordEncoder;
     }
@@ -119,11 +115,6 @@ public class AppUserService {
         
         List<AppUser> users = userRepository.findAll();
         
-        if (users.isEmpty()) {
-            logger.warn("No users found in database");
-            throw new IllegalStateException("No users found in the system");
-        }
-
         logger.info("Found {} users", users.size());
         return users.stream()
                 .map(userMapper::toResponseDto)
@@ -356,7 +347,8 @@ public class AppUserService {
                     return new UserIdNotFoundException(userId);
                 });
 
-        CoachModelType coach = coachModelTypeMapper.toEntity(coachModelTypeService.getById(coachId));
+        CoachModelType coach = coachModelTypeRepository.findById(coachId)
+                .orElseThrow(() -> new CoachModelTypeNotFoundException(String.valueOf(coachId)));
 
         user.setCoachModelType(coach);
         AppUser updatedUser = userRepository.save(user);

@@ -23,14 +23,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.uca.juangarcia.ifit.exception.dto.UserIdNotFoundException;
+import com.uca.juangarcia.ifit.exception.UserIdNotFoundException;
 import com.uca.juangarcia.ifit.exception.model.ErrorResponse;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.CreateRoutineRequestDto;
-import com.uca.juangarcia.ifit.modules.training.controller.dto.GenerateRoutineRequestDTO;
+import com.uca.juangarcia.ifit.modules.training.controller.dto.GenerateRoutineRequestDto;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.RoutineDayDto;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.RoutineResponseDto;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.UpdateRoutineRequestDto;
-import com.uca.juangarcia.ifit.modules.training.exception.RoutineNotFoundException;
+import com.uca.juangarcia.ifit.exception.RoutineNotFoundException;
 import com.uca.juangarcia.ifit.modules.training.service.RoutineService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -109,6 +109,7 @@ public class RoutineController {
             @Parameter(description = "Datos de la rutina a crear", required = true)
             @Valid @RequestBody CreateRoutineRequestDto requestDto
     ) throws UserIdNotFoundException {
+        logger.debug("Received create routine request: {}", requestDto);
         RoutineResponseDto createdRoutine = routineService.createRoutine(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdRoutine);
     }
@@ -536,9 +537,9 @@ public class RoutineController {
             @Parameter(
                 description = "Objeto con userId y responseId para generar la rutina personalizada",
                 required = true,
-                content = @Content(schema = @Schema(implementation = GenerateRoutineRequestDTO.class))
+                content = @Content(schema = @Schema(implementation = GenerateRoutineRequestDto.class))
             )
-            @Valid @RequestBody GenerateRoutineRequestDTO request) throws UserIdNotFoundException {
+            @Valid @RequestBody GenerateRoutineRequestDto request) throws UserIdNotFoundException {
                 
             // Devolver el JSON directamente
             return ResponseEntity.ok()
@@ -607,4 +608,34 @@ public class RoutineController {
         RoutineResponseDto updatedRoutine = routineService.setRoutineDayAsCompleted(routineId, day);
         return ResponseEntity.ok(updatedRoutine);
     }
+
+
+
+    @Operation(
+        summary = "Marcar una rutina como completada",
+        description = "Marca toda la rutina como completada."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Rutina marcada como completada exitosamente",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = RoutineResponseDto.class))
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Rutina no encontrada",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+        )
+    })
+    @PostMapping("/{routineId}/complete")
+    public ResponseEntity<RoutineResponseDto> setRoutineAsCompleted(
+        @Parameter(description = "ID de la rutina", required = true)
+        @PathVariable Long routineId)
+    throws RoutineNotFoundException {
+        RoutineResponseDto updatedRoutine = routineService.setRoutineAsCompleted(routineId);
+
+        return ResponseEntity.ok(updatedRoutine);
+
+    }
+
 }

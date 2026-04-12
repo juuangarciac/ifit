@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.ifit.ronnie.modules.message.mapper.ChatMessageMapper;
@@ -20,14 +19,17 @@ import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 
 @Component
 class PersistentChatMemoryStore implements ChatMemoryStore {
-    @Autowired
-    MessageRepository messageRepository;
+    private final MessageRepository messageRepository;
+    private final MessageTypeRepository messageTypeRepository;
+    private final ChatMessageMapper chatMessageMapper;
 
-    @Autowired
-    MessageTypeRepository messageTypeRepository;
-
-    @Autowired
-    ChatMessageMapper chatMessageMapper;
+    public PersistentChatMemoryStore(MessageRepository messageRepository,
+            MessageTypeRepository messageTypeRepository,
+            ChatMessageMapper chatMessageMapper) {
+        this.messageRepository = messageRepository;
+        this.messageTypeRepository = messageTypeRepository;
+        this.chatMessageMapper = chatMessageMapper;
+    }
 
     @Override
     public List<ChatMessage> getMessages(Object memoryId) {
@@ -69,7 +71,7 @@ class PersistentChatMemoryStore implements ChatMemoryStore {
         try {
             System.out.println("PersistentChatMemory.updateMessages");
             ChatMessage newMessage = messages.getLast();
-            messageRepository.save(chatMessageMapper.toChat((String)memoryId, newMessage, LocalDateTime.now()));
+            messageRepository.save(chatMessageMapper.toChat((String)memoryId, newMessage, LocalDateTime.now(), messageTypeRepository.findAll()));
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage() + " at PersistentChatMemoryStore.updateMessages(Object memoryId, List<ChatMessage> messages).");
         }

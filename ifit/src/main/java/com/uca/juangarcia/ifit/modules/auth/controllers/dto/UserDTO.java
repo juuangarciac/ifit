@@ -10,7 +10,7 @@ import lombok.Value;
 @Value
 @RequiredArgsConstructor
 @Builder
-public class UserDTO implements Serializable {
+public class UserDto implements Serializable {
 
     private String username;
     private String email;

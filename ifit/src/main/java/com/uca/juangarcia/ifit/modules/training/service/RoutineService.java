@@ -1,6 +1,7 @@
 package com.uca.juangarcia.ifit.modules.training.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -10,16 +11,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.uca.juangarcia.ifit.exception.dto.UserIdNotFoundException;
-import com.uca.juangarcia.ifit.modules.questionnaire.dto.AnswerDTO;
-import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireResponseSummaryDTO;
+import com.uca.juangarcia.ifit.exception.UserIdNotFoundException;
+import com.uca.juangarcia.ifit.modules.questionnaire.dto.AnswerDto;
+import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireResponseSummaryDto;
 import com.uca.juangarcia.ifit.modules.questionnaire.service.QuestionnaireService;
 import com.uca.juangarcia.ifit.modules.training.client.IFitAIClient;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.CreateRoutineRequestDto;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.RoutineDayDto;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.RoutineResponseDto;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.UpdateRoutineRequestDto;
-import com.uca.juangarcia.ifit.modules.training.exception.RoutineNotFoundException;
+import com.uca.juangarcia.ifit.exception.RoutineNotFoundException;
 import com.uca.juangarcia.ifit.modules.training.mapper.RoutineDayMapper;
 import com.uca.juangarcia.ifit.modules.training.mapper.RoutineMapper;
 import com.uca.juangarcia.ifit.modules.training.model.Routine;
@@ -52,7 +53,7 @@ import com.uca.juangarcia.ifit.modules.user.repository.AppUserRepository;
  * @since 1.0
  */
 @Service
-@Transactional
+@Transactional(readOnly = true)
 public class RoutineService {
 
     private static final Logger logger = LoggerFactory.getLogger(RoutineService.class);
@@ -93,7 +94,7 @@ public class RoutineService {
      */
     @Transactional
     public RoutineResponseDto createRoutine(CreateRoutineRequestDto requestDto) throws UserIdNotFoundException {
-        logger.info("Creando rutina para usuario con ID: {}", requestDto.getUserId());
+        logger.info("Creating routine for user with ID: {}", requestDto.getUserId());
 
         // Validar que el usuario existe
         AppUser user = userRepository.findById(requestDto.getUserId())
@@ -107,17 +108,25 @@ public class RoutineService {
         routine.setCurrentDay(1); 
         routine.setActive(true);
 
-        // Agregar días con sus ejercicios
-        if (requestDto.getDays() != null) {
-            requestDto.getDays().forEach(dayDto -> {
-                RoutineDay day = dayMapper.toEntity(dayDto);
-                routine.addDay(day);
-            });
-        }
         // Guardar rutina
         Routine savedRoutine = routineRepository.save(routine);
 
-        logger.info("Rutina creada con ID: {}", savedRoutine.getId());
+        // Agregar días con sus ejercicios
+        List<RoutineDay> days = new ArrayList<>();
+        if (requestDto.getDays() != null) {
+            requestDto.getDays().forEach(dayDto -> {
+                RoutineDay day = dayMapper.toEntity(dayDto);
+                day.setRoutine(savedRoutine); // Establecer la relación con la rutina guardada
+                day = routineDayRepository.save(day); 
+                days.add(day);
+            });
+        }
+        routine.setDays(days);
+        
+        // Guardar rutina
+        routineRepository.save(routine);
+
+        logger.info("Routine created with ID: {}", savedRoutine.getId());
         return routineMapper.toResponseDto(savedRoutine);
     }
 
@@ -127,7 +136,7 @@ public class RoutineService {
      * @return lista de todas las rutinas
      */
     public List<RoutineResponseDto> findAllRoutines() {
-        logger.info("Obteniendo todas las rutinas");
+        logger.info("Getting all routines");
         List<Routine> routines = routineRepository.findAll();
         return routineMapper.toResponseDtoList(routines);
     }
@@ -139,7 +148,7 @@ public class RoutineService {
      * @return página de rutinas
      */
     public Page<RoutineResponseDto> findAllRoutines(Pageable pageable) {
-        logger.info("Obteniendo rutinas paginadas: page={}, size={}",
+        logger.info("Getting paginated routines: page={}, size={}",
                 pageable.getPageNumber(), pageable.getPageSize());
         Page<Routine> routinePage = routineRepository.findAll(pageable);
         return routineMapper.toResponseDtoPage(routinePage);
@@ -153,10 +162,10 @@ public class RoutineService {
      * @throws RoutineNotFoundException si no existe la rutina
      */
     public RoutineResponseDto findRoutineById(Long id) throws RoutineNotFoundException {
-        logger.info("Buscando rutina con ID: {}", id);
+        logger.info("Finding routine with ID: {}", id);
 
         Routine routine = routineRepository.findByIdWithDaysAndExercises(id)
-                .orElseThrow(() -> new RoutineNotFoundException("Rutina con ID " + id + " no encontrada"));
+                .orElseThrow(() -> new RoutineNotFoundException("Routine with ID " + id + " not found"));
 
         return routineMapper.toResponseDto(routine);
     }
@@ -169,7 +178,7 @@ public class RoutineService {
      * @throws UserIdNotFoundException si el usuario no existe
      */
     public List<RoutineResponseDto> findRoutinesByUserId(Long userId) throws UserIdNotFoundException {
-        logger.info("Buscando rutinas del usuario con ID: {}", userId);
+        logger.info("Finding routines for user with ID: {}", userId);
 
         // Validar que el usuario existe
         if (!userRepository.existsById(userId)) {
@@ -190,7 +199,7 @@ public class RoutineService {
      */
     public Page<RoutineResponseDto> findRoutinesByUserId(Long userId, Pageable pageable)
             throws UserIdNotFoundException {
-        logger.info("Buscando rutinas paginadas del usuario {}: page={}, size={}",
+        logger.info("Finding paginated routines for user {}: page={}, size={}",
                 userId, pageable.getPageNumber(), pageable.getPageSize());
 
         // Validar que el usuario existe
@@ -210,7 +219,7 @@ public class RoutineService {
      * @throws UserIdNotFoundException si el usuario no existe
      */
     public List<RoutineResponseDto> findActiveRoutinesByUserId(Long userId) throws UserIdNotFoundException {
-        logger.info("Buscando rutinas activas del usuario con ID: {}", userId);
+        logger.info("Finding active routines for user with ID: {}", userId);
 
         if (!userRepository.existsById(userId)) {
             throw new UserIdNotFoundException(userId);
@@ -232,10 +241,10 @@ public class RoutineService {
     @Transactional
     public RoutineResponseDto updateRoutine(Long id, UpdateRoutineRequestDto updateDto)
             throws RoutineNotFoundException {
-        logger.info("Actualizando rutina con ID: {}", id);
+        logger.info("Updating routine with ID: {}", id);
 
         Routine routine = routineRepository.findByIdWithDaysAndExercises(id)
-                .orElseThrow(() -> new RoutineNotFoundException("Rutina con ID " + id + " no encontrada"));
+                .orElseThrow(() -> new RoutineNotFoundException("Routine with ID " + id + " not found"));
 
         // Actualizar campos si vienen en el DTO
         if (updateDto.getDescription() != null) {
@@ -265,7 +274,7 @@ public class RoutineService {
         routine.setUpdatedAt(LocalDateTime.now());
 
         Routine updatedRoutine = routineRepository.save(routine);
-        logger.info("Rutina actualizada: {}", id);
+        logger.info("Routine updated: {}", id);
 
         return routineMapper.toResponseDto(updatedRoutine);
     }
@@ -280,10 +289,10 @@ public class RoutineService {
      */
     @Transactional
     public RoutineResponseDto toggleRoutineActive(Long id, boolean isActive) throws RoutineNotFoundException {
-        logger.info("Cambiando estado activo de rutina {} a: {}", id, isActive);
+        logger.info("Changing active state of routine {} to: {}", id, isActive);
 
         Routine routine = routineRepository.findById(id)
-                .orElseThrow(() -> new RoutineNotFoundException("Rutina con ID " + id + " no encontrada"));
+                .orElseThrow(() -> new RoutineNotFoundException("Routine with ID " + id + " not found"));
 
         routine.setActive(isActive);
         routine.setUpdatedAt(LocalDateTime.now());
@@ -300,14 +309,14 @@ public class RoutineService {
      */
     @Transactional
     public void deleteRoutine(Long id) throws RoutineNotFoundException {
-        logger.info("Eliminando rutina con ID: {}", id);
+        logger.info("Deleting routine with ID: {}", id);
 
         if (!routineRepository.existsById(id)) {
-            throw new RoutineNotFoundException("Rutina con ID " + id + " no encontrada");
+            throw new RoutineNotFoundException("Routine with ID " + id + " not found");
         }
 
         routineRepository.deleteById(id);
-        logger.info("Rutina eliminada: {}", id);
+        logger.info("Routine deleted: {}", id);
     }
 
     /**
@@ -341,21 +350,21 @@ public class RoutineService {
      * @throws RuntimeException si hay error obteniendo el resumen o generando la
      *                          rutina
      */
-    public RoutineResponseDto generateRoutine(String userId, Long responseId) throws UserIdNotFoundException {
+    public RoutineResponseDto generateRoutine(Long userId, Long responseId) throws UserIdNotFoundException {
         logger.info("Starting routine generation for userId: {}, responseId: {}", userId, responseId);
 
-        if (userId == null || userId.isBlank())
-            throw new IllegalArgumentException("El userId no puede ser nulo o vacío");
+        if (userId == null)
+            throw new IllegalArgumentException("User ID cannot be null");
 
         if (responseId == null)
-            throw new IllegalArgumentException("El responseId no puede ser nulo");
+            throw new IllegalArgumentException("Response ID cannot be null");
 
         // 1. Obtener perfil del usuario y respuestas al cuestionario
-        AppUser user = userRepository.findById(Long.parseLong(userId))
-                .orElseThrow(() -> new UserIdNotFoundException(Long.parseLong(userId)));
+        AppUser user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserIdNotFoundException(userId));
 
 
-        QuestionnaireResponseSummaryDTO summary = questionnaireService.getResponseSummary(responseId);
+        QuestionnaireResponseSummaryDto summary = questionnaireService.getResponseSummary(responseId);
 
         logger.debug("Retrieved questionnaire summary: {} answers", summary.getAnswers().size());
 
@@ -372,7 +381,7 @@ public class RoutineService {
         // 4. Llamar a Ronnie para generar la rutina
         RoutineResponseDto routineResponseDto = aiClient.generateRoutine(memoryId, prompt);
             
-        routineResponseDto.setUserId(Long.parseLong(userId)); // Asignar userId al DTO
+        routineResponseDto.setUserId(userId);
 
         logger.info("Routine generated successfully for userId: {}", userId);
 
@@ -388,7 +397,7 @@ public class RoutineService {
      * @return
      * @throws UserIdNotFoundException
      */
-    private String buildRoutinePrompt(AppUser user, QuestionnaireResponseSummaryDTO summary) throws UserIdNotFoundException {
+    private String buildRoutinePrompt(AppUser user, QuestionnaireResponseSummaryDto summary) throws UserIdNotFoundException {
 
         StringBuilder sb = new StringBuilder();
 
@@ -403,12 +412,12 @@ public class RoutineService {
         sb.append("Cuestionario: ").append(summary.getQuestionnaireName()).append("\n\n");
 
         sb.append("RESPUESTAS AL CUESTIONARIO:\n");
-        for (AnswerDTO answer : summary.getAnswers()) {
-            sb.append("- ").append(answer.getQuestionText()).append("\n");
-            sb.append("  Respuesta: ").append(answer.getSelectedOption()).append("\n");
+        for (AnswerDto answer : summary.getAnswers()) {
+            sb.append("- ").append(answer.questionText()).append("\n");
+            sb.append("  Respuesta: ").append(answer.selectedOption()).append("\n");
 
-            if (answer.getAdditionalText() != null && !answer.getAdditionalText().isBlank()) {
-                sb.append("  Detalle: ").append(answer.getAdditionalText()).append("\n");
+            if (answer.additionalText() != null && !answer.additionalText().isBlank()) {
+                sb.append("  Detalle: ").append(answer.additionalText()).append("\n");
             }
             sb.append("\n");
         }
@@ -424,27 +433,36 @@ public class RoutineService {
      * @return
      * @throws RoutineNotFoundException
      */
-    @Transactional
     public RoutineDayDto getRoutineDayByRoutineIdAndDay(Long routineId, Integer day) throws RoutineNotFoundException {
-        logger.info("Buscando día {} de rutina con ID: {}", day, routineId);
+        logger.info("Finding day {} of routine with ID: {}", day, routineId);
 
         RoutineDay routineDay = routineDayRepository.findRoutineDayByRoutineIdAndDay(routineId, day)
                 .orElseThrow(() -> new RoutineNotFoundException(
-                "Día " + day + " de rutina con ID " + routineId + " no encontrado"));
+                "Day " + day + " of routine with ID " + routineId + " not found"));
 
         return dayMapper.toDto(routineDay);
     }
 
+    /**
+     * Marca un día de una rutina como completado.
+     *
+     * @param routineId
+     * @param day
+     * @return
+     * @throws RoutineNotFoundException
+
+     */
+    @Transactional
     public RoutineResponseDto setRoutineDayAsCompleted(Long routineId, Integer day) throws RoutineNotFoundException {
 
-        logger.info("Marcando día {} de rutina con ID: {} como completado", day, routineId);
+        logger.info("Marking day {} of routine with ID: {} as completed", day, routineId);
         
         Routine routine = routineRepository.findById(routineId)
-                .orElseThrow(() -> new RoutineNotFoundException("Rutina con ID " + routineId + " no encontrada"));
+                .orElseThrow(() -> new RoutineNotFoundException("Routine with ID " + routineId + " not found"));
 
         RoutineDay routineDay = routineDayRepository.findRoutineDayByRoutineIdAndDay(routineId, day)
                 .orElseThrow(() -> new RoutineNotFoundException(
-                "Día " + day + " de rutina con ID " + routineId + " no encontrado"));
+                "Day " + day + " of routine with ID " + routineId + " not found"));
 
         List<RoutineDay> routineDays = routineDayRepository.findByRoutineId(routineId);
 
@@ -457,8 +475,33 @@ public class RoutineService {
         }
 
         routine = routineRepository.save(routine);
-        logger.info("Día {} de rutina con ID: {} marcado como completado. Current day updated to: {}",
+        logger.info("Day {} of routine with ID: {} marked as completed. Current day updated to: {}",
                 day, routineId, routine.getCurrentDay());
+
+        return routineMapper.toResponseDto(routine);
+    }
+
+    /**
+     * Desactiva una rutina, marcándola como inactiva en lugar de eliminarla.
+     * 
+        * @param routineId ID de la rutina a desactivar
+        * @return DTO con los datos de la rutina actualizada
+        * @throws RoutineNotFoundException si no existe la rutina
+     */
+    @Transactional
+    public RoutineResponseDto setRoutineAsCompleted(Long routineId) 
+        throws RoutineNotFoundException {
+
+        logger.info("Deactivating routine with ID: {}", routineId);
+
+        Routine routine = routineRepository.findById(routineId)
+                .orElseThrow(() -> new RoutineNotFoundException("Routine with ID " + routineId + " not found"));
+        
+        routine.setActive(false);
+        routine.setUpdatedAt(LocalDateTime.now());
+        routine = routineRepository.save(routine);
+
+        logger.info("Routine with ID: {} deactivated", routineId);
 
         return routineMapper.toResponseDto(routine);
     }

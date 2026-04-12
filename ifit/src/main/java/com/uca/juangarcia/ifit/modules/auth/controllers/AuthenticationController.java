@@ -8,17 +8,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.uca.juangarcia.ifit.exception.dto.EmailAlreadyExistsException;
-import com.uca.juangarcia.ifit.exception.dto.EmailNotFoundException;
-import com.uca.juangarcia.ifit.exception.dto.InvalidCredentialsException;
-import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LoginRequestDTO;
-import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LoginResponseDTO;
-import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LogoutResponseDTO;
-import com.uca.juangarcia.ifit.modules.auth.controllers.dto.RefreshTokenRequestDTO;
-import com.uca.juangarcia.ifit.modules.auth.controllers.dto.RegisterRequestDTO;
-import com.uca.juangarcia.ifit.modules.auth.controllers.dto.RegisterResponseDTO;
-import com.uca.juangarcia.ifit.modules.auth.controllers.dto.VerifyUserRequestDTO;
-import com.uca.juangarcia.ifit.modules.auth.service.IAuthenticationService;
+import com.uca.juangarcia.ifit.exception.EmailAlreadyExistsException;
+import com.uca.juangarcia.ifit.exception.EmailNotFoundException;
+import com.uca.juangarcia.ifit.exception.InvalidCredentialsException;
+import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LoginRequestDto;
+import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LoginResponseDto;
+import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LogoutResponseDto;
+import com.uca.juangarcia.ifit.modules.auth.controllers.dto.RefreshTokenRequestDto;
+import com.uca.juangarcia.ifit.modules.auth.controllers.dto.RegisterRequestDto;
+import com.uca.juangarcia.ifit.modules.auth.controllers.dto.RegisterResponseDto;
+import com.uca.juangarcia.ifit.modules.auth.controllers.dto.VerifyUserRequestDto;
+import com.uca.juangarcia.ifit.modules.auth.service.impl.AuthenticationService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -52,7 +52,7 @@ import lombok.extern.slf4j.Slf4j;
 @Tag(name = "Authentication", description = "Endpoints para autenticación y gestión de tokens JWT")
 public class AuthenticationController {
     
-    private final IAuthenticationService authenticationService;
+    private final AuthenticationService authenticationService;
 
     /**
      * Autentica un usuario existente.
@@ -88,10 +88,10 @@ public class AuthenticationController {
         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO) 
+    public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto loginRequestDTO) 
             throws InvalidCredentialsException, AuthenticationServiceException {
         log.info("Login request received for: {}", loginRequestDTO.getUsername());
-        LoginResponseDTO response = authenticationService.login(loginRequestDTO);
+        LoginResponseDto response = authenticationService.login(loginRequestDTO);
         log.info("Login successful for: {}", loginRequestDTO.getUsername());
         return ResponseEntity.ok(response);
     }
@@ -109,7 +109,7 @@ public class AuthenticationController {
      * <p>En caso de error, se hace rollback automático en Keycloak.
      * 
      * @param registerDTO datos del nuevo usuario
-     * @return RegisterResponseDTO
+     * @return RegisterResponseDto
      */
     @Operation(
         summary = "Registro de nuevo usuario",
@@ -122,10 +122,10 @@ public class AuthenticationController {
         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @PostMapping("/register")
-    public ResponseEntity<RegisterResponseDTO> register(@Valid @RequestBody RegisterRequestDTO registerDTO) 
+    public ResponseEntity<RegisterResponseDto> register(@Valid @RequestBody RegisterRequestDto registerDTO) 
             throws EmailAlreadyExistsException {
         log.info("Registration request received for: {}", registerDTO.getEmail());
-        RegisterResponseDTO response = authenticationService.register(registerDTO);
+        RegisterResponseDto response = authenticationService.register(registerDTO);
         log.info("Registration successful for: {}", registerDTO.getEmail());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -149,9 +149,9 @@ public class AuthenticationController {
         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @PostMapping("/refresh")
-    public ResponseEntity<LoginResponseDTO> refreshToken(@Valid @RequestBody RefreshTokenRequestDTO request) {
+    public ResponseEntity<LoginResponseDto> refreshToken(@Valid @RequestBody RefreshTokenRequestDto request) {
         log.info("Token refresh request received");
-        LoginResponseDTO response = authenticationService.refreshToken(request.getRefreshToken());
+        LoginResponseDto response = authenticationService.refreshToken(request.refreshToken());
         log.info("Tokens refreshed successfully");
         return ResponseEntity.ok(response);
     }
@@ -187,16 +187,13 @@ public class AuthenticationController {
         @ApiResponse(responseCode = "500", description = "Error al comunicarse con Keycloak")
     })
     @PostMapping("/logout")
-    public ResponseEntity<LogoutResponseDTO> logout(@Valid @RequestBody RefreshTokenRequestDTO request) {
+    public ResponseEntity<LogoutResponseDto> logout(@Valid @RequestBody RefreshTokenRequestDto request) {
         log.info("Logout request received");
-        authenticationService.logout(request.getRefreshToken());
+        authenticationService.logout(request.refreshToken());
         log.info("Logout successful - Refresh token invalidated");
         
         return ResponseEntity.ok(
-            LogoutResponseDTO.builder()
-            .message("Session closed successfully")
-            .success(true)
-            .build());
+            new LogoutResponseDto("Session closed successfully", true));
     }
 
     /**
@@ -222,9 +219,9 @@ public class AuthenticationController {
         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @PostMapping("/verify")
-    public ResponseEntity<LoginResponseDTO> verify(@Valid @RequestBody VerifyUserRequestDTO request) 
+    public ResponseEntity<LoginResponseDto> verify(@Valid @RequestBody VerifyUserRequestDto request) 
     throws IllegalArgumentException, EmailNotFoundException, InvalidCredentialsException {
-        LoginResponseDTO response = authenticationService.verifyEmail(request);
+        LoginResponseDto response = authenticationService.verifyEmail(request);
         return ResponseEntity.ok(response);
     }
 }

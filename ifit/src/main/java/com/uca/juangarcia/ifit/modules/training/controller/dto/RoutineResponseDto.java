@@ -1,6 +1,7 @@
 package com.uca.juangarcia.ifit.modules.training.controller.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -31,13 +32,13 @@ public class RoutineResponseDto {
     
     private LocalDateTime updatedAt;
     
-    private Set<RoutineDayDto> days;
+    private List<RoutineDayDto> days;
     
     // Constructors
     
     public RoutineResponseDto() {}
 
-    public RoutineResponseDto(Long id, Long userId, String message, String description, Integer trainingDays, Boolean isActive, Integer currentDay, LocalDateTime createdAt, LocalDateTime updatedAt, Set<RoutineDayDto> days) {
+    public RoutineResponseDto(Long id, Long userId, String message, String description, Integer trainingDays, Boolean isActive, Integer currentDay, LocalDateTime createdAt, LocalDateTime updatedAt, List<RoutineDayDto> days) {
         this.id = id;
         this.userId = userId;
         this.message = message;
@@ -122,11 +123,11 @@ public class RoutineResponseDto {
         this.updatedAt = updatedAt;
     }
     
-    public Set<RoutineDayDto> getDays() {
+    public List<RoutineDayDto> getDays() {
         return days;
     }
     
-    public void setDays(Set<RoutineDayDto> days) {
+    public void setDays(List<RoutineDayDto> days) {
         this.days = days;
     }
 }

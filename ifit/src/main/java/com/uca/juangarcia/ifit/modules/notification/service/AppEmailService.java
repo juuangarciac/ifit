@@ -14,7 +14,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import com.uca.juangarcia.ifit.exception.dto.EmailNotFoundException;
+import com.uca.juangarcia.ifit.exception.EmailNotFoundException;
 import com.uca.juangarcia.ifit.modules.notification.dto.EmailResponseDto;
 import com.uca.juangarcia.ifit.modules.notification.model.AppEmailDetails;
 import com.uca.juangarcia.ifit.modules.user.dto.AppUserResponseDto;

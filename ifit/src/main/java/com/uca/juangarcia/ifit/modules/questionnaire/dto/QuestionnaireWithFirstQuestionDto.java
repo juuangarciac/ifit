@@ -55,7 +55,7 @@ public record QuestionnaireWithFirstQuestionDto(
     LocalDateTime updatedAt,
     
     @Schema(description = "Primera pregunta del cuestionario con todas sus opciones")
-    QuestionDTO firstQuestion
+    QuestionDto firstQuestion
 ) {
     
     public QuestionnaireWithFirstQuestionDto {

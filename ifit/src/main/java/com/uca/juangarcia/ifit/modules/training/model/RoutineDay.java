@@ -32,7 +32,7 @@ import jakarta.persistence.Table;
  */
 @Entity
 @Table(name = "routine_day")
-public class RoutineDay implements Comparable<RoutineDay> {
+public class RoutineDay {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -147,11 +147,6 @@ public class RoutineDay implements Comparable<RoutineDay> {
         return Objects.equals(dayNumber, other.dayNumber);
     }
 
-    @Override
-    public int compareTo(RoutineDay other) {
-        return Integer.compare(this.dayNumber, other.dayNumber);
-    }
-    
     @Override
     public String toString() {
         return "RoutineDay [id=" + id + ", dayNumber=" + dayNumber + ", dayName=" + dayName + 

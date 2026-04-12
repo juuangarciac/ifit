@@ -3,18 +3,18 @@ package com.uca.juangarcia.ifit.modules.questionnaire.dto;
 /**
  * DTO for Questionnaire Response - Returned after starting a questionnaire or answering a question
  */
-public class QuestionnaireResponseDTO {
+public class QuestionnaireResponseDto {
     
     private Long responseId;
-    private QuestionDTO currentQuestion;
+    private QuestionDto currentQuestion;
     private Boolean isCompleted;
     private Integer totalQuestionsAnswered;
     
     // Constructors
-    public QuestionnaireResponseDTO() {
+    public QuestionnaireResponseDto() {
     }
     
-    public QuestionnaireResponseDTO(Long responseId, QuestionDTO currentQuestion, 
+    public QuestionnaireResponseDto(Long responseId, QuestionDto currentQuestion, 
                                    Boolean isCompleted, Integer totalQuestionsAnswered) {
         this.responseId = responseId;
         this.currentQuestion = currentQuestion;
@@ -29,7 +29,7 @@ public class QuestionnaireResponseDTO {
     
     public static class Builder {
         private Long responseId;
-        private QuestionDTO currentQuestion;
+        private QuestionDto currentQuestion;
         private Boolean isCompleted;
         private Integer totalQuestionsAnswered;
         
@@ -38,7 +38,7 @@ public class QuestionnaireResponseDTO {
             return this;
         }
         
-        public Builder currentQuestion(QuestionDTO currentQuestion) {
+        public Builder currentQuestion(QuestionDto currentQuestion) {
             this.currentQuestion = currentQuestion;
             return this;
         }
@@ -53,8 +53,8 @@ public class QuestionnaireResponseDTO {
             return this;
         }
         
-        public QuestionnaireResponseDTO build() {
-            return new QuestionnaireResponseDTO(responseId, currentQuestion, isCompleted, totalQuestionsAnswered);
+        public QuestionnaireResponseDto build() {
+            return new QuestionnaireResponseDto(responseId, currentQuestion, isCompleted, totalQuestionsAnswered);
         }
     }
     
@@ -67,11 +67,11 @@ public class QuestionnaireResponseDTO {
         this.responseId = responseId;
     }
     
-    public QuestionDTO getCurrentQuestion() {
+    public QuestionDto getCurrentQuestion() {
         return currentQuestion;
     }
     
-    public void setCurrentQuestion(QuestionDTO currentQuestion) {
+    public void setCurrentQuestion(QuestionDto currentQuestion) {
         this.currentQuestion = currentQuestion;
     }
     

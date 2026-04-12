@@ -1,4 +1,4 @@
-package com.uca.juangarcia.ifit.modules.training.exception;
+package com.uca.juangarcia.ifit.exception;
 
 /**
  * Excepción lanzada cuando no se encuentra una rutina en el sistema.

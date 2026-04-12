@@ -2,7 +2,7 @@ package com.uca.juangarcia.ifit.modules.training.client.dto;
 
 import com.uca.juangarcia.ifit.modules.training.controller.dto.RoutineExerciseDto;
 
-public class IFitAIRoutineExerciseDTO {
+public class IFitAIRoutineExerciseDto {
     private String exerciseName;
 
     private Integer sets;
@@ -15,10 +15,10 @@ public class IFitAIRoutineExerciseDTO {
 
     private Integer orderIndex;
 
-    public IFitAIRoutineExerciseDTO() {
+    public IFitAIRoutineExerciseDto() {
     }
 
-    public IFitAIRoutineExerciseDTO(String exerciseName, Integer sets, String reps, Integer restSeconds, String notes,
+    public IFitAIRoutineExerciseDto(String exerciseName, Integer sets, String reps, Integer restSeconds, String notes,
             Integer orderIndex) {
         this.exerciseName = exerciseName;
         this.sets = sets;

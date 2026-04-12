@@ -15,9 +15,8 @@ import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
-import com.uca.juangarcia.ifit.exception.dto.KeycloakUserCreationException;
-import com.uca.juangarcia.ifit.modules.auth.controllers.dto.UserDTO;
-import com.uca.juangarcia.ifit.modules.auth.service.IKeycloakService;
+import com.uca.juangarcia.ifit.exception.KeycloakUserCreationException;
+import com.uca.juangarcia.ifit.modules.auth.controllers.dto.UserDto;
 import com.uca.juangarcia.ifit.modules.auth.util.KeycloakProvider;
 
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @Slf4j
-public class KeycloakServiceImpl implements IKeycloakService {
+public class KeycloakServiceImpl {
 
     /**
      * Lista todos los usuarios registrados en Keycloak.
@@ -79,7 +78,7 @@ public class KeycloakServiceImpl implements IKeycloakService {
      * @return ID del usuario creado en Keycloak
      * @throws KeycloakUserCreationException si el usuario ya existe o hay un error en la creación
      */
-    public String createUser(@NonNull UserDTO userDTO) throws KeycloakUserCreationException {
+    public String createUser(@NonNull UserDto userDTO) throws KeycloakUserCreationException {
         log.info("Creating user in Keycloak: {}", userDTO.getEmail());
         
         UsersResource usersResource = KeycloakProvider.getUserResource();
@@ -165,7 +164,7 @@ public class KeycloakServiceImpl implements IKeycloakService {
      * @param userId ID del usuario a actualizar
      * @param userDTO nuevos datos del usuario
      */
-    public void updateUser(String userId, @NonNull UserDTO userDTO) {
+    public void updateUser(String userId, @NonNull UserDto userDTO) {
         log.info("Updating user in Keycloak: {}", userId);
 
         CredentialRepresentation credentialRepresentation = new CredentialRepresentation();
@@ -193,7 +192,6 @@ public class KeycloakServiceImpl implements IKeycloakService {
      * 
      * @param userId ID del usuario cuyo email se marcará como verificado
      */
-    @Override
     public void markEmailAsVerified(String userId) {
         log.info("Marking email as verified in Keycloak for user: {}", userId);
         

@@ -1,12 +1,12 @@
 package com.uca.juangarcia.ifit.modules.training.client.dto;
 
-public class IFitAIMaxMemoryIdResponseDTO {
+public class IFitAIMaxMemoryIdResponseDto {
     private Integer maxMemoryId;
 
-    public IFitAIMaxMemoryIdResponseDTO() {
+    public IFitAIMaxMemoryIdResponseDto() {
     }
 
-     public IFitAIMaxMemoryIdResponseDTO(Integer maxMemoryId) {
+     public IFitAIMaxMemoryIdResponseDto(Integer maxMemoryId) {
         this.maxMemoryId = maxMemoryId;
     }
 

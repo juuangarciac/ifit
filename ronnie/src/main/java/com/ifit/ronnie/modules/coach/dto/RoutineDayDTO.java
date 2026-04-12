@@ -2,7 +2,7 @@ package com.ifit.ronnie.modules.coach.dto;
 
 import java.util.List;
 
-public class RoutineDayDTO {
+public class RoutineDayDto {
 
     private Integer dayNumber;
 
@@ -10,13 +10,13 @@ public class RoutineDayDTO {
 
     private String description;
 
-    private List<RoutineExerciseDTO> exercises;
+    private List<RoutineExerciseDto> exercises;
 
-    public RoutineDayDTO() {
+    public RoutineDayDto() {
     }
 
-    public RoutineDayDTO(Integer dayNumber, String dayName, String description,
-            List<RoutineExerciseDTO> exercises) {
+    public RoutineDayDto(Integer dayNumber, String dayName, String description,
+            List<RoutineExerciseDto> exercises) {
         this.dayNumber = dayNumber;
         this.dayName = dayName;
         this.description = description;
@@ -47,11 +47,11 @@ public class RoutineDayDTO {
         this.description = description;
     }
 
-    public List<RoutineExerciseDTO> getExercises() {
+    public List<RoutineExerciseDto> getExercises() {
         return exercises;
     }
 
-    public void setExercises(List<RoutineExerciseDTO> exercises) {
+    public void setExercises(List<RoutineExerciseDto> exercises) {
         this.exercises = exercises;
     }
 }

@@ -8,29 +8,29 @@ import jakarta.validation.constraints.NotNull;
  * El frontend envía el userId y el responseId del cuestionario completado.
  * El backend construye el prompt y llama al servicio de IA.
  */
-public class GenerateRoutineRequestDTO {
+public class GenerateRoutineRequestDto {
     
     @NotNull(message = "User ID is required")
-    private String userId;
-    
+    private Long userId;
+
     @NotNull(message = "Response ID is required")
     private Long responseId;
-    
+
     // Constructors
-    public GenerateRoutineRequestDTO() {
+    public GenerateRoutineRequestDto() {
     }
-    
-    public GenerateRoutineRequestDTO(String userId, Long responseId) {
+
+    public GenerateRoutineRequestDto(Long userId, Long responseId) {
         this.userId = userId;
         this.responseId = responseId;
     }
-    
+
     // Getters and Setters
-    public String getUserId() {
+    public Long getUserId() {
         return userId;
     }
-    
-    public void setUserId(String userId) {
+
+    public void setUserId(Long userId) {
         this.userId = userId;
     }
     
@@ -44,8 +44,8 @@ public class GenerateRoutineRequestDTO {
     
     @Override
     public String toString() {
-        return "GenerateRoutineRequestDTO{" +
-                "userId='" + userId + '\'' +
+        return "GenerateRoutineRequestDto{" +
+                "userId=" + userId +
                 ", responseId=" + responseId +
                 '}';
     }

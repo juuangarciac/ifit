@@ -32,7 +32,7 @@ public class GroqModelConfiguration {
                 .apiKey(groqApiKey)
                 .modelName(modelName)
                 .timeout(Duration.ofSeconds(timeout))
-                .temperature(0.3)
+                .temperature(0.5)
                 .build();
     }
 

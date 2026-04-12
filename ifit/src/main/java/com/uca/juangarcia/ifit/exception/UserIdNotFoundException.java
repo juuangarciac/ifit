@@ -1,9 +1,10 @@
-package com.uca.juangarcia.ifit.exception.dto;
+package com.uca.juangarcia.ifit.exception;
 
-public class UserQuestionnaireNotFoundException extends Exception {
+public class UserIdNotFoundException extends Exception {
+
     private Long userId;
 
-    public UserQuestionnaireNotFoundException(Long userId) {
+    public UserIdNotFoundException(Long userId) {
         this.userId = userId;
     }
 
@@ -17,6 +18,7 @@ public class UserQuestionnaireNotFoundException extends Exception {
 
     @Override
     public String getMessage() {
-        return "Questionnaire for User with ID " + userId + " not found.";
+        return "User with ID " + userId + " not found.";
     }
+
 }

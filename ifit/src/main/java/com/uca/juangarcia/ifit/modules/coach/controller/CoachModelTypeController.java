@@ -7,13 +7,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.uca.juangarcia.ifit.exception.dto.CoachModelTypeNotFoundException;
+import com.uca.juangarcia.ifit.exception.CoachModelTypeNotFoundException;
 import com.uca.juangarcia.ifit.exception.model.ErrorResponse;
 import com.uca.juangarcia.ifit.modules.coach.dto.CoachModelTypeResponseDto;
 import com.uca.juangarcia.ifit.modules.coach.dto.CreateCoachModelTypeRequestDto;
@@ -445,7 +446,7 @@ public class CoachModelTypeController {
      * @return ResponseEntity con el modelo habilitado
      * @throws CoachModelTypeNotFoundException si no existe un modelo con el ID proporcionado
      */
-    @PutMapping("/{id}/enable")
+    @PatchMapping("/{id}/enable")
     @Operation(
         summary = "Habilitar modelo",
         description = "Habilita un tipo de modelo de coach previamente deshabilitado. Requiere rol de administrador."

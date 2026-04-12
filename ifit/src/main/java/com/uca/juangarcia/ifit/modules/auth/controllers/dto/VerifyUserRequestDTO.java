@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 @Schema(description = "DTO de solicitud para verificación de usuario")
-public record VerifyUserRequestDTO(
+public record VerifyUserRequestDto(
 
     /**
      * Email del usuario (también se usa como username).

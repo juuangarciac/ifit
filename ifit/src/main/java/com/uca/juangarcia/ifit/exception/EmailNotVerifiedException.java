@@ -1,4 +1,4 @@
-package com.uca.juangarcia.ifit.exception.dto;
+package com.uca.juangarcia.ifit.exception;
 
 /**
  * Excepción lanzada cuando un usuario intenta hacer login sin haber verificado su email.

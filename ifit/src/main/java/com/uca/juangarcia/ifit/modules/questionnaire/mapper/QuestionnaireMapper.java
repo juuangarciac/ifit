@@ -3,8 +3,8 @@ package com.uca.juangarcia.ifit.modules.questionnaire.mapper;
 import org.springframework.stereotype.Component;
 
 import com.uca.juangarcia.ifit.modules.questionnaire.dto.CreateQuestionnaireRequestDto;
-import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionDTO;
-import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireDTO;
+import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionDto;
+import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireDto;
 import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireSummaryDto;
 import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireWithFirstQuestionDto;
 import com.uca.juangarcia.ifit.modules.questionnaire.dto.UpdateQuestionnaireRequestDto;
@@ -27,12 +27,12 @@ public class QuestionnaireMapper {
      * @return el DTO con todos los datos del cuestionario
      * @throws IllegalArgumentException si el cuestionario es nulo
      */
-    public QuestionnaireDTO toDto(Questionnaire questionnaire) {
+    public QuestionnaireDto toDto(Questionnaire questionnaire) {
         if (questionnaire == null) {
             throw new IllegalArgumentException("Questionnaire cannot be null");
         }
 
-        return new QuestionnaireDTO(
+        return new QuestionnaireDto(
             questionnaire.getId(),
             questionnaire.getName(),
             questionnaire.getDescription(),
@@ -79,7 +79,7 @@ public class QuestionnaireMapper {
      */
     public QuestionnaireWithFirstQuestionDto toWithFirstQuestionDto(
             Questionnaire questionnaire, 
-            QuestionDTO firstQuestionDto) {
+            QuestionDto firstQuestionDto) {
         
         if (questionnaire == null) {
             throw new IllegalArgumentException("Questionnaire cannot be null");

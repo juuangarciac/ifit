@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.uca.juangarcia.ifit.modules.training.controller.dto.RoutineDayDto;
 
-public class IFitAIRoutineDayDTO {
+public class IFitAIRoutineDayDto {
 
     private Integer dayNumber;
 
@@ -12,13 +12,13 @@ public class IFitAIRoutineDayDTO {
 
     private String description;
 
-    private List<IFitAIRoutineExerciseDTO> exercises;
+    private List<IFitAIRoutineExerciseDto> exercises;
 
-    public IFitAIRoutineDayDTO() {
+    public IFitAIRoutineDayDto() {
     }
 
-    public IFitAIRoutineDayDTO(Integer dayNumber, String dayName, String description,
-            List<IFitAIRoutineExerciseDTO> exercises) {
+    public IFitAIRoutineDayDto(Integer dayNumber, String dayName, String description,
+            List<IFitAIRoutineExerciseDto> exercises) {
         this.dayNumber = dayNumber;
         this.dayName = dayName;
         this.description = description;
@@ -49,11 +49,11 @@ public class IFitAIRoutineDayDTO {
         this.description = description;
     }
 
-    public List<IFitAIRoutineExerciseDTO> getExercises() {
+    public List<IFitAIRoutineExerciseDto> getExercises() {
         return exercises;
     }
 
-    public void setExercises(List<IFitAIRoutineExerciseDTO> exercises) {
+    public void setExercises(List<IFitAIRoutineExerciseDto> exercises) {
         this.exercises = exercises;
     }
 
@@ -68,7 +68,7 @@ public class IFitAIRoutineDayDTO {
         dto.setDayName(this.dayName);
         dto.setDescription(this.description);
         if (this.exercises != null) {
-            dto.setExercises(this.exercises.stream().map(IFitAIRoutineExerciseDTO::toRoutineExerciseDto).toList());
+            dto.setExercises(this.exercises.stream().map(IFitAIRoutineExerciseDto::toRoutineExerciseDto).toList());
         }
         return dto;
     }

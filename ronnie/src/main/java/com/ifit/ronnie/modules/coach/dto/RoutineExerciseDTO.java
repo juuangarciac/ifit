@@ -1,6 +1,6 @@
 package com.ifit.ronnie.modules.coach.dto;
 
-public class RoutineExerciseDTO {
+public class RoutineExerciseDto {
     private String exerciseName;
 
     private Integer sets;
@@ -13,10 +13,10 @@ public class RoutineExerciseDTO {
 
     private Integer orderIndex;
 
-    public RoutineExerciseDTO() {
+    public RoutineExerciseDto() {
     }
 
-    public RoutineExerciseDTO(String exerciseName, Integer sets, String reps, Integer restSeconds, String notes,
+    public RoutineExerciseDto(String exerciseName, Integer sets, String reps, Integer restSeconds, String notes,
             Integer orderIndex) {
         this.exerciseName = exerciseName;
         this.sets = sets;

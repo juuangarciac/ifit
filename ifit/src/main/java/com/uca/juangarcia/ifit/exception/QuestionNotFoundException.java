@@ -1,4 +1,4 @@
-package com.uca.juangarcia.ifit.exception.dto;
+package com.uca.juangarcia.ifit.exception;
 
 
 public class QuestionNotFoundException extends Exception{

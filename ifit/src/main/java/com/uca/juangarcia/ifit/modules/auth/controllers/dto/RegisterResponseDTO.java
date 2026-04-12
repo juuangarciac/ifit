@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
  * 
  * <p>Uso típico:
  * <pre>
- * RegisterResponseDTO response = RegisterResponseDTO.builder()
+ * RegisterResponseDto response = RegisterResponseDto.builder()
  *     .success(true)
  *     .message("Usuario registrado exitosamente. Verifica tu email.")
  *     .email("user@example.com")
@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RegisterResponseDTO {
+public class RegisterResponseDto {
     
     /**
      * Indica si el registro fue exitoso

@@ -8,20 +8,20 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.uca.juangarcia.ifit.exception.dto.CoachModelTypeNotFoundException;
-import com.uca.juangarcia.ifit.exception.dto.ExperienceLevelNotFoundException;
-import com.uca.juangarcia.ifit.exception.dto.QuestionNotFoundException;
-import com.uca.juangarcia.ifit.exception.dto.QuestionnaireNotFoundException;
-import com.uca.juangarcia.ifit.exception.dto.UserIdNotFoundException;
+import com.uca.juangarcia.ifit.exception.CoachModelTypeNotFoundException;
+import com.uca.juangarcia.ifit.exception.ExperienceLevelNotFoundException;
+import com.uca.juangarcia.ifit.exception.QuestionNotFoundException;
+import com.uca.juangarcia.ifit.exception.QuestionnaireNotFoundException;
+import com.uca.juangarcia.ifit.exception.UserIdNotFoundException;
 import com.uca.juangarcia.ifit.modules.coach.model.CoachModelType;
 import com.uca.juangarcia.ifit.modules.coach.repository.CoachModelTypeRepository;
-import com.uca.juangarcia.ifit.modules.questionnaire.dto.AnswerDTO;
+import com.uca.juangarcia.ifit.modules.questionnaire.dto.AnswerDto;
 import com.uca.juangarcia.ifit.modules.questionnaire.dto.CreateQuestionnaireRequestDto;
-import com.uca.juangarcia.ifit.modules.questionnaire.dto.OptionDTO;
-import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionDTO;
-import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireDTO;
-import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireResponseDTO;
-import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireResponseSummaryDTO;
+import com.uca.juangarcia.ifit.modules.questionnaire.dto.OptionDto;
+import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionDto;
+import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireDto;
+import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireResponseDto;
+import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireResponseSummaryDto;
 import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireSummaryDto;
 import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireWithFirstQuestionDto;
 import com.uca.juangarcia.ifit.modules.questionnaire.dto.UpdateQuestionnaireRequestDto;
@@ -124,7 +124,7 @@ public class QuestionnaireService {
      * @return DTO completo del cuestionario
      * @throws QuestionnaireNotFoundException si no se encuentra el cuestionario
      */
-    public QuestionnaireDTO getQuestionnaireById(Long id) throws QuestionnaireNotFoundException {
+    public QuestionnaireDto getQuestionnaireById(Long id) throws QuestionnaireNotFoundException {
         logger.debug("Finding questionnaire by id: {}", id);
         
         Questionnaire questionnaire = questionnaireRepository.findById(id)
@@ -145,9 +145,9 @@ public class QuestionnaireService {
      * @param experienceLevelId ID del nivel de experiencia seleccionado por el usuario
      * @throws QuestionnaireNotFoundException si no encuentra el cuestionario
      * 
-     * @return QuestionnaireDTO
+     * @return QuestionnaireDto
      */
-    public QuestionnaireDTO getQuestionnaireByCoachIdAndExperienceLevelId(Long coachId, Long experienceLevelId)
+    public QuestionnaireDto getQuestionnaireByCoachIdAndExperienceLevelId(Long coachId, Long experienceLevelId)
     throws QuestionnaireNotFoundException{
         logger.debug("Finding questionnaire by coachId: " + coachId + ", and experience id: " + experienceLevelId);
         Questionnaire questionnaire = questionnaireRepository.findByCoachModelTypeAndExperienceLevel(coachId, experienceLevelId)
@@ -182,7 +182,7 @@ public class QuestionnaireService {
             throw new IllegalStateException("Questionnaire has no first question configured");
         }
         
-        QuestionDTO firstQuestionDto = toQuestionDTO(questionnaire.getFirstQuestion());
+        QuestionDto firstQuestionDto = toQuestionDto(questionnaire.getFirstQuestion());
         
         return questionnaireMapper.toWithFirstQuestionDto(questionnaire, firstQuestionDto);
     }
@@ -197,7 +197,7 @@ public class QuestionnaireService {
      * @throws QuestionNotFoundException si la primera pregunta especificada no existe
      */
     @Transactional
-    public QuestionnaireDTO createQuestionnaire(CreateQuestionnaireRequestDto dto) 
+    public QuestionnaireDto createQuestionnaire(CreateQuestionnaireRequestDto dto) 
             throws CoachModelTypeNotFoundException, ExperienceLevelNotFoundException, QuestionNotFoundException {
         logger.debug("Creating new questionnaire: {}", dto.name());
         
@@ -248,7 +248,7 @@ public class QuestionnaireService {
      * @throws QuestionnaireNotFoundException si no se encuentra el cuestionario
      */
     @Transactional
-    public QuestionnaireDTO updateQuestionnaire(Long id, UpdateQuestionnaireRequestDto dto) 
+    public QuestionnaireDto updateQuestionnaire(Long id, UpdateQuestionnaireRequestDto dto) 
             throws QuestionnaireNotFoundException, CoachModelTypeNotFoundException, 
                    ExperienceLevelNotFoundException, QuestionNotFoundException {
         logger.debug("Updating questionnaire with id: {}", id);
@@ -332,7 +332,7 @@ public class QuestionnaireService {
      * @throws QuestionnaireNotFoundException si no se encuentra el cuestionario
      */
     @Transactional
-    public QuestionnaireResponseDTO startQuestionnaire(Long userId, Long questionnaireId) 
+    public QuestionnaireResponseDto startQuestionnaire(Long userId, Long questionnaireId) 
             throws UserIdNotFoundException, QuestionnaireNotFoundException {
         logger.debug("Starting questionnaire {} for user {}", questionnaireId, userId);
         
@@ -365,9 +365,9 @@ public class QuestionnaireService {
         logger.info("Questionnaire session started: responseId={}, user={}, questionnaire={}", 
                     response.getId(), user.getEmail(), questionnaire.getName());
         
-        return QuestionnaireResponseDTO.builder()
+        return QuestionnaireResponseDto.builder()
             .responseId(response.getId())
-            .currentQuestion(toQuestionDTO(questionnaire.getFirstQuestion()))
+            .currentQuestion(toQuestionDto(questionnaire.getFirstQuestion()))
             .isCompleted(false)
             .totalQuestionsAnswered(0)
             .build();
@@ -379,7 +379,7 @@ public class QuestionnaireService {
      * @return
      */
     @Transactional
-    public QuestionnaireResponseDTO goToPreviousQuestion(Long responseId) {
+    public QuestionnaireResponseDto goToPreviousQuestion(Long responseId) {
         QuestionnaireResponse response = responseRepository.findById(responseId)
             .orElseThrow(() -> new RuntimeException("Response not found: " + responseId));
 
@@ -404,9 +404,9 @@ public class QuestionnaireService {
 
         logger.info("Went back to question {} in response {}", previousQuestion.getId(), responseId);
 
-        return QuestionnaireResponseDTO.builder()
+        return QuestionnaireResponseDto.builder()
             .responseId(responseId)
-            .currentQuestion(toQuestionDTO(previousQuestion))
+            .currentQuestion(toQuestionDto(previousQuestion))
             .isCompleted(false)
             .totalQuestionsAnswered((int) remaining)
             .build();
@@ -422,7 +422,7 @@ public class QuestionnaireService {
      * @return DTO con la siguiente pregunta o indicación de finalización
      */
     @Transactional
-    public QuestionnaireResponseDTO answerQuestion(
+    public QuestionnaireResponseDto answerQuestion(
         Long responseId,
         Long questionId,
         Long selectedOptionId,
@@ -490,7 +490,7 @@ public class QuestionnaireService {
             logger.info("Questionnaire completed: responseId={}, totalQuestions={}", 
                         responseId, totalAnswered);
             
-            return QuestionnaireResponseDTO.builder()
+            return QuestionnaireResponseDto.builder()
                 .responseId(response.getId())
                 .currentQuestion(null)
                 .isCompleted(true)
@@ -499,9 +499,9 @@ public class QuestionnaireService {
         }
         
         // Devolver siguiente pregunta
-        return QuestionnaireResponseDTO.builder()
+        return QuestionnaireResponseDto.builder()
             .responseId(response.getId())
-            .currentQuestion(toQuestionDTO(nextQuestion))
+            .currentQuestion(toQuestionDto(nextQuestion))
             .isCompleted(false)
             .totalQuestionsAnswered(totalAnswered.intValue())
             .build();
@@ -513,7 +513,7 @@ public class QuestionnaireService {
      * @param responseId ID de la sesión de cuestionario
      * @return DTO con resumen completo de respuestas
      */
-    public QuestionnaireResponseSummaryDTO getResponseSummary(Long responseId) {
+    public QuestionnaireResponseSummaryDto getResponseSummary(Long responseId) {
         logger.debug("Getting response summary for responseId: {}", responseId);
         
         QuestionnaireResponse response = responseRepository.findById(responseId)
@@ -527,7 +527,7 @@ public class QuestionnaireService {
         logger.info("Retrieved response summary: responseId={}, totalAnswers={}", 
                     responseId, answers.size());
         
-        return QuestionnaireResponseSummaryDTO.builder()
+        return QuestionnaireResponseSummaryDto.builder()
             .responseId(response.getId())
             .userId(response.getUser().getId())
             .userName(response.getUser().getEmail())
@@ -535,7 +535,7 @@ public class QuestionnaireService {
             .questionnaireName(response.getQuestionnaire().getName())
             .questionnaireDescription(response.getQuestionnaire().getDescription())
             .answers(answers.stream()
-                .map(this::toAnswerDTO)
+                .map(this::toAnswerDto)
                 .collect(Collectors.toList()))
             .startedAt(response.getStartedAt())
             .completedAt(response.getCompletedAt())
@@ -549,82 +549,83 @@ public class QuestionnaireService {
      * @param userId ID del usuario
      * @return Lista de respuestas del usuario
      */
-    public List<QuestionnaireResponse> getUserResponses(Long userId) {
+    public List<QuestionnaireResponseDto> getUserResponses(Long userId) {
         logger.debug("Getting all responses for user: {}", userId);
-        
+
         List<QuestionnaireResponse> responses = responseRepository.findByUserId(userId);
-        
+
         logger.info("Found {} responses for user {}", responses.size(), userId);
-        
-        return responses;
+
+        return responses.stream().map(this::toSessionSummaryDTO).toList();
     }
 
     /**
      * Obtiene todas las respuestas completadas de cuestionarios de un usuario.
-     * 
+     *
      * @param userId ID del usuario
      * @return Lista de respuestas completadas
      */
-    public List<QuestionnaireResponse> getUserCompletedResponses(Long userId) {
+    public List<QuestionnaireResponseDto> getUserCompletedResponses(Long userId) {
         logger.debug("Getting completed responses for user: {}", userId);
-        
+
         List<QuestionnaireResponse> responses = responseRepository.findCompletedByUserId(userId);
-        
+
         logger.info("Found {} completed responses for user {}", responses.size(), userId);
-        
-        return responses;
+
+        return responses.stream().map(this::toSessionSummaryDTO).toList();
     }
-    
+
     /**
      * Obtiene todas las respuestas activas (no completadas) de cuestionarios de un usuario.
-     * 
+     *
      * @param userId ID del usuario
      * @return Lista de respuestas activas
      */
-    public List<QuestionnaireResponse> getUserActiveResponses(Long userId) {
+    public List<QuestionnaireResponseDto> getUserActiveResponses(Long userId) {
         logger.debug("Getting active responses for user: {}", userId);
-        
+
         List<QuestionnaireResponse> responses = responseRepository.findActiveByUserId(userId);
-        
+
         logger.info("Found {} active responses for user {}", responses.size(), userId);
-        
-        return responses;
+
+        return responses.stream().map(this::toSessionSummaryDTO).toList();
+    }
+
+    private QuestionnaireResponseDto toSessionSummaryDTO(QuestionnaireResponse response) {
+        return QuestionnaireResponseDto.builder()
+                .responseId(response.getId())
+                .isCompleted(response.getIsCompleted())
+                .build();
     }
     
     // ========================================================================
     // HELPER METHODS - Convert entities to DTOs
     // ========================================================================
     
-    private QuestionDTO toQuestionDTO(Question question) {
-        return QuestionDTO.builder()
-            .id(question.getId())
-            .text(question.getText())
-            .type(question.getType())
-            .options(question.getOptions().stream()
-                .map(this::toOptionDTO)
-                .collect(Collectors.toList()))
-            .build();
+    private QuestionDto toQuestionDto(Question question) {
+        return new QuestionDto(
+                question.getId(),
+                question.getText(),
+                question.getType(),
+                question.getOptions().stream().map(this::toOptionDto).collect(Collectors.toList()));
     }
     
-    private OptionDTO toOptionDTO(QuestionOption option) {
-        return OptionDTO.builder()
-            .id(option.getId())
-            .text(option.getText())
-            .requiresTextInput(option.getRequiresTextInput())
-            .textInputPrompt(option.getTextInputPrompt())
-            .textInputPlaceholder(option.getTextInputPlaceholder())
-            .build();
+    private OptionDto toOptionDto(QuestionOption option) {
+        return new OptionDto(
+                option.getId(),
+                option.getText(),
+                option.getRequiresTextInput(),
+                option.getTextInputPrompt(),
+                option.getTextInputPlaceholder());
     }
     
-    private AnswerDTO toAnswerDTO(UserAnswer answer) {
-        return AnswerDTO.builder()
-            .answerId(answer.getId())
-            .questionText(answer.getQuestion().getText())
-            .selectedOption(answer.getSelectedOption() != null ? 
-                answer.getSelectedOption().getText() : null)
-            .additionalText(answer.getAdditionalText())
-            .aiDescription(answer.getAiGeneratedDescription())
-            .answeredAt(answer.getAnsweredAt())
-            .build();
+    private AnswerDto toAnswerDto(UserAnswer answer) {
+        return new AnswerDto(
+                answer.getId(),
+                answer.getQuestion().getText(),
+                answer.getSelectedOption() != null ? answer.getSelectedOption().getText() : null,
+                answer.getAdditionalText(),
+                answer.getAiGeneratedDescription(),
+                answer.getAnsweredAt());
     }
 }

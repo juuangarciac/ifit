@@ -21,14 +21,14 @@ import jakarta.validation.constraints.Size;
 @Schema(description = "Datos para crear un nuevo cuestionario")
 public record CreateQuestionnaireRequestDto(
     
-    @NotBlank(message = "El nombre del cuestionario no puede estar vacío")
-    @Size(min = 3, max = 100, message = "El nombre debe tener entre 3 y 100 caracteres")
+    @NotBlank(message = "Questionnaire name cannot be blank")
+    @Size(min = 3, max = 100, message = "Name must be between 3 and 100 characters")
     @Schema(description = "Nombre único del cuestionario", 
             example = "Ronnie - Fuerza para Principiantes")
     String name,
     
-    @NotBlank(message = "La descripción no puede estar vacía")
-    @Size(min = 10, max = 1000, message = "La descripción debe tener entre 10 y 1000 caracteres")
+    @NotBlank(message = "Description cannot be blank")
+    @Size(min = 10, max = 1000, message = "Description must be between 10 and 1000 characters")
     @Schema(description = "Descripción detallada del cuestionario", 
             example = "Programa intenso de fuerza diseñado por Ronnie. Ideal para quienes quieren construir músculo desde cero.")
     String description,

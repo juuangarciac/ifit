@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 
 import com.ifit.ronnie.modules.message.model.Message;
 import com.ifit.ronnie.modules.message.model.MessageType;
-import com.ifit.ronnie.modules.message.repository.MessageTypeRepository;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
@@ -17,22 +16,15 @@ import dev.langchain4j.data.message.UserMessage;
 @Component
 public class ChatMessageMapper {
 
-    private final MessageTypeRepository chatMessageTypeRepository;
-
-    public ChatMessageMapper(MessageTypeRepository chatMessageTypeRepository) {
-        this.chatMessageTypeRepository = chatMessageTypeRepository;
-    }
-
     private MessageType findTypeByName(List<MessageType> types, String targetName) {
         return types.stream()
             .filter(type -> type.getName().equalsIgnoreCase(targetName))
             .findFirst()
-            .orElseThrow(() -> new RuntimeException("Tipo no encontrado: " + targetName));
+            .orElseThrow(() -> new RuntimeException("Message type not found: " + targetName));
     }
 
-    public Message toChat(String memoryId, ChatMessage message, LocalDateTime createdAt) {
+    public Message toChat(String memoryId, ChatMessage message, LocalDateTime createdAt, List<MessageType> allMessageTypes) {
         try {
-            List<MessageType> allMessageTypes = chatMessageTypeRepository.findAll();
             Message chat = new Message();
             chat.setMemoryId((String)memoryId);
             

@@ -52,7 +52,7 @@ public class RoutineMapper {
             routine.getCurrentDay(),
             routine.getCreatedAt(),
             routine.getUpdatedAt(),
-            dayMapper.toDtoSet(routine.getDays())
+            dayMapper.toDtoList(routine.getDays())
         );
     }
     
@@ -109,7 +109,7 @@ public RoutineResponseDto ronnieJsonToRoutineResponseDto(String ronnieJson) {
         
         // Parsear los días
         JsonNode daysNode = routineNode.get("days");
-        Set<RoutineDayDto> days = new HashSet<>();
+        List<RoutineDayDto> days = new ArrayList<>();
         
         for (JsonNode dayNode : daysNode) {
             RoutineDayDto dayDto = new RoutineDayDto();

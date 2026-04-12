@@ -12,25 +12,25 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import com.uca.juangarcia.ifit.exception.dto.CoachModelTypeNotFoundException;
-import com.uca.juangarcia.ifit.exception.dto.EmailAlreadyExistsException;
-import com.uca.juangarcia.ifit.exception.dto.EmailNotFoundException;
-import com.uca.juangarcia.ifit.exception.dto.EmailNotVerifiedException;
-import com.uca.juangarcia.ifit.exception.dto.ExperienceLevelNotFoundException;
-import com.uca.juangarcia.ifit.exception.dto.InvalidCredentialsException;
-import com.uca.juangarcia.ifit.exception.dto.QuestionnaireNotFoundException;
-import com.uca.juangarcia.ifit.exception.dto.QuestionnaireQuestionNotFoundException;
-import com.uca.juangarcia.ifit.exception.dto.UserIdNotFoundException;
+import com.uca.juangarcia.ifit.exception.CoachModelTypeNotFoundException;
+import com.uca.juangarcia.ifit.exception.EmailAlreadyExistsException;
+import com.uca.juangarcia.ifit.exception.EmailNotFoundException;
+import com.uca.juangarcia.ifit.exception.EmailNotVerifiedException;
+import com.uca.juangarcia.ifit.exception.ExperienceLevelNotFoundException;
+import com.uca.juangarcia.ifit.exception.InvalidCredentialsException;
+import com.uca.juangarcia.ifit.exception.QuestionnaireNotFoundException;
+import com.uca.juangarcia.ifit.exception.QuestionnaireQuestionNotFoundException;
+import com.uca.juangarcia.ifit.exception.UserIdNotFoundException;
 import com.uca.juangarcia.ifit.exception.model.ErrorResponse;
+import com.uca.juangarcia.ifit.exception.RoutineNotFoundException;
 
 @RestControllerAdvice
 public class HandlerExceptionController {
 
-    @ExceptionHandler({ 
+    @ExceptionHandler({
         DataIntegrityViolationException.class,
         IllegalArgumentException.class,
         HttpMessageNotReadableException.class,
-        NullPointerException.class,
         EmailNotVerifiedException.class
     })
     public ResponseEntity<ErrorResponse> handleBadRequestExceptions(Exception ex) {
@@ -64,7 +64,8 @@ public class HandlerExceptionController {
         ExperienceLevelNotFoundException.class,
         QuestionnaireQuestionNotFoundException.class,
         QuestionnaireNotFoundException.class,
-        UsernameNotFoundException.class
+        UsernameNotFoundException.class,
+        RoutineNotFoundException.class
     })
     public ResponseEntity<ErrorResponse> handleNotFoundException(Exception ex) {
         return ResponseEntity
