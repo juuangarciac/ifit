@@ -12,7 +12,8 @@
       "Bash(sed -i 's|import org.springframework.beans.factory.annotation.Autowired;||' __TRACKED_VAR__/controllers/KeycloakController.java)",
       "Bash(sed -i 's|import com.uca.juangarcia.ifit.modules.auth.service.IKeycloakService;|import com.uca.juangarcia.ifit.modules.auth.service.impl.KeycloakServiceImpl;|' __TRACKED_VAR__/controllers/KeycloakController.java)",
       "Bash(python3 -c ':*)",
-      "Bash(python3 -)"
+      "Bash(python3 -)",
+      "Bash(xargs grep:*)"
     ]
   }
 }
