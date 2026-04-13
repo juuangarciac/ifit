@@ -1,4 +1,128 @@
 {
+   "warmup":[
+      {
+         "exerciseName":"Marcha en el sitio",
+         "sets":1,
+         "reps":1,
+         "restSeconds":0,
+         "notes":"3-5 minutos a ritmo moderado elevando rodillas. Calentamiento cardiovascular inicial obligatorio.",
+         "orderIndex":1
+      },
+      {
+         "exerciseName":"Círculos de brazos",
+         "sets":1,
+         "reps":1,
+         "restSeconds":0,
+         "notes":"15 círculos hacia adelante y 15 hacia atrás con brazos extendidos. Moviliza hombros y calienta el manguito rotador.",
+         "orderIndex":2
+      },
+      {
+         "exerciseName":"Círculos de caderas",
+         "sets":1,
+         "reps":1,
+         "restSeconds":0,
+         "notes":"10 círculos en cada dirección con manos en la cintura. Activa la movilidad lumbo-pélvica.",
+         "orderIndex":3
+      },
+      {
+         "exerciseName":"Rotaciones de tronco de pie",
+         "sets":1,
+         "reps":1,
+         "restSeconds":0,
+         "notes":"20 giros alternos con brazos extendidos a los lados. Calienta la zona torácica y el core.",
+         "orderIndex":4
+      },
+      {
+         "exerciseName":"Sentadilla de movilidad sin carga",
+         "sets":1,
+         "reps":10,
+         "restSeconds":0,
+         "notes":"Lenta y controlada, 3 segundos de bajada. Activa la cadena posterior y prepara rodillas y caderas para el trabajo.",
+         "orderIndex":5
+      },
+      {
+         "exerciseName":"Rotación de hombros con banda",
+         "sets":1,
+         "reps":15,
+         "restSeconds":0,
+         "notes":"Moviliza el manguito rotador. Imprescindible antes de cualquier sesión con ejercicios de empuje o jalón.",
+         "orderIndex":6
+      },
+      {
+         "exerciseName":"Elevaciones de rodillas caminando",
+         "sets":1,
+         "reps":1,
+         "restSeconds":0,
+         "notes":"10 pasos llevando la rodilla al pecho. Activa flexores de cadera y mejora la coordinación para la sesión.",
+         "orderIndex":7
+      }
+   ],
+   "stretching":[
+      {
+         "exerciseName":"Estiramiento de cuádriceps de pie",
+         "sets":1,
+         "reps":1,
+         "restSeconds":0,
+         "notes":"Sostén 30 segundos por pierna tirando el pie hacia el glúteo. Apóyate en una pared si es necesario.",
+         "orderIndex":1
+      },
+      {
+         "exerciseName":"Estiramiento de isquiotibiales tumbado",
+         "sets":1,
+         "reps":1,
+         "restSeconds":0,
+         "notes":"Tumbado, lleva una pierna extendida hacia el pecho con ayuda de las manos. 30 segundos por lado. Sin forzar.",
+         "orderIndex":2
+      },
+      {
+         "exerciseName":"Estiramiento de glúteos tobillo sobre rodilla",
+         "sets":1,
+         "reps":1,
+         "restSeconds":0,
+         "notes":"Tumbado boca arriba, cruza el tobillo sobre la rodilla contraria y lleva ambas piernas al pecho. 30 seg por lado.",
+         "orderIndex":3
+      },
+      {
+         "exerciseName":"Estiramiento de pectoral en pared",
+         "sets":1,
+         "reps":1,
+         "restSeconds":0,
+         "notes":"Apoya el brazo a 90° en una pared y gira el tronco al lado contrario. 30 segundos por lado.",
+         "orderIndex":4
+      },
+      {
+         "exerciseName":"Estiramiento de trapecio y cuello",
+         "sets":1,
+         "reps":1,
+         "restSeconds":0,
+         "notes":"Inclina la cabeza hacia el hombro con suave ayuda de la mano. 20-30 segundos por lado. No forzar.",
+         "orderIndex":5
+      },
+      {
+         "exerciseName":"Postura del niño",
+         "sets":1,
+         "reps":1,
+         "restSeconds":0,
+         "notes":"Arrodillado, estira los brazos al frente con la frente apoyada. 45-60 segundos. Relaja completamente la espalda baja.",
+         "orderIndex":6
+      },
+      {
+         "exerciseName":"Estiramiento de aductores sentado",
+         "sets":1,
+         "reps":1,
+         "restSeconds":0,
+         "notes":"Sentado, planta de los pies juntas y rodillas abiertas. Inclina ligeramente el tronco hacia adelante. 30 segundos.",
+         "orderIndex":7
+      },
+      {
+         "exerciseName":"Estiramiento de dorsales de pie",
+         "sets":1,
+         "reps":1,
+         "restSeconds":0,
+         "notes":"Agarra una barra o marco de puerta y deja caer el peso del cuerpo estirando el dorsal. 30 segundos por lado.",
+         "orderIndex":8
+      }
+   ],
    "beginner":[
       {
          "exerciseName":"Sentadilla con peso corporal",

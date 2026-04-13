@@ -20,6 +20,7 @@ import com.uca.juangarcia.ifit.modules.training.controller.dto.CreateRoutineRequ
 import com.uca.juangarcia.ifit.modules.training.controller.dto.RoutineDayDto;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.RoutineResponseDto;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.UpdateRoutineRequestDto;
+import com.uca.juangarcia.ifit.modules.training.model.CoachType;
 import com.uca.juangarcia.ifit.exception.RoutineNotFoundException;
 import com.uca.juangarcia.ifit.modules.training.mapper.RoutineDayMapper;
 import com.uca.juangarcia.ifit.modules.training.mapper.RoutineMapper;
@@ -341,17 +342,18 @@ public class RoutineService {
     }
 
     /**
-     * Genera una rutina personalizada basada en las respuestas del cuestionario.
-     * 
-     * @param userId     ID del usuario (usado para memoryId en Ronnie)
+     * Genera una rutina personalizada basada en las respuestas del cuestionario
+     * y el coach seleccionado.
+     *
+     * @param userId     ID del usuario
      * @param responseId ID de la respuesta del cuestionario completado
-     * @return JSON string con la rutina generada por Ronnie
-     * @throws UserIdNotFoundException 
-     * @throws RuntimeException si hay error obteniendo el resumen o generando la
-     *                          rutina
+     * @param coachType  Coach de IA seleccionado (por defecto MASTER)
+     * @return DTO con la rutina generada
+     * @throws UserIdNotFoundException si el usuario no existe
      */
-    public RoutineResponseDto generateRoutine(Long userId, Long responseId) throws UserIdNotFoundException {
-        logger.info("Starting routine generation for userId: {}, responseId: {}", userId, responseId);
+    public RoutineResponseDto generateRoutine(Long userId, Long responseId, CoachType coachType) throws UserIdNotFoundException {
+        logger.info("Starting routine generation for userId: {}, responseId: {}, coach: {}",
+                userId, responseId, coachType);
 
         if (userId == null)
             throw new IllegalArgumentException("User ID cannot be null");
@@ -359,47 +361,51 @@ public class RoutineService {
         if (responseId == null)
             throw new IllegalArgumentException("Response ID cannot be null");
 
+        CoachType resolvedCoach = coachType != null ? coachType : CoachType.MASTER;
+
         // 1. Obtener perfil del usuario y respuestas al cuestionario
         AppUser user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserIdNotFoundException(userId));
-
 
         QuestionnaireResponseSummaryDto summary = questionnaireService.getResponseSummary(responseId);
 
         logger.debug("Retrieved questionnaire summary: {} answers", summary.getAnswers().size());
 
-        // 2. Construir el prompt personalizado
-        String prompt = buildRoutinePrompt(user, summary);
+        // 2. Construir el prompt personalizado con el contexto del coach
+        String prompt = buildRoutinePrompt(user, summary, resolvedCoach);
 
-        logger.debug("Prompt built successfully. Length: {} characters", prompt.length());
+        logger.debug("Prompt built successfully. Length: {} characters, coach: {}",
+                prompt.length(), resolvedCoach);
 
         // 3. Obtener memoryId
-        int memoryId = aiClient.getMaxMemoryId().getMaxMemoryId(); // Incrementar el max memoryId para obtener uno nuevo
+        int memoryId = aiClient.getMaxMemoryId().getMaxMemoryId();
 
-        logger.debug("Generated memoryId: {} from userId: {}", memoryId, userId);
+        logger.debug("Generated memoryId: {}", memoryId);
 
-        // 4. Llamar a Ronnie para generar la rutina
+        // 4. Llamar al modelo master de Ronnie para generar la rutina
         RoutineResponseDto routineResponseDto = aiClient.generateRoutine(memoryId, prompt);
-            
+
         routineResponseDto.setUserId(userId);
 
-        logger.info("Routine generated successfully for userId: {}", userId);
+        logger.info("Routine generated successfully for userId: {}, coach: {}", userId, resolvedCoach);
 
         return routineResponseDto;
     }
 
     /**
-     * Construye un prompt personalizado para Ronnie basado en el perfil del
-     * usuario y las respuestas al cuestionario.
-     *
-     * @param user
-     * @param summary
-     * @return
-     * @throws UserIdNotFoundException
+     * Construye un prompt personalizado basado en el perfil del usuario,
+     * las respuestas al cuestionario y la especialidad del coach seleccionado.
      */
-    private String buildRoutinePrompt(AppUser user, QuestionnaireResponseSummaryDto summary) throws UserIdNotFoundException {
+    private String buildRoutinePrompt(AppUser user, QuestionnaireResponseSummaryDto summary, CoachType coachType) {
 
         StringBuilder sb = new StringBuilder();
+
+        // Inyectar contexto del coach si no es Master (Master ya tiene su @SystemMessage en Ronnie)
+        if (!coachType.isMaster()) {
+            sb.append("ROL DEL ENTRENADOR:\n");
+            sb.append(coachType.getSystemContext());
+            sb.append("\n");
+        }
 
         sb.append("PERFIL DEL USUARIO:\n");
         sb.append("Usuario: ").append(summary.getUserName()).append("\n");
