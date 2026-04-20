@@ -44,7 +44,7 @@ El sistema combina un cuestionario adaptativo (árbol de decisiones), un motor d
 
 2. **Cuestionario adaptativo.** El usuario responde un cuestionario con estructura de árbol de decisiones: cada respuesta condiciona la siguiente pregunta, adaptándose al perfil real del usuario (objetivo, nivel de experiencia, equipamiento disponible, etc.).
 
-3. **Selección de coach y generación de rutina.** Al finalizar el cuestionario, el usuario elige un modelo de entrenador IA. El sistema construye un prompt enriquecido con los datos del cuestionario y la personalidad del coach, y lo envía al microservicio **Ronnie** para generar una rutina personalizada mediante un LLM (Groq / Ollama).
+3. **Selección de coach y generación de rutina.** Al empezar el cuestionario, el usuario elige un modelo de entrenador IA. El sistema construye un prompt enriquecido con los datos del cuestionario y la personalidad del coach, y lo envía al microservicio **Ronnie** para generar una rutina personalizada mediante un LLM (Groq / Ollama).
 
 4. **Seguimiento de la rutina.** La rutina generada queda almacenada y el usuario puede consultar sus ejercicios, registrar el progreso y adaptar el plan.
 
