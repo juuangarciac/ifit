@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ifit.ronnie.configuration.ChatContext;
 import com.ifit.ronnie.modules.coach.dto.RoutineResponseDto;
 import com.ifit.ronnie.modules.message.controller.dto.MessageDto;
 
@@ -50,16 +51,21 @@ public class MasterController {
                                  + "del cuestionario para generar la rutina. Usa el mismo memoryId para mantener el contexto de la conversación."
                         , required = true, 
                         content = @Content(schema = @Schema(implementation = MessageDto.class))) 
-        @Valid @RequestBody MessageDto messageDto) 
+        @Valid @RequestBody MessageDto messageDto)
         throws IOException {
-                
-                String catalog = masterCatalogResource.getContentAsString(StandardCharsets.UTF_8);   
 
-                RoutineResponseDto routineResponse = master.generateRoutine(
-                        messageDto.memoryId(),
-                        messageDto.message(),
-                        catalog);
+                try {
+                        ChatContext.set(messageDto.userId(), "master");
+                        String catalog = masterCatalogResource.getContentAsString(StandardCharsets.UTF_8);
 
-                return ResponseEntity.ok(routineResponse);
+                        RoutineResponseDto routineResponse = master.generateRoutine(
+                                messageDto.memoryId(),
+                                messageDto.message(),
+                                catalog);
+
+                        return ResponseEntity.ok(routineResponse);
+                } finally {
+                        ChatContext.clear();
+                }
         }
 }
