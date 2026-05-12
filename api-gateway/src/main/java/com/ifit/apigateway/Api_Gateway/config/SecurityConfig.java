@@ -15,7 +15,7 @@ public class SecurityConfig {
         http
             .authorizeExchange(exchange -> exchange
                 .pathMatchers("/ifit/api/v1/auth/**").permitAll()
-                .pathMatchers("/ifit/exercise-images/**").permitAll()
+                .pathMatchers("/ifit/api/v1/exercise-images/**").permitAll()
                 .anyExchange().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2
