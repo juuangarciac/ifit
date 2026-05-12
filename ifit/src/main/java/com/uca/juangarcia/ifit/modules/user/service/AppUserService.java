@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.uca.juangarcia.ifit.exception.CoachModelTypeNotFoundException;
@@ -522,6 +523,35 @@ public class AppUserService {
         
         logger.info("Verification code validated successfully for user: {}", email);
         return userMapper.toResponseDto(user);
+    }
+
+    /**
+     * Genera un nuevo código de verificación para un usuario no verificado.
+     *
+     * @param email email del usuario
+     * @return DTO del usuario con el nuevo código
+     * @throws EmailNotFoundException si no existe el usuario
+     * @throws IllegalStateException si el usuario ya está verificado
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public AppUserResponseDto regenerateVerificationCode(String email) throws EmailNotFoundException {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email cannot be null or blank");
+        }
+
+        AppUser user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EmailNotFoundException(email));
+
+        if (user.isVerified()) {
+            throw new IllegalStateException("User is already verified");
+        }
+
+        String newCode = String.format("%06d", (int)(Math.random() * 1_000_000));
+        user.setVerificationCode(newCode);
+        AppUser updatedUser = userRepository.save(user);
+
+        logger.info("Verification code regenerated for user: {}", email);
+        return userMapper.toResponseDto(updatedUser);
     }
 
     /**

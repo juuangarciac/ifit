@@ -35,7 +35,8 @@ import com.uca.juangarcia.ifit.modules.user.dto.CreateAppUserRequestDto;
 import com.uca.juangarcia.ifit.modules.user.service.AppUserService;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Servicio de autenticación que orquesta Keycloak y la base de datos de la aplicación.
@@ -58,10 +59,11 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0
  */
 @Service
-@Slf4j
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AuthenticationService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthenticationService.class);
 
     @Value("${keycloak.client-id}")
     private String clientId;
@@ -126,10 +128,23 @@ public class AuthenticationService {
             AppUserResponseDto appUser = appUserService.findUserByEmail(loginRequestDTO.getUsername());
             log.info("User profile loaded successfully for: {}", loginRequestDTO.getUsername());
 
-            // 2.5. Verificar que el email esté verificado en nuestra BD
+            // 2.5. Si el email no está verificado, regenerar código y reenviarlo automáticamente.
             if (!appUser.isVerified()) {
-                log.warn("Login attempt with unverified email: {}", loginRequestDTO.getUsername());
-                throw new EmailNotVerifiedException(loginRequestDTO.getUsername());
+                log.warn("Login blocked - unverified email: {}", loginRequestDTO.getUsername());
+                try {
+                    AppUserResponseDto updatedUser = appUserService.regenerateVerificationCode(appUser.getEmail());
+                    emailService.sendVerificationEmail(updatedUser);
+                    log.info("Verification code resent automatically on login for: {}", loginRequestDTO.getUsername());
+                } catch (Exception e) {
+                    log.error("Failed to resend verification code on login for {}: {}", loginRequestDTO.getUsername(), e.getMessage());
+                }
+                return LoginResponseDto.builder()
+                        .accessToken(null)
+                        .refreshToken(null)
+                        .expiresIn(null)
+                        .tokenType(null)
+                        .appUser(appUser)
+                        .build();
             }
 
             // 3. Construir respuesta con tokens + perfil
@@ -423,6 +438,28 @@ public class AuthenticationService {
         } catch (Exception e) {
             log.error("Unexpected error during logout: {}", e.getMessage(), e);
             throw new RuntimeException("Logout service unavailable");
+        }
+    }
+
+    /**
+     * Regenera el código de verificación y reenvía el email al usuario.
+     *
+     * @param email email del usuario no verificado
+     * @throws EmailNotFoundException si no existe el usuario
+     * @throws IllegalStateException si el usuario ya está verificado
+     */
+    @Transactional
+    public void resendVerificationEmail(String email) throws EmailNotFoundException {
+        log.info("Resend verification email requested for: {}", email);
+
+        AppUserResponseDto user = appUserService.regenerateVerificationCode(email);
+
+        try {
+            emailService.sendVerificationEmail(user);
+            log.info("Verification email resent to: {}", email);
+        } catch (Exception e) {
+            log.error("Failed to resend verification email to {}: {}", email, e.getMessage());
+            throw new RuntimeException("Could not send verification email", e);
         }
     }
 

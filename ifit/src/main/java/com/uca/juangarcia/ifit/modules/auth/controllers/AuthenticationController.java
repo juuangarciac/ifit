@@ -17,6 +17,7 @@ import com.uca.juangarcia.ifit.modules.auth.controllers.dto.LogoutResponseDto;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.RefreshTokenRequestDto;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.RegisterRequestDto;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.RegisterResponseDto;
+import com.uca.juangarcia.ifit.modules.auth.controllers.dto.ResendVerificationRequestDto;
 import com.uca.juangarcia.ifit.modules.auth.controllers.dto.VerifyUserRequestDto;
 import com.uca.juangarcia.ifit.modules.auth.service.impl.AuthenticationService;
 
@@ -219,9 +220,28 @@ public class AuthenticationController {
         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @PostMapping("/verify")
-    public ResponseEntity<LoginResponseDto> verify(@Valid @RequestBody VerifyUserRequestDto request) 
+    public ResponseEntity<LoginResponseDto> verify(@Valid @RequestBody VerifyUserRequestDto request)
     throws IllegalArgumentException, EmailNotFoundException, InvalidCredentialsException {
         LoginResponseDto response = authenticationService.verifyEmail(request);
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+        summary = "Reenviar email de verificación",
+        description = "Genera un nuevo código de verificación y lo envía al email del usuario. "
+                    + "Solo funciona si el usuario existe y aún no ha verificado su cuenta."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Email reenviado exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Email inválido o usuario ya verificado"),
+        @ApiResponse(responseCode = "404", description = "No existe un usuario con ese email"),
+        @ApiResponse(responseCode = "500", description = "Error al enviar el email")
+    })
+    @PostMapping("/resend-verification")
+    public ResponseEntity<Void> resendVerification(@Valid @RequestBody ResendVerificationRequestDto request)
+            throws EmailNotFoundException {
+        log.info("Resend verification request for: {}", request.email());
+        authenticationService.resendVerificationEmail(request.email());
+        return ResponseEntity.noContent().build();
     }
 }
