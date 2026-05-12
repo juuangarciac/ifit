@@ -36,7 +36,9 @@
       "Read(//c/Users/Juan GC/.claude/skills\" 2>/dev/**)",
       "Read(//c/Users/Juan GC/.claude/**)",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(git pull *)",
+      "Bash(git commit *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\Juan GC\\Desktop\\Personal\\Universidad\\TFG\\ifit"
