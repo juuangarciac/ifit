@@ -16,4 +16,6 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 
     @Query("SELECT DISTINCT m.memoryId FROM Message m")
     List<String> findByDistinctMemoryIds();
+
+    List<Message> findByUserIdAndCoachNameOrderByCreatedAtAsc(String userId, String coachName);
 }

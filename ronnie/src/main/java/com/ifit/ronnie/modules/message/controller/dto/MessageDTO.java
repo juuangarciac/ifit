@@ -9,5 +9,10 @@ public record MessageDto(
     @NotNull(message = "memoryId cannot be null")
     Integer memoryId,
     @NotBlank(message = "message cannot be null or blank")
-    String message
-) {}
+    String message,
+    String userId
+) {
+    public MessageDto(Integer memoryId, String message) {
+        this(memoryId, message, null);
+    }
+}

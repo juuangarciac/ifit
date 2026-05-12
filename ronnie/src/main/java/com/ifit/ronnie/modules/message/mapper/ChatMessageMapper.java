@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
+import com.ifit.ronnie.configuration.ChatContext;
 import com.ifit.ronnie.modules.message.model.Message;
 import com.ifit.ronnie.modules.message.model.MessageType;
 
@@ -27,7 +28,10 @@ public class ChatMessageMapper {
         try {
             Message chat = new Message();
             chat.setMemoryId((String)memoryId);
-            
+            chat.setUserId(ChatContext.getUserId());
+            chat.setCoachName(ChatContext.getCoachName());
+            System.out.println("[ChatMessageMapper] hilo=" + Thread.currentThread().getName() + " userId=" + ChatContext.getUserId() + " coachName=" + ChatContext.getCoachName());
+
             String chatMessage = "";
             MessageType chatMessageType = new MessageType();
             if(message instanceof UserMessage){

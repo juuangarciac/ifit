@@ -23,13 +23,19 @@ public class Message {
     @Column(nullable = false)
     private String memoryId;
 
+    @Column(nullable = true)
+    private String userId;
+
+    @Column(nullable = true)
+    private String coachName;
+
     @Lob
     @Column(columnDefinition = "TEXT", nullable = false)
     private String message;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "messagetype_id")
-    private MessageType messageType; 
+    private MessageType messageType;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
@@ -48,6 +54,22 @@ public class Message {
 
     public void setMemoryId(String memoryId) {
         this.memoryId = memoryId;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getCoachName() {
+        return coachName;
+    }
+
+    public void setCoachName(String coachName) {
+        this.coachName = coachName;
     }
 
     public String getMessage() {
