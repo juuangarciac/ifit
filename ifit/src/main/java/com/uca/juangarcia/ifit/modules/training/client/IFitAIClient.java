@@ -17,6 +17,7 @@ import com.uca.juangarcia.ifit.modules.training.client.dto.IFitAIMaxMemoryIdResp
 import com.uca.juangarcia.ifit.modules.training.client.dto.IFitAIRoutineResponseDto;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.RonnieMessageDto;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.RoutineResponseDto;
+import com.uca.juangarcia.ifit.modules.training.model.CoachType;
 
 
 /**
@@ -47,15 +48,15 @@ public class IFitAIClient {
      * @return JSON string con la rutina generada
      * @throws RuntimeException si hay error en la comunicación
      */
-    public RoutineResponseDto generateRoutine(int memoryId, String prompt) {
-        String url = ronnieBaseUrl + "/master/generate-routine";
+    public RoutineResponseDto generateRoutine(int memoryId, String prompt, String keycloakUserId, CoachType coachType) {
+        String url = ronnieBaseUrl + coachType.getEndpointPath();
 
         logger.debug("Calling Ronnie service at: {}", url);
-        logger.debug("MemoryId: {}, Prompt length: {} characters", memoryId, prompt.length());
+        logger.debug("MemoryId: {}, Coach: {}, Prompt length: {} characters", memoryId, coachType, prompt.length());
 
         try {
             // Preparar request body
-            RonnieMessageDto messageDto = new RonnieMessageDto(memoryId, prompt);
+            RonnieMessageDto messageDto = new RonnieMessageDto(memoryId, prompt, keycloakUserId);
 
             // Configurar headers
             HttpHeaders headers = new HttpHeaders();

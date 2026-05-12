@@ -83,4 +83,8 @@ public enum CoachType {
     public boolean isMaster() {
         return this == MASTER;
     }
+
+    public String getEndpointPath() {
+        return "/" + displayName.toLowerCase() + "/generate-routine";
+    }
 }

@@ -371,8 +371,8 @@ public class RoutineService {
 
         logger.debug("Retrieved questionnaire summary: {} answers", summary.getAnswers().size());
 
-        // 2. Construir el prompt personalizado con el contexto del coach
-        String prompt = buildRoutinePrompt(user, summary, resolvedCoach);
+        // 2. Construir el prompt con el perfil del usuario
+        String prompt = buildRoutinePrompt(user, summary);
 
         logger.debug("Prompt built successfully. Length: {} characters, coach: {}",
                 prompt.length(), resolvedCoach);
@@ -382,8 +382,8 @@ public class RoutineService {
 
         logger.debug("Generated memoryId: {}", memoryId);
 
-        // 4. Llamar al modelo master de Ronnie para generar la rutina
-        RoutineResponseDto routineResponseDto = aiClient.generateRoutine(memoryId, prompt);
+        // 4. Llamar al endpoint del coach seleccionado para generar la rutina
+        RoutineResponseDto routineResponseDto = aiClient.generateRoutine(memoryId, prompt, user.getKeycloakId(), resolvedCoach);
 
         routineResponseDto.setUserId(userId);
 
@@ -396,26 +396,26 @@ public class RoutineService {
      * Construye un prompt personalizado basado en el perfil del usuario,
      * las respuestas al cuestionario y la especialidad del coach seleccionado.
      */
-    private String buildRoutinePrompt(AppUser user, QuestionnaireResponseSummaryDto summary, CoachType coachType) {
+    private String buildRoutinePrompt(AppUser user, QuestionnaireResponseSummaryDto summary) {
 
         StringBuilder sb = new StringBuilder();
 
-        // Inyectar contexto del coach si no es Master (Master ya tiene su @SystemMessage en Ronnie)
-        if (!coachType.isMaster()) {
-            sb.append("ROL DEL ENTRENADOR:\n");
-            sb.append(coachType.getSystemContext());
-            sb.append("\n");
-        }
-
         sb.append("PERFIL DEL USUARIO:\n");
-        sb.append("Usuario: ").append(summary.getUserName()).append("\n");
+        sb.append("Usuario: ").append(user.getName()).append("\n");
         sb.append("Nivel de experiencia: ")
                 .append(user.getExperienceLevel().getName())
                 .append(" - ")
                 .append(user.getExperienceLevel().getDescription())
                 .append("\n");
+        sb.append("Nivel de catálogo a usar: ")
+                .append(resolveCatalogLevel(user.getExperienceLevel().getName()))
+                .append("\n");
 
-        sb.append("Cuestionario: ").append(summary.getQuestionnaireName()).append("\n\n");
+        sb.append("Cuestionario: ").append(summary.getQuestionnaireName()).append("\n");
+        if (summary.getQuestionnaireDescription() != null && !summary.getQuestionnaireDescription().isBlank()) {
+            sb.append("Descripción: ").append(summary.getQuestionnaireDescription()).append("\n");
+        }
+        sb.append("\n");
 
         sb.append("RESPUESTAS AL CUESTIONARIO:\n");
         for (AnswerDto answer : summary.getAnswers()) {
@@ -429,6 +429,15 @@ public class RoutineService {
         }
 
         return sb.toString();
+    }
+
+    private String resolveCatalogLevel(String experienceLevelName) {
+        if (experienceLevelName == null) return "BEGINNER";
+        return switch (experienceLevelName.toLowerCase()) {
+            case "intermedio" -> "INTERMEDIATE";
+            case "avanzado" -> "ADVANCED";
+            default -> "BEGINNER";
+        };
     }
 
     /**
