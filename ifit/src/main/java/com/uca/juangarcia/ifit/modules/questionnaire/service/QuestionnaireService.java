@@ -384,7 +384,9 @@ public class QuestionnaireService {
             .orElseThrow(() -> new RuntimeException("Response not found: " + responseId));
 
         if (response.getIsCompleted()) {
-            throw new IllegalStateException("Cannot go back on a completed questionnaire");
+            response.setIsCompleted(false);
+            response.setCompletedAt(null);
+            responseRepository.save(response);
         }
 
         // Buscar la última respuesta registrada (ordenar por id DESC o answeredAt DESC)
