@@ -45,11 +45,11 @@ public class ExerciseCatalog {
     @Column(length = 100)
     private String equipment;
 
-    @Column(name = "primaryMuscles", columnDefinition = "TEXT")
+    @Column(name = "primary_muscles", columnDefinition = "TEXT")
     @Convert(converter = StringListConverter.class)
     private List<String> primaryMuscles;
 
-    @Column(name = "secondaryMuscles", columnDefinition = "TEXT")
+    @Column(name = "secondary_muscles", columnDefinition = "TEXT")
     @Convert(converter = StringListConverter.class)
     private List<String> secondaryMuscles;
 

@@ -10,13 +10,27 @@ import com.uca.juangarcia.ifit.modules.exercises.model.ExerciseCatalog;
 
 public interface ExerciseCatalogRepository extends JpaRepository<ExerciseCatalog, Long> {
 
-    @Query("""
-        SELECT e FROM ExerciseCatalog e
-        WHERE (:level    IS NULL OR e.level    = :level)
-          AND (:category IS NULL OR e.category = :category)
-          AND (:equipment IS NULL OR e.equipment = :equipment)
-          AND (:muscle   IS NULL OR e.primaryMuscles LIKE %:muscle%)
-        """)
+    @Query(
+        value = """
+            SELECT * FROM exercise_catalog
+            WHERE (:level     IS NULL OR level     = :level)
+              AND (:category  IS NULL OR category  = :category)
+              AND (:equipment IS NULL OR equipment = :equipment)
+              AND (:muscle    IS NULL
+                   OR LOWER(primary_muscles)   LIKE LOWER(CONCAT('%', :muscle, '%'))
+                   OR LOWER(secondary_muscles) LIKE LOWER(CONCAT('%', :muscle, '%')))
+            """,
+        countQuery = """
+            SELECT COUNT(*) FROM exercise_catalog
+            WHERE (:level     IS NULL OR level     = :level)
+              AND (:category  IS NULL OR category  = :category)
+              AND (:equipment IS NULL OR equipment = :equipment)
+              AND (:muscle    IS NULL
+                   OR LOWER(primary_muscles)   LIKE LOWER(CONCAT('%', :muscle, '%'))
+                   OR LOWER(secondary_muscles) LIKE LOWER(CONCAT('%', :muscle, '%')))
+            """,
+        nativeQuery = true
+    )
     Page<ExerciseCatalog> findWithFilters(
         @Param("level")     String level,
         @Param("category")  String category,
