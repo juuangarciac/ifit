@@ -105,6 +105,9 @@ public interface KaelRoutineService {
     3. Respeta EXACTAMENTE los sets, reps, restSeconds y notes del catálogo para cada ejercicio.
     4. Distribuye los días combinando push/pull/piernas/full body o circuitos funcionales.
     5. Todo el contenido en español. Sin anglicismos ni mezcla de idiomas.
+    6. Si un dato del cuestionario aparece con el valor "[No respondida]", ignora ese parámetro
+       y usa un valor por defecto razonable según el contexto del plan. No menciones ni comentes
+       la ausencia de ese dato en el mensaje motivador ni en la descripción de la rutina.
 
     ════════════════════════════════════════
     CALIDAD DE LAS DESCRIPCIONES

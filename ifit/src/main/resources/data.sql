@@ -1107,7 +1107,131 @@ INSERT INTO question_option (id, question_id, text, next_question_id, display_or
 ON DUPLICATE KEY UPDATE text = VALUES(text), next_question_id = VALUES(next_question_id), display_order = VALUES(display_order), requires_text_input = VALUES(requires_text_input), text_input_prompt = VALUES(text_input_prompt), text_input_placeholder = VALUES(text_input_placeholder);
 
 -- ===========================================
--- 9. VINCULAR CUESTIONARIOS A SUS ÁRBOLES
+-- 9. OPCIONES "PREFIERO NO RESPONDER" (IDs 216-280)
+-- ===========================================
+-- Una opción adicional por cada pregunta (Q1-Q65).
+-- requires_text_input = FALSE, text_input_prompt = NULL, text_input_placeholder = NULL.
+-- next_question_id: misma pregunta siguiente que las demás opciones del grupo.
+-- Preguntas finales (Q13, Q26, Q39, Q52, Q65): next_question_id = NULL.
+-- ===========================================
+
+-- Preguntas generales Q1-Q13
+INSERT INTO question_option (id, question_id, text, next_question_id, display_order, requires_text_input, text_input_prompt, text_input_placeholder) VALUES
+(216, 1,  'Prefiero no responder', 2,    6, FALSE, NULL, NULL),
+(217, 2,  'Prefiero no responder', 3,    5, FALSE, NULL, NULL),
+(218, 3,  'Prefiero no responder', 4,    5, FALSE, NULL, NULL),
+(219, 4,  'Prefiero no responder', 5,    5, FALSE, NULL, NULL),
+(220, 5,  'Prefiero no responder', 6,    6, FALSE, NULL, NULL),
+(221, 6,  'Prefiero no responder', 7,    2, FALSE, NULL, NULL),
+(222, 7,  'Prefiero no responder', 8,    2, FALSE, NULL, NULL),
+(223, 8,  'Prefiero no responder', 9,    6, FALSE, NULL, NULL),
+(224, 9,  'Prefiero no responder', 10,   6, FALSE, NULL, NULL),
+(225, 10, 'Prefiero no responder', 12,   5, FALSE, NULL, NULL),
+(226, 11, 'Prefiero no responder', 12,   4, FALSE, NULL, NULL),
+(227, 12, 'Prefiero no responder', 13,   5, FALSE, NULL, NULL),
+(228, 13, 'Prefiero no responder', NULL, 3, FALSE, NULL, NULL)
+ON DUPLICATE KEY UPDATE
+    text = VALUES(text),
+    next_question_id = VALUES(next_question_id),
+    display_order = VALUES(display_order),
+    requires_text_input = VALUES(requires_text_input),
+    text_input_prompt = VALUES(text_input_prompt),
+    text_input_placeholder = VALUES(text_input_placeholder);
+
+-- Ronnie Q14-Q26
+INSERT INTO question_option (id, question_id, text, next_question_id, display_order, requires_text_input, text_input_prompt, text_input_placeholder) VALUES
+(229, 14, 'Prefiero no responder', 15,   5, FALSE, NULL, NULL),
+(230, 15, 'Prefiero no responder', 16,   4, FALSE, NULL, NULL),
+(231, 16, 'Prefiero no responder', 17,   5, FALSE, NULL, NULL),
+(232, 17, 'Prefiero no responder', 18,   4, FALSE, NULL, NULL),
+(233, 18, 'Prefiero no responder', 19,   6, FALSE, NULL, NULL),
+(234, 19, 'Prefiero no responder', 20,   2, FALSE, NULL, NULL),
+(235, 20, 'Prefiero no responder', 21,   2, FALSE, NULL, NULL),
+(236, 21, 'Prefiero no responder', 22,   5, FALSE, NULL, NULL),
+(237, 22, 'Prefiero no responder', 23,   5, FALSE, NULL, NULL),
+(238, 23, 'Prefiero no responder', 24,   5, FALSE, NULL, NULL),
+(239, 24, 'Prefiero no responder', 25,   4, FALSE, NULL, NULL),
+(240, 25, 'Prefiero no responder', 26,   5, FALSE, NULL, NULL),
+(241, 26, 'Prefiero no responder', NULL, 3, FALSE, NULL, NULL)
+ON DUPLICATE KEY UPDATE
+    text = VALUES(text),
+    next_question_id = VALUES(next_question_id),
+    display_order = VALUES(display_order),
+    requires_text_input = VALUES(requires_text_input),
+    text_input_prompt = VALUES(text_input_prompt),
+    text_input_placeholder = VALUES(text_input_placeholder);
+
+-- Serena Q27-Q39
+INSERT INTO question_option (id, question_id, text, next_question_id, display_order, requires_text_input, text_input_prompt, text_input_placeholder) VALUES
+(242, 27, 'Prefiero no responder', 28,   5, FALSE, NULL, NULL),
+(243, 28, 'Prefiero no responder', 29,   4, FALSE, NULL, NULL),
+(244, 29, 'Prefiero no responder', 30,   4, FALSE, NULL, NULL),
+(245, 30, 'Prefiero no responder', 31,   5, FALSE, NULL, NULL),
+(246, 31, 'Prefiero no responder', 32,   6, FALSE, NULL, NULL),
+(247, 32, 'Prefiero no responder', 33,   2, FALSE, NULL, NULL),
+(248, 33, 'Prefiero no responder', 34,   2, FALSE, NULL, NULL),
+(249, 34, 'Prefiero no responder', 35,   5, FALSE, NULL, NULL),
+(250, 35, 'Prefiero no responder', 36,   5, FALSE, NULL, NULL),
+(251, 36, 'Prefiero no responder', 37,   4, FALSE, NULL, NULL),
+(252, 37, 'Prefiero no responder', 38,   5, FALSE, NULL, NULL),
+(253, 38, 'Prefiero no responder', 39,   5, FALSE, NULL, NULL),
+(254, 39, 'Prefiero no responder', NULL, 3, FALSE, NULL, NULL)
+ON DUPLICATE KEY UPDATE
+    text = VALUES(text),
+    next_question_id = VALUES(next_question_id),
+    display_order = VALUES(display_order),
+    requires_text_input = VALUES(requires_text_input),
+    text_input_prompt = VALUES(text_input_prompt),
+    text_input_placeholder = VALUES(text_input_placeholder);
+
+-- Kael Q40-Q52
+INSERT INTO question_option (id, question_id, text, next_question_id, display_order, requires_text_input, text_input_prompt, text_input_placeholder) VALUES
+(255, 40, 'Prefiero no responder', 41,   5, FALSE, NULL, NULL),
+(256, 41, 'Prefiero no responder', 42,   4, FALSE, NULL, NULL),
+(257, 42, 'Prefiero no responder', 43,   5, FALSE, NULL, NULL),
+(258, 43, 'Prefiero no responder', 44,   5, FALSE, NULL, NULL),
+(259, 44, 'Prefiero no responder', 45,   6, FALSE, NULL, NULL),
+(260, 45, 'Prefiero no responder', 46,   2, FALSE, NULL, NULL),
+(261, 46, 'Prefiero no responder', 47,   2, FALSE, NULL, NULL),
+(262, 47, 'Prefiero no responder', 48,   5, FALSE, NULL, NULL),
+(263, 48, 'Prefiero no responder', 49,   4, FALSE, NULL, NULL),
+(264, 49, 'Prefiero no responder', 50,   5, FALSE, NULL, NULL),
+(265, 50, 'Prefiero no responder', 51,   5, FALSE, NULL, NULL),
+(266, 51, 'Prefiero no responder', 52,   5, FALSE, NULL, NULL),
+(267, 52, 'Prefiero no responder', NULL, 3, FALSE, NULL, NULL)
+ON DUPLICATE KEY UPDATE
+    text = VALUES(text),
+    next_question_id = VALUES(next_question_id),
+    display_order = VALUES(display_order),
+    requires_text_input = VALUES(requires_text_input),
+    text_input_prompt = VALUES(text_input_prompt),
+    text_input_placeholder = VALUES(text_input_placeholder);
+
+-- Eliud Q53-Q65
+INSERT INTO question_option (id, question_id, text, next_question_id, display_order, requires_text_input, text_input_prompt, text_input_placeholder) VALUES
+(268, 53, 'Prefiero no responder', 54,   5, FALSE, NULL, NULL),
+(269, 54, 'Prefiero no responder', 55,   4, FALSE, NULL, NULL),
+(270, 55, 'Prefiero no responder', 56,   4, FALSE, NULL, NULL),
+(271, 56, 'Prefiero no responder', 57,   5, FALSE, NULL, NULL),
+(272, 57, 'Prefiero no responder', 58,   6, FALSE, NULL, NULL),
+(273, 58, 'Prefiero no responder', 59,   2, FALSE, NULL, NULL),
+(274, 59, 'Prefiero no responder', 60,   2, FALSE, NULL, NULL),
+(275, 60, 'Prefiero no responder', 61,   5, FALSE, NULL, NULL),
+(276, 61, 'Prefiero no responder', 62,   4, FALSE, NULL, NULL),
+(277, 62, 'Prefiero no responder', 63,   5, FALSE, NULL, NULL),
+(278, 63, 'Prefiero no responder', 64,   4, FALSE, NULL, NULL),
+(279, 64, 'Prefiero no responder', 65,   5, FALSE, NULL, NULL),
+(280, 65, 'Prefiero no responder', NULL, 3, FALSE, NULL, NULL)
+ON DUPLICATE KEY UPDATE
+    text = VALUES(text),
+    next_question_id = VALUES(next_question_id),
+    display_order = VALUES(display_order),
+    requires_text_input = VALUES(requires_text_input),
+    text_input_prompt = VALUES(text_input_prompt),
+    text_input_placeholder = VALUES(text_input_placeholder);
+
+-- ===========================================
+-- 10. VINCULAR CUESTIONARIOS A SUS ÁRBOLES
 -- ===========================================
 -- Actualiza first_question_id para que cada cuestionario
 -- arranque por el árbol propio de su coach.

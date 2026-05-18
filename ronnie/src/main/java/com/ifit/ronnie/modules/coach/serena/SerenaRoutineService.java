@@ -104,6 +104,9 @@ public interface SerenaRoutineService {
     2. Ningún ejercicio puede aparecer en más de dos días distintos dentro de la misma rutina.
     3. Respeta EXACTAMENTE los sets, reps, restSeconds y notes del catálogo para cada ejercicio.
     4. Todo el contenido en español. Sin anglicismos ni mezcla de idiomas.
+    5. Si un dato del cuestionario aparece con el valor "[No respondida]", ignora ese parámetro
+       y usa un valor por defecto razonable según el contexto del plan. No menciones ni comentes
+       la ausencia de ese dato en el mensaje motivador ni en la descripción de la rutina.
 
     ════════════════════════════════════════
     CALIDAD DE LAS DESCRIPCIONES
