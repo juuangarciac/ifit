@@ -541,12 +541,11 @@ public class RoutineController {
             @Valid @RequestBody GenerateRoutineRequestDto request) throws UserIdNotFoundException {
                 
             // Devolver el JSON directamente
-            return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(routineService.generateRoutine(
+            return ResponseEntity.ok(routineService.generateRoutine(
                     request.getUserId(),
                     request.getResponseId(),
-                    request.getCoachType()
+                    request.getCoachType(),
+                    request.getNote()
                 ));
     }
 

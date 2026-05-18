@@ -351,7 +351,7 @@ public class RoutineService {
      * @return DTO con la rutina generada
      * @throws UserIdNotFoundException si el usuario no existe
      */
-    public RoutineResponseDto generateRoutine(Long userId, Long responseId, CoachType coachType) throws UserIdNotFoundException {
+    public RoutineResponseDto generateRoutine(Long userId, Long responseId, CoachType coachType, String note) throws UserIdNotFoundException {
         logger.info("Starting routine generation for userId: {}, responseId: {}, coach: {}",
                 userId, responseId, coachType);
 
@@ -372,7 +372,7 @@ public class RoutineService {
         logger.debug("Retrieved questionnaire summary: {} answers", summary.getAnswers().size());
 
         // 2. Construir el prompt con el perfil del usuario
-        String prompt = buildRoutinePrompt(user, summary);
+        String prompt = buildRoutinePrompt(user, summary, note);
 
         logger.debug("Prompt built successfully. Length: {} characters, coach: {}",
                 prompt.length(), resolvedCoach);
@@ -396,7 +396,7 @@ public class RoutineService {
      * Construye un prompt personalizado basado en el perfil del usuario,
      * las respuestas al cuestionario y la especialidad del coach seleccionado.
      */
-    private String buildRoutinePrompt(AppUser user, QuestionnaireResponseSummaryDto summary) {
+    private String buildRoutinePrompt(AppUser user, QuestionnaireResponseSummaryDto summary, String note) {
 
         StringBuilder sb = new StringBuilder();
 
@@ -420,12 +420,20 @@ public class RoutineService {
         sb.append("RESPUESTAS AL CUESTIONARIO:\n");
         for (AnswerDto answer : summary.getAnswers()) {
             sb.append("- ").append(answer.questionText()).append("\n");
-            sb.append("  Respuesta: ").append(answer.selectedOption()).append("\n");
+            String selectedOption = "Prefiero no responder".equals(answer.selectedOption())
+                    ? "[No respondida]"
+                    : answer.selectedOption();
+            sb.append("  Respuesta: ").append(selectedOption).append("\n");
 
             if (answer.additionalText() != null && !answer.additionalText().isBlank()) {
                 sb.append("  Detalle: ").append(answer.additionalText()).append("\n");
             }
             sb.append("\n");
+        }
+
+        if (note != null && !note.isBlank()) {
+            sb.append("NOTA DEL USUARIO:\n");
+            sb.append(note.trim()).append("\n");
         }
 
         return sb.toString();

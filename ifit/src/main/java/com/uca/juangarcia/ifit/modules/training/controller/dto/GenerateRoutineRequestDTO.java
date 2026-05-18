@@ -19,6 +19,8 @@ public class GenerateRoutineRequestDto {
 
     private CoachType coachType = CoachType.MASTER;
 
+    private String note;
+
     // Constructors
     public GenerateRoutineRequestDto() {
     }
@@ -32,6 +34,13 @@ public class GenerateRoutineRequestDto {
         this.userId = userId;
         this.responseId = responseId;
         this.coachType = coachType;
+    }
+
+    public GenerateRoutineRequestDto(Long userId, Long responseId, CoachType coachType, String note) {
+        this.userId = userId;
+        this.responseId = responseId;
+        this.coachType = coachType;
+        this.note = note;
     }
 
     // Getters and Setters
@@ -59,12 +68,21 @@ public class GenerateRoutineRequestDto {
         this.coachType = coachType != null ? coachType : CoachType.MASTER;
     }
 
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
+    }
+
     @Override
     public String toString() {
         return "GenerateRoutineRequestDto{" +
                 "userId=" + userId +
                 ", responseId=" + responseId +
                 ", coachType=" + coachType +
+                ", note=" + note +
                 '}';
     }
 }
