@@ -18,8 +18,6 @@ import com.uca.juangarcia.ifit.exception.EmailNotFoundException;
 import com.uca.juangarcia.ifit.modules.notification.dto.EmailResponseDto;
 import com.uca.juangarcia.ifit.modules.notification.model.AppEmailDetails;
 import com.uca.juangarcia.ifit.modules.user.dto.AppUserResponseDto;
-import com.uca.juangarcia.ifit.modules.user.mapper.AppUserMapper;
-import com.uca.juangarcia.ifit.modules.user.service.AppUserService;
 
 import jakarta.mail.internet.MimeMessage;
 
@@ -30,12 +28,6 @@ public class AppEmailService {
 
     @Autowired
     private JavaMailSender javaMailSender;
-
-    @Autowired
-    private AppUserService appUserService;
-
-    @Autowired
-    private AppUserMapper userMapper;
 
     @Value("${spring.mail.username}") 
     private String sender;
@@ -92,7 +84,7 @@ public class AppEmailService {
 
         } catch (IOException e) {
             logger.error("Error reading email template: {}", e.getMessage(), e);
-            return new EmailResponseDto(false, e.getMessage() + "Error reading email template: ");
+            return new EmailResponseDto(false, "Error reading email template: " + e.getMessage());
         }
     }
 }    
