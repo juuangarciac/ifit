@@ -101,12 +101,15 @@ public class RoutineService {
         AppUser user = userRepository.findById(requestDto.getUserId())
                 .orElseThrow(() -> new UserIdNotFoundException(requestDto.getUserId()));
 
+        // Desactivar cualquier rutina activa previa del usuario
+        deactivatePreviousActiveRoutine(requestDto.getUserId());
+
         // Crear la rutina
         Routine routine = new Routine();
         routine.setUser(user);
         routine.setDescription(requestDto.getDescription());
         routine.setTrainingDays(requestDto.getTrainingDays());
-        routine.setCurrentDay(1); 
+        routine.setCurrentDay(1);
         routine.setActive(true);
 
         // Guardar rutina
@@ -257,6 +260,9 @@ public class RoutineService {
         }
 
         if (updateDto.getIsActive() != null) {
+            if (updateDto.getIsActive()) {
+                deactivatePreviousActiveRoutine(routine.getUser().getId());
+            }
             routine.setActive(updateDto.getIsActive());
         }
 
@@ -294,6 +300,10 @@ public class RoutineService {
 
         Routine routine = routineRepository.findById(id)
                 .orElseThrow(() -> new RoutineNotFoundException("Routine with ID " + id + " not found"));
+
+        if (isActive) {
+            deactivatePreviousActiveRoutine(routine.getUser().getId());
+        }
 
         routine.setActive(isActive);
         routine.setUpdatedAt(LocalDateTime.now());
@@ -437,6 +447,16 @@ public class RoutineService {
         }
 
         return sb.toString();
+    }
+
+    private void deactivatePreviousActiveRoutine(Long userId) {
+        if (userId == null)
+            throw new IllegalArgumentException("User ID cannot be null");
+        List<Routine> active = routineRepository.findByUserIdAndIsActive(userId, true);
+        if (!active.isEmpty()) {
+            active.forEach(r -> r.setActive(false));
+            routineRepository.saveAll(active);
+        }
     }
 
     private String resolveCatalogLevel(String experienceLevelName) {

@@ -1,97 +1,144 @@
-# Task: Añadir opción "Prefiero no responder" en todas las preguntas del cuestionario
+# Task: Arreglar inconsistencias en la gestión de rutinas activas (microservicio Ifit)
 
 ## Request
-Revisar el fichero data.sql de Ifit para añadir la opción 'Prefiero no responder' en todas las preguntas del cuestionario. Esta nueva opción debe persistirse correctamente en la base de datos, gestionarse en la capa de servicio de Ifit, y los microservicios de Ronnie deben interpretarla adecuadamente en los system prompts de cada coach, ofreciendo alternativas o ignorando ese dato sin romper la generación de rutinas.
+La constraint de negocio "un usuario solo puede tener una rutina activa en un instante dado"
+no se respeta en tres métodos de `RoutineService`. Al crear, activar mediante toggle o actualizar
+una rutina con `isActive=true`, el sistema nunca desactiva las rutinas activas previas del usuario,
+lo que permite que existan múltiples rutinas activas simultáneamente.
+
+El fix consiste en extraer un método privado `deactivatePreviousActiveRoutine(Long userId)` e
+invocarlo en los tres métodos afectados antes de activar cualquier rutina. No se añade complejidad
+extra: se reutilizan los métodos de repositorio ya existentes (`findByUserIdAndIsActive` + `saveAll`).
 
 ## Affected services
-- **Ifit** — data.sql (inserción de nuevas question_option), RoutineService.buildRoutinePrompt (marcar respuestas omitidas), QuestionnaireService (validación ya existente compatible)
-- **Ronnie** — RonnieRoutineService, SerenaRoutineService, KaelRoutineService, EliudRoutineService, Master (system prompts deben interpretar "[No respondida]" y generar valores por defecto)
+- **Ifit** — `RoutineService.java` (único archivo a modificar)
+- **ApiGateway** — sin cambios
+- **Ronnie** — sin cambios
 
 ## Change type
-REFACTOR (enriquecimiento de datos + ajuste de system prompts)
+BUG FIX (lógica de negocio)
 
 ## Agent assignments
 
 ### Agent 1 — Context analyst
-Analizar:
-- `ifit/src/main/resources/data.sql`: árbol completo de preguntas (Q1-Q65) y opciones (IDs 1-215) para identificar el display_order máximo y el next_question_id correcto de cada pregunta donde añadir la nueva opción.
-- `ifit/src/main/java/.../questionnaire/service/QuestionnaireService.java`: método `answerQuestion` — validar que `requiresTextInput=false` en la nueva opción no rompe la validación existente.
-- `ifit/src/main/java/.../training/service/RoutineService.java`: método `buildRoutinePrompt` — cómo se serializa `answer.selectedOption()` al prompt.
-- `ronnie/src/main/java/.../coach/ronnie/RonnieRoutineService.java`, `SerenaRoutineService.java`, `KaelRoutineService.java`, `EliudRoutineService.java`, `master/Master.java`: sección REGLAS DE CALIDAD en cada @SystemMessage.
+Analizar en `ifit/src/main/java/.../training/service/RoutineService.java`:
+- `createRoutine` (líneas 96-132): actualmente hace `routine.setActive(true)` sin desactivar activas previas.
+- `toggleRoutineActive` (líneas 292-303): activa la rutina target sin tocar las demás activas del mismo usuario.
+- `updateRoutine` (líneas 259-261): al procesar `updateDto.getIsActive() == true`, no desactiva otras rutinas.
+- `deactivatePreviousActiveRoutine` (método privado a crear): debe llamar a
+  `routineRepository.findByUserIdAndIsActive(userId, true)` y hacer `saveAll` con `setActive(false)`.
+- Confirmar que `RoutineRepository` ya expone `findByUserIdAndIsActive` y `saveAll` heredado de `JpaRepository`.
+- Verificar que los tres métodos afectados ya tienen `@Transactional`, garantizando atomicidad del fix.
 
 ### Agent 2A — Gateway guardian
 SKIP — no hay cambios en rutas ApiGateway ni en predicados/filtros.
 
 ### Agent 2B — Domain guardian
-Verificar:
-- `QuestionOption`: los campos `requiresTextInput=FALSE`, `textInputPrompt=NULL`, `textInputPlaceholder=NULL` son correctos para la nueva opción.
-- `QuestionnaireService.answerQuestion`: la validación `if (selectedOption.getRequiresTextInput() && additionalText == null)` es safe con la nueva opción (requiresTextInput=false → no falla).
-- `RoutineService.buildRoutinePrompt`: actualmente escribe `answer.selectedOption()` directamente. Añadir lógica para que si el texto de la opción es "Prefiero no responder", se serialice como `[No respondida]` en lugar del texto literal, para que el sistema de prompts lo interprete correctamente.
-- IDs de nuevas opciones: rango 216-280 (65 preguntas × 1 opción cada una). Confirmar que no colisionan con registros existentes.
-- `display_order` de la nueva opción en cada pregunta: debe ser `(max display_order existente + 1)`.
-- `next_question_id` de la nueva opción: mismo que la siguiente pregunta en el árbol de decisión de esa pregunta; NULL en preguntas finales.
+Verificar en `RoutineService.java`:
+- El nuevo método privado `deactivatePreviousActiveRoutine(Long userId)` no necesita `@Transactional`
+  propio porque siempre se llama desde métodos que ya son `@Transactional`.
+- En `createRoutine`: la llamada debe hacerse ANTES de `routine.setActive(true)` y ANTES del
+  `routineRepository.save(routine)`, usando el `userId` de `requestDto.getUserId()`.
+- En `toggleRoutineActive`: la llamada solo debe hacerse cuando `isActive == true` (no al desactivar).
+  El `userId` se obtiene de `routine.getUser().getId()` tras el `findById`.
+- En `updateRoutine`: la llamada solo debe hacerse cuando `updateDto.getIsActive() != null &&
+  updateDto.getIsActive() == true`. El `userId` se obtiene de `routine.getUser().getId()`.
+- Confirmar que el helper tiene null-guard: `if (userId == null) throw new IllegalArgumentException(...)`.
+- Confirmar que si no hay rutinas activas previas, `findByUserIdAndIsActive` devuelve lista vacía y
+  `saveAll` sobre lista vacía es no-op (sin efectos secundarios).
+- El acceso a `routine.getUser().getId()` en `toggleRoutineActive` puede disparar lazy loading;
+  verificar que el método carga el usuario antes de que la transacción cierre, o usar
+  `routineRepository.findByIdWithDaysAndExercises` en su lugar si fuera necesario.
 
 ### Agent 2C — AI guardian
-Verificar en cada @AiService de Ronnie:
-- `RonnieRoutineService.java` @SystemMessage — añadir regla: si una respuesta es `[No respondida]`, usar un valor por defecto razonable según el contexto del coach y no romper la estructura de la rutina.
-- `SerenaRoutineService.java` @SystemMessage — ídem.
-- `KaelRoutineService.java` @SystemMessage — ídem.
-- `EliudRoutineService.java` @SystemMessage — ídem.
-- `Master.java` @SystemMessage — ídem (regla en REGLAS DE CALIDAD).
-- Confirmar que `wiringMode=EXPLICIT` y beans declarados no se ven afectados por el cambio.
-- Confirmar que el parámetro `@V("questionnaireData")` sigue siendo la única entrada, y la nueva marca `[No respondida]` llega a través de él sin cambios estructurales en la interfaz.
+SKIP — no hay cambios en Ronnie ni en @AiService.
 
 ### Agent 3 — Quality reviewer
-- Verificar que todos los INSERT en data.sql usan `ON DUPLICATE KEY UPDATE` para ser idempotentes.
-- Verificar que los IDs 216-280 no colisionan con ningún ID existente (rango actual termina en 215).
-- Verificar que `next_question_id` de la nueva opción en cada pregunta final (Q13, Q26, Q39, Q52, Q65) es NULL.
-- Verificar que `RoutineService.buildRoutinePrompt` tiene null-guard para `answer.selectedOption()` antes de comparar el texto.
-- Verificar que cada @SystemMessage modificado mantiene coherencia de formato (delimitadores ═══, secciones con nombres en mayúscula).
-- Verificar que no hay texto adicional en inglés en las nuevas reglas de los system prompts.
-- Javadoc: no se crean nuevos métodos públicos, no se requiere Javadoc adicional.
+- Verificar que los tres métodos afectados siguen respetando `@Transactional` (ya existente).
+- Verificar que el helper privado no tiene Javadoc (es privado; las convenciones del proyecto no
+  lo requieren en métodos privados).
+- Verificar que no se introduce ninguna llamada extra al repositorio cuando `isActive == false`
+  (no tiene sentido desactivar activas cuando lo que se hace es desactivar la rutina target).
+- Verificar que el orden de operaciones en `createRoutine` es: deactivate previas → crear entidad →
+  save → asociar días → save final. No alterar el flujo de días.
+- Verificar que `updateRoutine` mantiene el patrón de actualización parcial: el helper solo se
+  llama si `updateDto.getIsActive()` es explícitamente `true`, no para cualquier update.
+- Confirmar que `countActiveRoutinesByUserId` sigue siendo coherente tras el fix (siempre devolverá
+  0 o 1 para cualquier usuario).
 
 ### Agent 4 — Implementor
-Archivos a crear/modificar en orden:
+Archivo único a modificar:
+`ifit/src/main/java/com/uca/juangarcia/ifit/modules/training/service/RoutineService.java`
 
-1. `ifit/src/main/resources/data.sql`
-   - Añadir bloque final: 65 INSERT INTO question_option para la opción "Prefiero no responder" en cada pregunta (IDs 216-280), con `requires_text_input=FALSE`, `text_input_prompt=NULL`, `text_input_placeholder=NULL`, `next_question_id` correspondiente y `display_order` = max + 1 por pregunta.
-   - Convención: `ON DUPLICATE KEY UPDATE` con todos los campos.
+**1. Añadir método privado (antes del cierre de clase)**
+```java
+private void deactivatePreviousActiveRoutine(Long userId) {
+    if (userId == null)
+        throw new IllegalArgumentException("User ID cannot be null");
+    List<Routine> active = routineRepository.findByUserIdAndIsActive(userId, true);
+    if (!active.isEmpty()) {
+        active.forEach(r -> r.setActive(false));
+        routineRepository.saveAll(active);
+    }
+}
+```
 
-2. `ifit/src/main/java/.../training/service/RoutineService.java`
-   - En `buildRoutinePrompt`, dentro del bucle `for (AnswerDto answer : summary.getAnswers())`, si `answer.selectedOption()` es igual a `"Prefiero no responder"`, serializar como `"[No respondida]"` en lugar del texto literal.
+**2. En `createRoutine` (línea ~110), antes de `routine.setActive(true)`**
+```java
+deactivatePreviousActiveRoutine(requestDto.getUserId());
+routine.setActive(true);
+```
 
-3. `ronnie/src/main/java/.../coach/ronnie/RonnieRoutineService.java`
-   - Añadir en @SystemMessage, dentro de la sección REGLAS DE CALIDAD, una nueva regla: "Si un dato del cuestionario aparece como [No respondida], usa un valor por defecto razonable para ese parámetro y no lo menciones explícitamente en el mensaje motivador."
+**3. En `toggleRoutineActive` (línea ~298), antes de `routine.setActive(isActive)`**
+```java
+if (isActive) {
+    deactivatePreviousActiveRoutine(routine.getUser().getId());
+}
+routine.setActive(isActive);
+```
 
-4. `ronnie/src/main/java/.../coach/serena/SerenaRoutineService.java`
-   - Ídem en @SystemMessage, sección REGLAS DE CALIDAD.
-
-5. `ronnie/src/main/java/.../coach/kael/KaelRoutineService.java`
-   - Ídem en @SystemMessage, sección REGLAS DE CALIDAD.
-
-6. `ronnie/src/main/java/.../coach/eliud/EliudRoutineService.java`
-   - Ídem en @SystemMessage, sección REGLAS DE CALIDAD.
-
-7. `ronnie/src/main/java/.../coach/master/Master.java`
-   - Ídem en @SystemMessage, sección REGLAS DE CALIDAD.
+**4. En `updateRoutine` (línea ~259), dentro del bloque `if (updateDto.getIsActive() != null)`**
+```java
+if (updateDto.getIsActive() != null) {
+    if (updateDto.getIsActive()) {
+        deactivatePreviousActiveRoutine(routine.getUser().getId());
+    }
+    routine.setActive(updateDto.getIsActive());
+}
+```
 
 ### Agent 5 — Final verifier
-- Verificar que todos los IDs de las nuevas opciones (216-280) existen en data.sql y no colisionan con IDs previos.
-- Verificar que `next_question_id` de cada nueva opción apunta a la misma pregunta siguiente que las otras opciones de ese grupo.
-- Verificar que `RoutineService.buildRoutinePrompt` usa comparación de cadena exacta para "Prefiero no responder" y tiene null-check previo.
-- Verificar que los cinco @AiService de Ronnie tienen exactamente la misma nueva regla formulada de forma consistente.
-- Verificar que el flujo completo (usuario responde "Prefiero no responder" → se almacena en user_answer → getResponseSummary → buildRoutinePrompt serializa [No respondida] → coach genera rutina con defaults) es coherente de extremo a extremo.
+- Verificar que `POST /routines` con un usuario que ya tiene rutina activa resulta en exactamente
+  una rutina activa tras la operación (la nueva).
+- Verificar que `PATCH /{id}/toggle-active?isActive=true` con otra rutina activa previa resulta
+  en exactamente una activa (la toggled).
+- Verificar que `PUT /{id}` con `"isActive": true` en body y otra activa previa resulta en
+  exactamente una activa.
+- Verificar que `PATCH /{id}/toggle-active?isActive=false` no invoca el helper (no debe desactivar
+  otras rutinas al desactivar la target).
+- Verificar que `POST /{routineId}/complete` (setRoutineAsCompleted) no necesita el helper: solo
+  desactiva la rutina target, no activa ninguna otra.
+- Verificar que el `countActiveRoutinesByUserId` retorna como máximo 1 para cualquier usuario tras
+  el fix.
+- Verificar que no hay imports nuevos necesarios (List ya importada, tipos ya presentes).
 
 ## Acceptance criteria
-1. En data.sql existen exactamente 65 nuevas opciones "Prefiero no responder" (IDs 216-280), una por cada pregunta Q1-Q65, cada una con `requires_text_input=FALSE` y el `next_question_id` correcto.
-2. El método `RoutineService.buildRoutinePrompt` serializa la respuesta "Prefiero no responder" como `[No respondida]` en el prompt enviado al coach, sin romper el formato existente.
-3. Los cinco @AiService de Ronnie (Ronnie, Serena, Kael, Eliud, Master) contienen la regla explícita sobre cómo tratar `[No respondida]`.
-4. El flujo de cuestionario existente sigue funcionando correctamente para usuarios que NO seleccionan "Prefiero no responder".
-5. Los INSERT en data.sql son idempotentes (ON DUPLICATE KEY UPDATE) y no rompen el script de inicialización.
+1. Tras `createRoutine`, el usuario tiene exactamente 1 rutina activa (la nueva), independientemente
+   de cuántas tuviera antes.
+2. Tras `toggleRoutineActive(id, true)`, el usuario tiene exactamente 1 rutina activa (la indicada).
+3. Tras `updateRoutine(id, {isActive: true})`, el usuario tiene exactamente 1 rutina activa.
+4. Las operaciones de desactivación (`isActive=false`, `complete`) no invocan el helper y no alteran
+   otras rutinas.
+5. El único archivo modificado es `RoutineService.java`. Ningún otro servicio, repositorio,
+   controlador o DTO se toca.
+6. Los tres métodos afectados mantienen sus anotaciones `@Transactional` sin cambios.
 
 ## Risk areas
-- **Colisión de IDs**: si en el futuro se añaden preguntas u opciones al data.sql antes de este rango, puede haber conflicto. Mitigación: el bloque nuevo está agrupado al final con comentario explicativo.
-- **next_question_id incorrecto en Q9**: la opción 34 ("Actualmente entreno de forma regular") lleva a Q11 en vez de Q10. La nueva opción "Prefiero no responder" de Q9 debe ir a Q10 (ruta conservadora).
-- **Prompt injection**: el texto "[No respondida]" podría ser confundido con instrucciones si el LLM no tiene el contexto correcto. Mitigación: la regla en el system prompt explica exactamente qué hacer con esta marca.
-- **Preguntas con única opción (NUMERIC)**: Q6, Q7, Q19, Q20, Q32, Q33, Q45, Q46, Q58, Q59 tienen solo una opción (requiresTextInput=true). Añadir "Prefiero no responder" como segunda opción es una adición no destructiva; el frontend ya soporta múltiples opciones en preguntas NUMERIC.
-- **Consistencia entre coaches**: si se actualiza solo algunos coaches, el comportamiento será inconsistente. Actualizar los cinco @AiService en el mismo commit.
+- **Lazy loading en `toggleRoutineActive`**: `routine.getUser().getId()` puede fallar si el contexto
+  de persistencia ya cerró. Mitigación: el método ya es `@Transactional`, por lo que el contexto
+  está abierto al hacer el `findById`. Si hay problemas, alternativa: añadir query de userId al
+  repositorio por routineId.
+- **Concurrencia**: si dos peticiones simultáneas crean rutinas para el mismo usuario, pueden pasar
+  el check al mismo tiempo. No es un riesgo real en el contexto del TFG (usuario único por sesión).
+- **Regresión en `updateRoutine`**: el método soporta actualización parcial; solo tocar el bloque
+  `isActive` y no interferir con descripción, trainingDays ni días.
