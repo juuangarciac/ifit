@@ -3,63 +3,57 @@
 ## Overall result: PASS
 
 ## JWT / token flow
-- [x] No se añaden endpoints nuevos — sin impacto en TokenRelay ni en rutas protegidas.
-- [x] Los endpoints existentes (`POST /routines`, `PATCH /{id}/toggle-active`, `PUT /{id}`)
-  no cambian su contrato HTTP ni su nivel de protección.
+
+- [x] `POST /auth/login` y `POST /auth/register` — IFIT-PUBLIC, sin TokenRelay. Los scripts
+  los llaman sin cabecera Authorization. Correcto.
+- [x] Todos los endpoints protegidos (users, questionnaires, routines) — IFIT-PRIVATE, con
+  TokenRelay. Los scripts construyen el header `Authorization: Bearer {token}` en cada
+  llamada protegida. Correcto.
+- [x] No se usa `JwtUtils.extractUserId` — los scripts no tocan Ronnie directamente.
 
 ## Route consistency
-- [x] No se añaden ni modifican `@RequestMapping` en ningún controlador.
-- [x] Sin cambios en `application.yaml` de ApiGateway.
+
+- [x] Todos los `@RequestMapping` consumidos NO incluyen `/ifit/api/v1`. Los scripts lo
+  añaden al llamar al gateway, que aplica StripPrefix=3. Correcto.
+- [x] `lb://IFIT` y `lb://RONNIE` coinciden con los `spring.application.name` registrados
+  en Eureka.
+- [x] No se añaden nuevas rutas en `application.yaml` — sin riesgo de shadowing.
 
 ## DTO alignment
-- [x] `CreateRoutineRequestDto`, `UpdateRoutineRequestDto` y `RoutineResponseDto` sin modificar.
-- [x] El helper privado no aparece en ningún contrato de API.
+
+- [x] Login: `{ username, password }` → `LoginRequestDto`. Correcto.
+- [x] Register: `{ name, surname, email, password }` → `RegisterRequestDto`. Correcto.
+- [x] Answer: `{ questionId, selectedOptionId }` → `AnswerRequestDto` (@NotNull en ambos). Correcto.
+- [x] Generate: `{ userId, responseId, coachType }` → `GenerateRoutineRequestDto`. Correcto.
+- [x] `QuestionnaireResponseDto` expone `responseId`, `currentQuestion.id`,
+  `currentQuestion.options[].id` e `isCompleted`. El bucle accede a todos. Correcto.
 
 ## Memory and resource checks
-- [x] Sin `ChatContext` ni `@AiService` afectados.
-- [x] `findByUserIdAndIsActive` devuelve `List<Routine>` acotada por usuario — no hay
-  consultas sin límite sobre toda la tabla.
+
+- [x] Un único `APIRequestContext` por ejecución de script, liberado con `ctx.dispose()`.
+- [x] No interaccionan con `ChatContext` de Ronnie — sin riesgo de contexto no limpiado.
+- [x] Bucle de cuestionario con límite de 50 iteraciones. Sin riesgo de loop infinito.
+- [x] `outputs/` creado con `mkdirSync` solo si no existe.
 
 ## Regression check
 
-### `createRoutine`
-- [x] Flujo de días (`routineDayRepository.save` por cada día) no alterado.
-- [x] `deactivatePreviousActiveRoutine` se llama ANTES del primer `save` de la nueva rutina,
-  dentro de la misma transacción — atomicidad garantizada.
-- [x] Si el usuario no tiene rutinas activas previas, `findByUserIdAndIsActive` devuelve
-  lista vacía → `saveAll([])` es no-op → sin efectos secundarios.
-
-### `toggleRoutineActive`
-- [x] Cuando `isActive=false`: el helper NO se invoca. Solo se desactiva la rutina target.
-  Las demás rutinas no se tocan.
-- [x] Cuando `isActive=true`: helper desactiva previas, luego se activa la target.
-- [x] Lazy loading de `routine.getUser().getId()` resuelto dentro de `@Transactional`. Seguro.
-
-### `updateRoutine`
-- [x] Actualización parcial preservada: descripción y trainingDays siguen siendo independientes.
-- [x] Cuando `isActive=null` en el DTO: el bloque completo se omite, helper no se llama.
-- [x] Cuando `isActive=false`: helper no se llama. Solo se desactiva la rutina target.
-- [x] Cuando `isActive=true`: helper desactiva previas, luego se activa la target.
-- [x] El bloque de días (reemplazo de días existentes) no se ve afectado por el cambio.
-
-### `setRoutineAsCompleted`
-- [x] Sin cambios. Solo llama `routine.setActive(false)` — no activa nada, helper no aplica.
-
-### `deleteRoutine`
-- [x] Sin cambios. No involucra `isActive`.
-
-### `countActiveRoutinesByUserId`
-- [x] Tras el fix, siempre retornará 0 o 1 para cualquier usuario.
+- [x] **ApiGateway**: sin cambios en `application.yaml` — rutas existentes no afectadas.
+- [x] **Ifit**: sin cambios en código Java — `AppUserControllerTest`, `AppUserServiceTest`,
+  `ExperienceLevelControllerTest` no se ven afectados.
+- [x] **Ronnie**: sin cambios — coaches Ronnie, Serena, Kael, Eliud y Master no afectados.
+- [x] **Playwright base** (8 suites): `tsc --noEmit` pasa limpio. Los nuevos archivos están
+  en `scripts/`, no en `tests/` — no interfieren con los specs existentes.
 
 ## Build check
-- [x] Sin imports nuevos: `List` y `Routine` ya importados; `routineRepository.saveAll`
-  heredado de `JpaRepository<Routine, Long>` — disponible sin cambios en `RoutineRepository`.
-- [x] Sin nuevas propiedades en `application.properties` ni `application.yaml`.
-- [x] Sin nuevos beans ni configuración requerida.
-- [x] Único archivo modificado: `RoutineService.java`.
-- [x] Warnings del IDE (null type safety en líneas 101 y 301) son informativos — el
-  null-guard dentro del helper los cubre. No afectan al build de Maven.
+
+- [x] `npm install` → sin vulnerabilidades, 25 paquetes.
+- [x] `tsc --noEmit` → EXIT 0.
+- [x] `ts-node` instalado → `npm run seed` y `npm run prompt-lab` disponibles.
+- [x] No se modifican `pom.xml` de ningún microservicio.
 
 ## Verdict
 
 PASS — Implementation is consistent across all services. Ready to merge.
+
+**Acción pendiente**: ejecutar `npm run seed` con el stack levantado para validar que
+`.seed-state.json` se genera correctamente (verificación de red no realizable en estático).

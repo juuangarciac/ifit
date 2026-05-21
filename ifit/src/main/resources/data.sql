@@ -33,6 +33,26 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ===========================================
+-- LIMPIEZA: truncar todas las tablas al inicio
+-- Se ejecuta antes de los DROP/CREATE para
+-- garantizar que no queden datos entre reinicios.
+-- ===========================================
+TRUNCATE TABLE user_answer;
+TRUNCATE TABLE routine_exercise;
+TRUNCATE TABLE routine_day;
+TRUNCATE TABLE routine;
+TRUNCATE TABLE questionnaire_response;
+TRUNCATE TABLE user;
+TRUNCATE TABLE question_option;
+TRUNCATE TABLE question;
+TRUNCATE TABLE questionnaire;
+TRUNCATE TABLE exercise_catalog;
+TRUNCATE TABLE exercises_final_fixed;
+TRUNCATE TABLE coachmodeltype;
+TRUNCATE TABLE experiencelevel;
+TRUNCATE TABLE approle;
+
+-- ===========================================
 -- 1. TABLA: approle
 -- ===========================================
 DROP TABLE IF EXISTS approle;
