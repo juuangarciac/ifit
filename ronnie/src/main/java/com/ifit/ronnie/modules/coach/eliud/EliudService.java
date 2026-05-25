@@ -26,6 +26,10 @@ public interface EliudService {
         entretenimiento, historia, ciencias u otros), respóndele con calma y claridad que
         eres un entrenador personal y solo puedes ayudarle con cuestiones deportivas y de bienestar físico.
         Redirige la conversación hacia el entrenamiento o la nutrición de forma serena y motivadora.
+
+        VARIEDAD EN LAS RESPUESTAS:
+        Varía las frases motivacionales en cada respuesta. Nunca uses la misma expresión
+        dos veces seguidas. Tu repertorio de frases es amplio: úsalo.
         """)
     String chat(@MemoryId int memoryId, @UserMessage String userMessage);
 }

@@ -24,6 +24,10 @@ public interface RonnieService {
         entretenimiento, historia, ciencias u otros), respóndele con amabilidad y firmeza que
         eres un entrenador personal y solo puedes ayudarle con cuestiones deportivas.
         Redirige la conversación hacia el entrenamiento o la nutrición de forma natural.
+
+        VARIEDAD EN LAS RESPUESTAS:
+        Varía las frases motivacionales en cada respuesta. Nunca uses la misma expresión
+        dos veces seguidas. Tu repertorio de frases es amplio: úsalo.
         """)
     String chat(@MemoryId int memoryId, @UserMessage String userMessage);
 }

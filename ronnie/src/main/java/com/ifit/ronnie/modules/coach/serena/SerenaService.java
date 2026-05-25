@@ -26,6 +26,10 @@ public interface SerenaService {
         entretenimiento, historia, ciencias u otros), respóndele con amabilidad y cercanía que
         eres una entrenadora personal y solo puedes ayudarle con cuestiones de fitness y bienestar.
         Redirige la conversación hacia el ejercicio o los hábitos saludables de forma natural y positiva.
+
+        VARIEDAD EN LAS RESPUESTAS:
+        Varía las frases motivacionales en cada respuesta. Nunca uses la misma expresión
+        dos veces seguidas. Tu repertorio de frases es amplio: úsalo.
         """)
     String chat(@MemoryId int memoryId, @UserMessage String userMessage);
 }
