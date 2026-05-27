@@ -1,69 +1,37 @@
-# Quality gate
+# Quality gate — Support Ticket via Email
 
 ## Overall status: APPROVED
 
 ## Guardian summary
-| Agent | Status |
-|---|---|
-| 2A Gateway | APPROVED — rutas existentes cubren todos los endpoints; sin cambios necesarios |
-| 2B Domain  | APPROVED — DTOs y firmas de controladores alineados con los scripts |
-| 2C AI      | APPROVED — delegación ifit→Ronnie transparente; timeout 120s adecuado |
+| Agent | Status | Notas |
+|---|---|---|
+| 2A Gateway | APPROVED | `IFIT-PRIVATE Path=/ifit/api/v1/**` cubre `/ifit/api/v1/appemail/**`. Sin cambios en Gateway. |
+| 2B Domain  | APPROVED | `spring-boot-starter-validation` presente. `AppEmailDetails` tiene todos los campos. Patrón `{{placeholder}}` confirmado. Principal del JWT es objeto `Jwt` (via `JwtAuthenticationToken`). |
+| 2C AI      | SKIP | Ronnie no involucrado. |
 
 ## Test coverage
+Requerido (para cobertura completa del nuevo método de servicio):
+- `AppEmailServiceTest` con `@ExtendWith(MockitoExtension.class)`, mockeando `JavaMailSender`.
+  Casos: envío exitoso, null en `userName` lanza `IllegalArgumentException`,
+  `IOException` retorna `EmailResponseDto(false, ...)`.
 
-Esta tarea añade infraestructura de testing, no código de producción Java. No se crean
-servicios, entidades ni controladores Java — el criterio de tests JUnit no aplica.
-
-Los propios scripts son el artefacto de testing. Verificaciones de compilación realizadas:
-- `tsc --noEmit` → EXIT 0 (sin errores de tipo)
-- `npm install` → sin vulnerabilidades
+No requerido para el controlador (sin `@WebMvcTest` precedente en el proyecto).
 
 ## Defensive programming issues
-
-Evaluadas las prácticas defensivas en los scripts TypeScript:
-
-- [x] `seed.ts`: comprueba `email` y `password` en .env antes de continuar (exit 1 si faltan).
-- [x] `seed.ts`: maneja respuestas no-ok en cada llamada con mensaje de error explícito.
-- [x] `seed.ts`: límite de 50 iteraciones en el bucle del cuestionario para evitar loops infinitos.
-- [x] `prompt-lab.ts`: captura errores por perfil con `try/catch` y registra el error en
-  `LabResult.error` sin abortar los demás perfiles.
-- [x] `questionnaire-runner.ts`: lanza `Error` descriptivo si no hay opciones disponibles
-  o si el cuestionario no completa en 50 iteraciones.
-- [x] No hay `console.log` en código de producción Java — solo en scripts TypeScript de test
-  donde es el mecanismo de salida estándar apropiado.
+Resueltos en implementación:
+- `sendSupportTicketEmail()` incluye null/blank guards antes del primer uso de cada parámetro.
+- `IOException` capturada en try/catch retornando `EmailResponseDto(false, ...)`.
 
 ## API contract issues
-
-- [x] Todos los endpoints consumidos existen y están documentados con `@Operation` y `@ApiResponses`.
-- [x] Los DTOs enviados por los scripts (login, register, answer, generate) coinciden con
-  los campos `@NotNull` requeridos en los DTOs Java.
-- [x] No se crean nuevos endpoints — ningún contrato nuevo que auditar.
-
-**Observación pendiente de verificación en runtime**: `prompt-lab.ts` accede a
-`routine.trainingDays[].exercises` para calcular `totalExercises` en el resumen Markdown.
-Si el campo JSON serializado tiene nombre diferente (ej. `days`), el valor será `null`.
-No afecta a la funcionalidad principal (generación y guardado del JSON).
+Resueltos en implementación:
+- Endpoint incluye `@Operation` + `@ApiResponses` (200, 400, 500) siguiendo el patrón de `RoutineController`.
+- `@Valid` en `@RequestBody SupportTicketRequestDto`.
 
 ## Security issues
-
-- [x] No hay credenciales hardcodeadas — todas las credenciales provienen de `.env`.
-- [x] `.env`, `.auth-state.json` y `.seed-state.json` están en `.gitignore`.
-- [x] Los tokens (accessToken, refreshToken) no se loguean en consola — solo userId y responseId.
-- [x] No se añaden rutas públicas nuevas en ApiGateway.
+- Sin `@PreAuthorize`: correcto. `SpringSecurityConfig.anyRequest().authenticated()` protege el endpoint.
+  El proyecto no usa `@PreAuthorize` en endpoints de usuario estándar.
+- Claim `email` de Keycloak puede ser null: implementado fallback a `"no-disponible"`.
+- SMTP credentials en `application.properties`: estado previo del proyecto, no empeora.
 
 ## Decision
-
-Proceeding to Agent 4 — Implementor
-
-## Agent 4 — Implementation complete
-Files generated:
-- `test/e2e/.gitignore`
-- `test/e2e/.env.example` (actualizado)
-- `test/e2e/package.json` (actualizado: ts-node, npm scripts)
-- `test/e2e/helpers/questionnaire-runner.ts`
-- `test/e2e/scripts/seed.ts`
-- `test/e2e/scripts/prompt-lab.ts`
-
-TypeScript compilation: EXIT 0 — sin errores.
-
-Proceeding to Agent 5 — Final Verifier.
+Proceeding to Agent 4 — Implementor.

@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import com.uca.juangarcia.ifit.exception.EmailNotFoundException;
 import com.uca.juangarcia.ifit.modules.notification.dto.EmailResponseDto;
+import com.uca.juangarcia.ifit.modules.notification.dto.SupportTicketRequestDto;
 import com.uca.juangarcia.ifit.modules.notification.model.AppEmailDetails;
 import com.uca.juangarcia.ifit.modules.user.dto.AppUserResponseDto;
 
@@ -29,8 +30,11 @@ public class AppEmailService {
     @Autowired
     private JavaMailSender javaMailSender;
 
-    @Value("${spring.mail.username}") 
+    @Value("${spring.mail.username}")
     private String sender;
+
+    @Value("${ifit.support.email}")
+    private String supportEmail;
 
     /**
      * This method is used to send an email with the provided details.
@@ -87,5 +91,56 @@ public class AppEmailService {
             return new EmailResponseDto(false, "Error reading email template: " + e.getMessage());
         }
     }
-}    
+
+    /**
+     * Envía un ticket de soporte al buzón de atención técnica de IFit.
+     *
+     * @param userName nombre del usuario que envía el ticket.
+     * @param userEmail email del usuario (puede ser "no-disponible" si el claim JWT no está mapeado).
+     * @param ticket DTO con asunto, categoría y mensaje.
+     * @return {@link EmailResponseDto} indicando si el envío fue exitoso.
+     */
+    public EmailResponseDto sendSupportTicketEmail(String userName, String userEmail, SupportTicketRequestDto ticket) {
+        if (userName == null || userName.isBlank()) {
+            throw new IllegalArgumentException("userName cannot be null or blank");
+        }
+        if (userEmail == null || userEmail.isBlank()) {
+            throw new IllegalArgumentException("userEmail cannot be null or blank");
+        }
+        if (ticket == null || ticket.getMessage() == null || ticket.getMessage().isBlank()) {
+            throw new IllegalArgumentException("ticket message cannot be null or blank");
+        }
+
+        try {
+            Resource resource = new ClassPathResource("templates/email/supportticket.html");
+            String htmlTemplate = new String(
+                resource.getInputStream().readAllBytes(),
+                StandardCharsets.UTF_8
+            );
+
+            String submittedAt = java.time.LocalDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
+
+            String htmlContent = htmlTemplate
+                .replace("{{userName}}", userName)
+                .replace("{{userEmail}}", userEmail)
+                .replace("{{category}}", ticket.getCategory() != null ? ticket.getCategory() : "OTRO")
+                .replace("{{subject}}", ticket.getSubject())
+                .replace("{{message}}", ticket.getMessage())
+                .replace("{{submittedAt}}", submittedAt);
+
+            AppEmailDetails details = new AppEmailDetails();
+            details.setRecipient(supportEmail);
+            details.setSubject("[IFit Soporte] " + ticket.getSubject());
+            details.setMsgBody(htmlContent);
+
+            sendEmail(details);
+            return new EmailResponseDto(true, "Ticket de soporte enviado correctamente.");
+
+        } catch (IOException e) {
+            logger.error("Error reading support ticket template: {}", e.getMessage(), e);
+            return new EmailResponseDto(false, "Error al procesar la plantilla del ticket: " + e.getMessage());
+        }
+    }
+}
 
