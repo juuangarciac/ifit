@@ -45,10 +45,11 @@ public class RoutineMapper {
             routine.getUser() != null ? routine.getUser().getId() : null,
             "Bienvenido a tu nueva rutina personalizada. Esta rutina ha sido diseñada específicamente para ti, "
             + "teniendo en cuenta tus objetivos, nivel de experiencia y preferencias. Asegúrate de seguirla de "
-            + "manera consistente para obtener los mejores resultados. ¡Vamos a por ello!", 
+            + "manera consistente para obtener los mejores resultados. ¡Vamos a por ello!",
             routine.getDescription(),
             routine.getTrainingDays(),
             routine.isActive(),
+            routine.isDeleted(),
             routine.getCurrentDay(),
             routine.getCreatedAt(),
             routine.getUpdatedAt(),
@@ -104,6 +105,7 @@ public RoutineResponseDto ronnieJsonToRoutineResponseDto(String ronnieJson) {
         responseDto.setDescription(routineNode.get("description").asText());
         responseDto.setTrainingDays(routineNode.get("trainingDays").asInt());
         responseDto.setIsActive(true);
+        responseDto.setDeleted(false);
         responseDto.setCreatedAt(LocalDateTime.now());
         responseDto.setUpdatedAt(LocalDateTime.now());
         

@@ -14,6 +14,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.uca.juangarcia.ifit.exception.CoachModelTypeNotFoundException;
 import com.uca.juangarcia.ifit.exception.EmailAlreadyExistsException;
+import com.uca.juangarcia.ifit.exception.RoutineIsActiveException;
 import com.uca.juangarcia.ifit.exception.EmailNotFoundException;
 import com.uca.juangarcia.ifit.exception.EmailNotVerifiedException;
 import com.uca.juangarcia.ifit.exception.ExperienceLevelNotFoundException;
@@ -78,14 +79,15 @@ public class HandlerExceptionController {
     }
 
     @ExceptionHandler({
-        EmailAlreadyExistsException.class
+        EmailAlreadyExistsException.class,
+        RoutineIsActiveException.class
     })
-    public ResponseEntity<ErrorResponse> handleConflictException(EmailAlreadyExistsException ex) {
+    public ResponseEntity<ErrorResponse> handleConflictException(Exception ex) {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(new ErrorResponse(
                         "Error: " + ex.getClass().getSimpleName(),
-                        409, 
+                        409,
                         LocalDateTime.now().toString(),
                         ex.getMessage()));
     }

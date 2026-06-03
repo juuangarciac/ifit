@@ -26,6 +26,8 @@ public class RoutineResponseDto {
     
     private Boolean isActive;
 
+    private Boolean deleted;
+
     private Integer currentDay;
 
     private LocalDateTime createdAt;
@@ -38,13 +40,14 @@ public class RoutineResponseDto {
     
     public RoutineResponseDto() {}
 
-    public RoutineResponseDto(Long id, Long userId, String message, String description, Integer trainingDays, Boolean isActive, Integer currentDay, LocalDateTime createdAt, LocalDateTime updatedAt, List<RoutineDayDto> days) {
+    public RoutineResponseDto(Long id, Long userId, String message, String description, Integer trainingDays, Boolean isActive, Boolean deleted, Integer currentDay, LocalDateTime createdAt, LocalDateTime updatedAt, List<RoutineDayDto> days) {
         this.id = id;
         this.userId = userId;
         this.message = message;
         this.description = description;
         this.trainingDays = trainingDays;
         this.isActive = isActive;
+        this.deleted = deleted;
         this.currentDay = currentDay;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -94,11 +97,19 @@ public class RoutineResponseDto {
     public Boolean getIsActive() {
         return isActive;
     }
-    
+
     public void setIsActive(Boolean isActive) {
         this.isActive = isActive;
     }
-    
+
+    public Boolean getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(Boolean deleted) {
+        this.deleted = deleted;
+    }
+
     public Integer getCurrentDay() {
         return currentDay;
     }

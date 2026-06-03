@@ -21,6 +21,7 @@ import com.uca.juangarcia.ifit.modules.training.controller.dto.RoutineDayDto;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.RoutineResponseDto;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.UpdateRoutineRequestDto;
 import com.uca.juangarcia.ifit.modules.training.model.CoachType;
+import com.uca.juangarcia.ifit.exception.RoutineIsActiveException;
 import com.uca.juangarcia.ifit.exception.RoutineNotFoundException;
 import com.uca.juangarcia.ifit.modules.training.mapper.RoutineDayMapper;
 import com.uca.juangarcia.ifit.modules.training.mapper.RoutineMapper;
@@ -189,7 +190,7 @@ public class RoutineService {
             throw new UserIdNotFoundException(userId);
         }
 
-        List<Routine> routines = routineRepository.findByUserId(userId);
+        List<Routine> routines = routineRepository.findByUserIdAndDeletedFalse(userId);
         return routineMapper.toResponseDtoList(routines);
     }
 
@@ -206,18 +207,17 @@ public class RoutineService {
         logger.info("Finding paginated routines for user {}: page={}, size={}",
                 userId, pageable.getPageNumber(), pageable.getPageSize());
 
-        // Validar que el usuario existe
         if (!userRepository.existsById(userId)) {
             throw new UserIdNotFoundException(userId);
         }
 
-        Page<Routine> routinePage = routineRepository.findByUserId(userId, pageable);
+        Page<Routine> routinePage = routineRepository.findByUserIdAndDeletedFalse(userId, pageable);
         return routineMapper.toResponseDtoPage(routinePage);
     }
 
     /**
      * Obtiene las rutinas activas de un usuario.
-     * 
+     *
      * @param userId identificador del usuario
      * @return lista de rutinas activas
      * @throws UserIdNotFoundException si el usuario no existe
@@ -229,7 +229,7 @@ public class RoutineService {
             throw new UserIdNotFoundException(userId);
         }
 
-        List<Routine> routines = routineRepository.findByUserIdAndIsActive(userId, true);
+        List<Routine> routines = routineRepository.findByUserIdAndIsActiveAndDeletedFalse(userId, true);
         return routineMapper.toResponseDtoList(routines);
     }
 
@@ -338,17 +338,17 @@ public class RoutineService {
      * @return true si la rutina pertenece al usuario, false en caso contrario
      */
     public boolean routineBelongsToUser(Long routineId, Long userId) {
-        return routineRepository.findByIdAndUserId(routineId, userId).isPresent();
+        return routineRepository.findByIdAndUserIdAndDeletedFalse(routineId, userId).isPresent();
     }
 
     /**
-     * Cuenta las rutinas activas de un usuario.
-     * 
+     * Cuenta las rutinas activas y no eliminadas de un usuario.
+     *
      * @param userId identificador del usuario
      * @return número de rutinas activas
      */
     public long countActiveRoutinesByUserId(Long userId) {
-        return routineRepository.countByUserIdAndIsActive(userId, true);
+        return routineRepository.countByUserIdAndIsActiveAndDeletedFalse(userId, true);
     }
 
     /**
@@ -449,10 +449,37 @@ public class RoutineService {
         return sb.toString();
     }
 
+    /**
+     * Realiza un soft-delete sobre una rutina, marcándola como eliminada.
+     * La rutina deja de ser visible para el usuario pero no se borra de la base de datos.
+     * Si era la rutina activa, se desactiva automáticamente.
+     *
+     * @param id identificador de la rutina
+     * @throws RoutineNotFoundException si no existe la rutina
+     */
+    @Transactional
+    public RoutineResponseDto softDeleteRoutine(Long id) throws RoutineNotFoundException, RoutineIsActiveException {
+        logger.info("Soft-deleting routine with ID: {}", id);
+
+        Routine routine = routineRepository.findById(id)
+                .orElseThrow(() -> new RoutineNotFoundException("Routine with ID " + id + " not found"));
+
+        if (routine.isActive()) {
+            throw new RoutineIsActiveException(id);
+        }
+
+        routine.setDeleted(true);
+        routine.setUpdatedAt(LocalDateTime.now());
+        routine = routineRepository.save(routine);
+
+        logger.info("Routine with ID: {} soft-deleted", id);
+        return routineMapper.toResponseDto(routine);
+    }
+
     private void deactivatePreviousActiveRoutine(Long userId) {
         if (userId == null)
             throw new IllegalArgumentException("User ID cannot be null");
-        List<Routine> active = routineRepository.findByUserIdAndIsActive(userId, true);
+        List<Routine> active = routineRepository.findByUserIdAndIsActiveAndDeletedFalse(userId, true);
         if (!active.isEmpty()) {
             active.forEach(r -> r.setActive(false));
             routineRepository.saveAll(active);

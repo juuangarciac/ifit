@@ -22,45 +22,46 @@ import com.uca.juangarcia.ifit.modules.training.model.Routine;
 public interface RoutineRepository extends JpaRepository<Routine, Long> {
     
     /**
-     * Encuentra todas las rutinas de un usuario específico.
+     * Encuentra todas las rutinas visibles (no eliminadas) de un usuario.
      */
-    List<Routine> findByUserId(Long userId);
-    
+    List<Routine> findByUserIdAndDeletedFalse(Long userId);
+
     /**
-     * Encuentra todas las rutinas activas de un usuario.
+     * Encuentra rutinas visibles (no eliminadas) de un usuario con paginación.
      */
-    List<Routine> findByUserIdAndIsActive(Long userId, boolean isActive);
-    
+    Page<Routine> findByUserIdAndDeletedFalse(Long userId, Pageable pageable);
+
     /**
-     * Encuentra rutinas de un usuario con paginación.
+     * Encuentra rutinas visibles (no eliminadas) filtradas por estado activo.
      */
-    Page<Routine> findByUserId(Long userId, Pageable pageable);
-    
+    List<Routine> findByUserIdAndIsActiveAndDeletedFalse(Long userId, boolean isActive);
+
     /**
-     * Encuentra una rutina específica de un usuario.
+     * Encuentra una rutina visible (no eliminada) de un usuario por su ID.
      */
-    Optional<Routine> findByIdAndUserId(Long id, Long userId);
-    
+    Optional<Routine> findByIdAndUserIdAndDeletedFalse(Long id, Long userId);
+
     /**
-     * Cuenta las rutinas activas de un usuario.
+     * Cuenta las rutinas activas y no eliminadas de un usuario.
      */
-    long countByUserIdAndIsActive(Long userId, boolean isActive);
-    
+    long countByUserIdAndIsActiveAndDeletedFalse(Long userId, boolean isActive);
+
     /**
      * Encuentra todas las rutinas con sus días y ejercicios cargados (evita N+1).
+     * Excluye rutinas eliminadas con soft-delete.
      */
     @Query("SELECT DISTINCT r FROM Routine r " +
            "LEFT JOIN FETCH r.days d " +
            "LEFT JOIN FETCH d.exercises " +
-           "WHERE r.id = :routineId")
+           "WHERE r.id = :routineId AND r.deleted = false")
     Optional<Routine> findByIdWithDaysAndExercises(@Param("routineId") Long routineId);
-    
+
     /**
-     * Encuentra rutinas activas de un usuario con fetch join optimizado.
+     * Encuentra rutinas activas y no eliminadas de un usuario con fetch join optimizado.
      */
     @Query("SELECT DISTINCT r FROM Routine r " +
            "LEFT JOIN FETCH r.days d " +
            "LEFT JOIN FETCH d.exercises " +
-           "WHERE r.user.id = :userId AND r.isActive = true")
+           "WHERE r.user.id = :userId AND r.isActive = true AND r.deleted = false")
     List<Routine> findActiveRoutinesWithDetailsByUserId(@Param("userId") Long userId);
 }

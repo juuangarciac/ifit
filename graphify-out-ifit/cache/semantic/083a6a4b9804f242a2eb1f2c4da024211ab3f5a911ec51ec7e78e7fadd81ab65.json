@@ -1,0 +1,1 @@
+{"nodes": [{"id": "email_resetpassword_html", "label": "Reset Password Email Template", "file_type": "document", "source_file": "ifit/src/main/resources/templates/email/resetpassword.html", "source_location": null, "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}

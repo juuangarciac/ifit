@@ -22,6 +22,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.uca.juangarcia.ifit.exception.RoutineIsActiveException;
+import com.uca.juangarcia.ifit.exception.RoutineNotFoundException;
 import com.uca.juangarcia.ifit.exception.UserIdNotFoundException;
 import com.uca.juangarcia.ifit.exception.model.ErrorResponse;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.CreateRoutineRequestDto;
@@ -29,7 +31,6 @@ import com.uca.juangarcia.ifit.modules.training.controller.dto.GenerateRoutineRe
 import com.uca.juangarcia.ifit.modules.training.controller.dto.RoutineDayDto;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.RoutineResponseDto;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.UpdateRoutineRequestDto;
-import com.uca.juangarcia.ifit.exception.RoutineNotFoundException;
 import com.uca.juangarcia.ifit.modules.training.service.RoutineService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -413,22 +414,66 @@ public class RoutineController {
     }
     
     /**
-     * Elimina una rutina del sistema.
-     * 
+     * Realiza un soft-delete sobre una rutina, ocultándola para el usuario sin borrarla físicamente.
+     *
+     * Endpoint: {@code PATCH /api/v1/routines/{id}/cancel}
+     *
+     * La rutina queda marcada como eliminada y deja de aparecer en los listados del usuario.
+     * Si era la rutina activa, también se desactiva automáticamente.
+     * Esta operación es reversible a nivel de base de datos.
+     *
+     * @param id identificador de la rutina
+     * @return ResponseEntity con código 204 NO CONTENT
+     * @throws RoutineNotFoundException si no existe la rutina
+     */
+    @PatchMapping("/{id}/cancel")
+    @Operation(
+        summary = "Cancelar rutina (soft-delete)",
+        description = "Marca una rutina como eliminada sin borrarla físicamente de la base de datos. " +
+                     "La rutina deja de ser visible para el usuario. Si era la rutina activa, se desactiva automáticamente."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Rutina cancelada exitosamente",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = RoutineResponseDto.class))
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Rutina no encontrada",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "409",
+            description = "La rutina es la rutina activa del usuario y no puede eliminarse",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
+        )
+    })
+    public ResponseEntity<RoutineResponseDto> cancelRoutine(
+            @Parameter(description = "ID de la rutina a cancelar", required = true)
+            @PathVariable Long id
+    ) throws RoutineNotFoundException, RoutineIsActiveException {
+        RoutineResponseDto cancelled = routineService.softDeleteRoutine(id);
+        return ResponseEntity.ok(cancelled);
+    }
+
+    /**
+     * Elimina permanentemente una rutina del sistema.
+     *
      * Endpoint: {@code DELETE /api/v1/routines/{id}}
-     * 
+     *
      * Advertencia: Esta operación es irreversible y eliminará también
      * todos los días y ejercicios asociados.
-     * 
+     *
      * @param id identificador de la rutina a eliminar
      * @return ResponseEntity con código 204 NO CONTENT
      * @throws RoutineNotFoundException si no existe la rutina
      */
     @DeleteMapping("/{id}")
     @Operation(
-        summary = "Eliminar rutina",
+        summary = "Eliminar rutina (hard-delete)",
         description = "Elimina permanentemente una rutina del sistema, incluyendo días y ejercicios. " +
-                     "Esta operación es irreversible."
+                     "Esta operación es irreversible. Para ocultarla sin borrarla usar PATCH /{id}/cancel."
     )
     @ApiResponses(value = {
         @ApiResponse(

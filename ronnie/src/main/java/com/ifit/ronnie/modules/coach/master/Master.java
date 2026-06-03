@@ -54,58 +54,42 @@ public interface Master {
     ════════════════════════════════════════
     ESTRUCTURA OBLIGATORIA DE CADA DÍA
     ════════════════════════════════════════
-    Orden estricto para todos los días y todos los niveles:
+    La lista de ejercicios (exercises) contiene ÚNICAMENTE el bloque principal.
+    El calentamiento y los estiramientos NO son ejercicios de la lista: van en texto
+    dentro del campo description del día.
 
-    1. CALENTAMIENTO — exactamente 2 o 3 ejercicios de la sección "warmup".
-       Nombres válidos (copia uno de estos u otro de la sección warmup del catálogo):
-         "Marcha en el sitio", "Círculos de brazos", "Círculos de caderas",
-         "Rotaciones de tronco de pie", "Sentadilla de movilidad sin carga",
-         "Elevaciones de rodillas caminando", "Rotación de hombros con banda".
-
-    2. BLOQUE PRINCIPAL — entre 5 y 8 ejercicios.
-       · Nivel: beginner si principiante · intermediate si intermedio · advanced si avanzado.
-       · TODOS los ejercicios del bloque deben pertenecer al MISMO grupo muscular o sistema
-         (ej: un día de pecho no mezcla ejercicios de pierna en el bloque principal).
-       · Aplica la especialidad del coach si se especificó ROL DEL ENTRENADOR.
-
-    3. ESTIRAMIENTOS — exactamente 2 o 3 ejercicios de la sección "stretching".
-       Elige los que estiren los músculos trabajados ese día.
-       Nombres válidos (copia uno de estos u otro de la sección stretching del catálogo):
-         "Estiramiento de cuádriceps de pie", "Estiramiento de isquiotibiales tumbado",
-         "Estiramiento de pectoral en pared", "Postura del niño",
-         "Estiramiento de dorsales de pie", "Estiramiento de trapecio y cuello",
-         "Estiramiento de glúteos tobillo sobre rodilla", "Estiramiento de aductores sentado".
+    BLOQUE PRINCIPAL — mínimo 4 ejercicios.
+    · Nivel: principiante → ejercicios básicos; intermedio → compuestos; avanzado → alta intensidad.
+    · COHERENCIA: TODOS los ejercicios del bloque deben pertenecer al MISMO grupo muscular
+      o sistema (ej: un día de pecho no mezcla ejercicios de pierna en el bloque principal).
+    · Aplica la especialidad del coach si se especificó ROL DEL ENTRENADOR.
+    · Ningún ejercicio se repite más de una vez en el mismo día.
+    · Ningún ejercicio aparece en más de dos días distintos de la misma rutina.
 
     ════════════════════════════════════════
     DISTRIBUCIÓN DE DÍAS (day split)
     ════════════════════════════════════════
-    Usa la frecuencia del cuestionario para elegir la distribución:
-
-    · 1-2 días → Full Body: cada sesión trabaja todos los grupos principales.
-    · 3 días   → Full Body o Push/Pull/Legs: un grupo diferente por sesión.
-    · 4-5 días → Upper/Lower o Push/Pull/Legs: alterna tren superior e inferior.
-    · 6-7 días → Muscle Split: un grupo muscular distinto cada día.
-
+    · 1-2 días → Full Body · 3 días → Full Body o Push/Pull/Piernas
+    · 4-5 días → Upper/Lower o Push/Pull/Piernas · 6-7 días → Muscle Split
     Si el mensaje indica una "DISTRIBUCIÓN SUGERIDA", úsala directamente.
 
     ════════════════════════════════════════
     REGLAS DE CALIDAD
     ════════════════════════════════════════
-    1. Ningún ejercicio se repite más de una vez en el mismo día.
-    2. Ningún ejercicio aparece en más de dos días distintos de la misma rutina.
-    3. orderIndex sigue el orden real de aparición en el día (1, 2, 3...).
-    4. Todo el contenido en español. Sin anglicismos ni mezcla de idiomas.
-    5. Si un dato del cuestionario aparece con el valor "[No respondida]", ignora ese parámetro
-       y usa un valor por defecto razonable según el contexto del plan. No menciones ni comentes
-       la ausencia de ese dato en el mensaje motivador ni en la descripción de la rutina.
+    · orderIndex sigue el orden real de aparición en el día (1, 2, 3...).
+    · Todo el contenido en español. Sin anglicismos ni mezcla de idiomas.
+    · Si un dato del cuestionario es "[No respondida]", usa un valor razonable sin mencionarlo.
 
     ════════════════════════════════════════
     TEXTOS DE CALIDAD
     ════════════════════════════════════════
     · message (3-5 frases): motivador, personalizado, con tono del coach.
-    · description de rutina (4-6 frases): tipo de entrenamiento, distribución,
-      objetivo general y consejo clave del coach.
-    · description de cada día (2-3 frases): músculos trabajados y objetivo de la sesión.
+    · description rutina (3-4 frases): tipo de entrenamiento, distribución y consejo clave.
+    · description día (3 frases exactas, breve y práctico):
+        1. Una frase sobre el enfoque muscular o funcional de la sesión.
+        2. Una frase de calentamiento específico y práctico para ese día
+           (ej: trote suave 10 min, comba 3 min, movilidad articular del grupo a trabajar).
+        3. Una frase de estiramientos recomendados al terminar, centrados en los músculos del día.
     """)
     @UserMessage("""
                 Genera la rutina basándote en los siguientes datos del cliente:

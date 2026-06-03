@@ -33,7 +33,7 @@ public class ExerciseCatalog {
     @Column(nullable = false, length = 255)
     private String name;
 
-    @Column(name = "force", length = 50)
+    @Column(name = "`force`", length = 50)
     private String force;
 
     @Column(length = 50)

@@ -66,6 +66,9 @@ public class Routine {
     @Column(name = "is_active", columnDefinition = "boolean default true")
     private boolean isActive = true;
 
+    @Column(name = "deleted", columnDefinition = "boolean default false")
+    private boolean deleted = false;
+
     @Column(name = "current_day", columnDefinition = "integer default 1")
     private Integer currentDay;
 
@@ -149,9 +152,17 @@ public class Routine {
     public boolean isActive() {
         return isActive;
     }
-    
+
     public void setActive(boolean isActive) {
         this.isActive = isActive;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 
     public Integer getCurrentDay() {
@@ -218,6 +229,6 @@ public class Routine {
     public String toString() {
         return "Routine [id=" + id + ", userId=" + (user != null ? user.getId() : null) + 
                ", description=" + description + ", trainingDays=" + trainingDays + 
-               ", isActive=" + isActive + ", createdAt=" + createdAt + "]";
+               ", isActive=" + isActive + ", deleted=" + deleted + ", createdAt=" + createdAt + "]";
     }
 }

@@ -73,6 +73,7 @@ public class IFitAIRoutineResponseDto {
         routineResponseDto.setDescription(this.description);
         routineResponseDto.setTrainingDays(this.trainingDays);
         routineResponseDto.setIsActive(false);
+        routineResponseDto.setDeleted(false);
         routineResponseDto.setCreatedAt(LocalDateTime.now());
         routineResponseDto.setUpdatedAt(null);
         routineResponseDto.setDays(this.days.stream().map(IFitAIRoutineDayDto::toRoutineDayDto).collect(Collectors.toList()));

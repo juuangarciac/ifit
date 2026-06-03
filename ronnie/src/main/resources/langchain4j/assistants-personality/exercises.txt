@@ -1,772 +1,402 @@
-{
-   "warmup":[
-      {
-         "exerciseName":"Marcha en el sitio",
-         "sets":1,
-         "reps":1,
-         "restSeconds":0,
-         "notes":"3-5 minutos a ritmo moderado elevando rodillas. Calentamiento cardiovascular inicial obligatorio.",
-         "orderIndex":1
-      },
-      {
-         "exerciseName":"Círculos de brazos",
-         "sets":1,
-         "reps":1,
-         "restSeconds":0,
-         "notes":"15 círculos hacia adelante y 15 hacia atrás con brazos extendidos. Moviliza hombros y calienta el manguito rotador.",
-         "orderIndex":2
-      },
-      {
-         "exerciseName":"Círculos de caderas",
-         "sets":1,
-         "reps":1,
-         "restSeconds":0,
-         "notes":"10 círculos en cada dirección con manos en la cintura. Activa la movilidad lumbo-pélvica.",
-         "orderIndex":3
-      },
-      {
-         "exerciseName":"Rotaciones de tronco de pie",
-         "sets":1,
-         "reps":1,
-         "restSeconds":0,
-         "notes":"20 giros alternos con brazos extendidos a los lados. Calienta la zona torácica y el core.",
-         "orderIndex":4
-      },
-      {
-         "exerciseName":"Sentadilla de movilidad sin carga",
-         "sets":1,
-         "reps":10,
-         "restSeconds":0,
-         "notes":"Lenta y controlada, 3 segundos de bajada. Activa la cadena posterior y prepara rodillas y caderas para el trabajo.",
-         "orderIndex":5
-      },
-      {
-         "exerciseName":"Rotación de hombros con banda",
-         "sets":1,
-         "reps":15,
-         "restSeconds":0,
-         "notes":"Moviliza el manguito rotador. Imprescindible antes de cualquier sesión con ejercicios de empuje o jalón.",
-         "orderIndex":6
-      },
-      {
-         "exerciseName":"Elevaciones de rodillas caminando",
-         "sets":1,
-         "reps":1,
-         "restSeconds":0,
-         "notes":"10 pasos llevando la rodilla al pecho. Activa flexores de cadera y mejora la coordinación para la sesión.",
-         "orderIndex":7
-      }
-   ],
-   "stretching":[
-      {
-         "exerciseName":"Estiramiento de cuádriceps de pie",
-         "sets":1,
-         "reps":1,
-         "restSeconds":0,
-         "notes":"Sostén 30 segundos por pierna tirando el pie hacia el glúteo. Apóyate en una pared si es necesario.",
-         "orderIndex":1
-      },
-      {
-         "exerciseName":"Estiramiento de isquiotibiales tumbado",
-         "sets":1,
-         "reps":1,
-         "restSeconds":0,
-         "notes":"Tumbado, lleva una pierna extendida hacia el pecho con ayuda de las manos. 30 segundos por lado. Sin forzar.",
-         "orderIndex":2
-      },
-      {
-         "exerciseName":"Estiramiento de glúteos tobillo sobre rodilla",
-         "sets":1,
-         "reps":1,
-         "restSeconds":0,
-         "notes":"Tumbado boca arriba, cruza el tobillo sobre la rodilla contraria y lleva ambas piernas al pecho. 30 seg por lado.",
-         "orderIndex":3
-      },
-      {
-         "exerciseName":"Estiramiento de pectoral en pared",
-         "sets":1,
-         "reps":1,
-         "restSeconds":0,
-         "notes":"Apoya el brazo a 90° en una pared y gira el tronco al lado contrario. 30 segundos por lado.",
-         "orderIndex":4
-      },
-      {
-         "exerciseName":"Estiramiento de trapecio y cuello",
-         "sets":1,
-         "reps":1,
-         "restSeconds":0,
-         "notes":"Inclina la cabeza hacia el hombro con suave ayuda de la mano. 20-30 segundos por lado. No forzar.",
-         "orderIndex":5
-      },
-      {
-         "exerciseName":"Postura del niño",
-         "sets":1,
-         "reps":1,
-         "restSeconds":0,
-         "notes":"Arrodillado, estira los brazos al frente con la frente apoyada. 45-60 segundos. Relaja completamente la espalda baja.",
-         "orderIndex":6
-      },
-      {
-         "exerciseName":"Estiramiento de aductores sentado",
-         "sets":1,
-         "reps":1,
-         "restSeconds":0,
-         "notes":"Sentado, planta de los pies juntas y rodillas abiertas. Inclina ligeramente el tronco hacia adelante. 30 segundos.",
-         "orderIndex":7
-      },
-      {
-         "exerciseName":"Estiramiento de dorsales de pie",
-         "sets":1,
-         "reps":1,
-         "restSeconds":0,
-         "notes":"Agarra una barra o marco de puerta y deja caer el peso del cuerpo estirando el dorsal. 30 segundos por lado.",
-         "orderIndex":8
-      }
-   ],
-   "beginner":[
-      {
-         "exerciseName":"Sentadilla con peso corporal",
-         "sets":3,
-         "reps":15,
-         "restSeconds":60,
-         "notes":"Mantén la espalda recta y las rodillas alineadas con los pies. Ideal para aprender el patrón de movimiento básico.",
-         "orderIndex":1
-      },
-      {
-         "exerciseName":"Flexiones de rodillas",
-         "sets":3,
-         "reps":10,
-         "restSeconds":60,
-         "notes":"Versión modificada de la flexión. Perfecta para desarrollar fuerza en pecho y tríceps desde cero.",
-         "orderIndex":2
-      },
-      {
-         "exerciseName":"Plancha estática (30s)",
-         "sets":3,
-         "reps":1,
-         "restSeconds":45,
-         "notes":"Apoya en antebrazos. Cuerpo recto como tabla. Activa el core sin impacto articular.",
-         "orderIndex":3
-      },
-      {
-         "exerciseName":"Puente de glúteos",
-         "sets":3,
-         "reps":15,
-         "restSeconds":45,
-         "notes":"Tumbado boca arriba, sube las caderas. Excelente activador de glúteos y lumbares.",
-         "orderIndex":4
-      },
-      {
-         "exerciseName":"Marcha en el sitio",
-         "sets":3,
-         "reps":20,
-         "restSeconds":30,
-         "notes":"Levanta rodillas al ritmo moderado. Calentamiento cardiovascular ideal para principiantes.",
-         "orderIndex":5
-      },
-      {
-         "exerciseName":"Zancada estática",
-         "sets":3,
-         "reps":10,
-         "restSeconds":60,
-         "notes":"Da un paso largo y baja la rodilla trasera. Trabaja cuádriceps y equilibrio.",
-         "orderIndex":6
-      },
-      {
-         "exerciseName":"Superman (extensión lumbar)",
-         "sets":3,
-         "reps":12,
-         "restSeconds":45,
-         "notes":"Tumbado boca abajo, eleva brazos y piernas. Fortalece la cadena posterior baja.",
-         "orderIndex":7
-      },
-      {
-         "exerciseName":"Elevación de talones de pie",
-         "sets":3,
-         "reps":20,
-         "restSeconds":30,
-         "notes":"Sube y baja sobre la punta de los pies. Trabaja gastrocnemio y sóleo.",
-         "orderIndex":8
-      },
-      {
-         "exerciseName":"Curl de bíceps con mancuernas ligeras",
-         "sets":3,
-         "reps":15,
-         "restSeconds":60,
-         "notes":"Usa peso que permitas 15 reps limpias. Controla la bajada (excéntrico).",
-         "orderIndex":9
-      },
-      {
-         "exerciseName":"Press de hombros sentado",
-         "sets":3,
-         "reps":12,
-         "restSeconds":60,
-         "notes":"Empuja las mancuernas hacia arriba sin arquear la espalda. Trabaja deltoides.",
-         "orderIndex":10
-      },
-      {
-         "exerciseName":"Remo con mancuerna a una mano",
-         "sets":3,
-         "reps":12,
-         "restSeconds":60,
-         "notes":"Apóyate en un banco. Lleva el codo hacia atrás. Activa dorsal y romboides.",
-         "orderIndex":11
-      },
-      {
-         "exerciseName":"Extensión de tríceps sobre la cabeza",
-         "sets":3,
-         "reps":12,
-         "restSeconds":60,
-         "notes":"Con mancuerna ligera. Mantén los codos fijos. No arquees la espalda.",
-         "orderIndex":12
-      },
-      {
-         "exerciseName":"Abducción lateral de cadera tumbado",
-         "sets":3,
-         "reps":15,
-         "restSeconds":45,
-         "notes":"Eleva la pierna estirada hacia el lado. Activa glúteo medio y tensor fascia lata.",
-         "orderIndex":13
-      },
-      {
-         "exerciseName":"Crunch abdominal",
-         "sets":3,
-         "reps":20,
-         "restSeconds":45,
-         "notes":"Eleva solo los hombros del suelo. No tires del cuello. Exhala al subir.",
-         "orderIndex":14
-      },
-      {
-         "exerciseName":"Sentadilla con silla",
-         "sets":3,
-         "reps":12,
-         "restSeconds":60,
-         "notes":"Usa la silla como guía. Perfecto para adultos mayores o muy principiantes.",
-         "orderIndex":15
-      },
-      {
-         "exerciseName":"Flexión de pecho en pared",
-         "sets":3,
-         "reps":15,
-         "restSeconds":45,
-         "notes":"La versión más fácil de la flexión. Ideal para empezar a desarrollar fuerza en empuje.",
-         "orderIndex":16
-      },
-      {
-         "exerciseName":"Paso lateral con banda elástica",
-         "sets":3,
-         "reps":15,
-         "restSeconds":45,
-         "notes":"Con banda en tobillos, da pasos laterales. Activa glúteo medio y estabilizadores.",
-         "orderIndex":17
-      },
-      {
-         "exerciseName":"Rotación de hombros con banda",
-         "sets":3,
-         "reps":15,
-         "restSeconds":30,
-         "notes":"Mejora la movilidad y calienta el manguito rotador antes de entrenar.",
-         "orderIndex":18
-      },
-      {
-         "exerciseName":"Elevación de piernas tumbado",
-         "sets":3,
-         "reps":12,
-         "restSeconds":45,
-         "notes":"Espalda baja pegada al suelo. Eleva las piernas sin que toquen. Core y flexores de cadera.",
-         "orderIndex":19
-      },
-      {
-         "exerciseName":"Caminar en cinta o al aire libre (30 min)",
-         "sets":1,
-         "reps":1,
-         "restSeconds":0,
-         "notes":"Cardio base de bajo impacto. Construye resistencia aeróbica de forma gradual.",
-         "orderIndex":20
-      },
-      {
-         "exerciseName":"Sentadilla lateral",
-         "sets":3,
-         "reps":10,
-         "restSeconds":60,
-         "notes":"Da un paso al lado y dobla esa rodilla. Trabaja aductores, abductores y cuádriceps.",
-         "orderIndex":21
-      },
-      {
-         "exerciseName":"Press de pecho con mancuernas en banco",
-         "sets":3,
-         "reps":12,
-         "restSeconds":60,
-         "notes":"Controla el descenso. Usa peso ligero para aprender el rango de movimiento completo.",
-         "orderIndex":22
-      },
-      {
-         "exerciseName":"Extensión de cuádriceps en máquina",
-         "sets":3,
-         "reps":15,
-         "restSeconds":60,
-         "notes":"Ajusta bien el pivote. Sube despacio, baja más despacio. Sin peso excesivo al inicio.",
-         "orderIndex":23
-      },
-      {
-         "exerciseName":"Curl femoral en máquina",
-         "sets":3,
-         "reps":15,
-         "restSeconds":60,
-         "notes":"Trabaja los isquiotibiales de forma aislada. Básico y seguro para principiantes.",
-         "orderIndex":24
-      },
-      {
-         "exerciseName":"Remo en máquina (cable bajo)",
-         "sets":3,
-         "reps":12,
-         "restSeconds":60,
-         "notes":"Espalda recta, tira hacia el ombligo. Ideal para aprender el patrón de jalón horizontal.",
-         "orderIndex":25
-      },
-      {
-         "exerciseName":"Jalón al pecho en polea",
-         "sets":3,
-         "reps":12,
-         "restSeconds":60,
-         "notes":"Agarre ancho. Lleva la barra a la barbilla. Trabaja dorsal y bíceps.",
-         "orderIndex":26
-      },
-      {
-         "exerciseName":"Bicicleta estática suave (20 min)",
-         "sets":1,
-         "reps":1,
-         "restSeconds":0,
-         "notes":"Cardio de bajo impacto. Resistencia baja-media. Perfecto para recuperación activa.",
-         "orderIndex":27
-      }
-   ],
-   "intermediate":[
-      {
-         "exerciseName":"Sentadilla con barra (back squat)",
-         "sets":4,
-         "reps":8,
-         "restSeconds":90,
-         "notes":"Barra sobre trapecios. Profundidad hasta muslos paralelos al suelo. Control total del movimiento.",
-         "orderIndex":1
-      },
-      {
-         "exerciseName":"Press de banca con barra",
-         "sets":4,
-         "reps":8,
-         "restSeconds":90,
-         "notes":"Agarre ligeramente más ancho que los hombros. Baja la barra al pecho con control.",
-         "orderIndex":2
-      },
-      {
-         "exerciseName":"Peso muerto convencional",
-         "sets":4,
-         "reps":6,
-         "restSeconds":120,
-         "notes":"Barra pegada a las piernas, espalda neutra, caderas en bisagra. Movimiento rey de fuerza.",
-         "orderIndex":3
-      },
-      {
-         "exerciseName":"Dominadas asistidas",
-         "sets":4,
-         "reps":8,
-         "restSeconds":90,
-         "notes":"Usa banda elástica o máquina. Trabaja dorsal, bíceps y core. Progresión hacia dominadas libres.",
-         "orderIndex":4
-      },
-      {
-         "exerciseName":"Flexiones declinadas",
-         "sets":3,
-         "reps":12,
-         "restSeconds":75,
-         "notes":"Pies elevados. Más énfasis en la parte superior del pecho y deltoides anterior.",
-         "orderIndex":5
-      },
-      {
-         "exerciseName":"Zancada caminando con mancuernas",
-         "sets":3,
-         "reps":12,
-         "restSeconds":75,
-         "notes":"Alterna piernas avanzando. Mayor demanda de equilibrio y coordinación que la estática.",
-         "orderIndex":6
-      },
-      {
-         "exerciseName":"Hip thrust con barra",
-         "sets":4,
-         "reps":10,
-         "restSeconds":90,
-         "notes":"Apoya la parte alta de la espalda en banco. Empuja con las caderas hacia arriba. Glúteo máximo.",
-         "orderIndex":7
-      },
-      {
-         "exerciseName":"Remo con barra (bent-over row)",
-         "sets":4,
-         "reps":8,
-         "restSeconds":90,
-         "notes":"Espalda inclinada ~45°. Tira hacia el abdomen. Uno de los mejores ejercicios de espalda.",
-         "orderIndex":8
-      },
-      {
-         "exerciseName":"Press militar con barra de pie",
-         "sets":4,
-         "reps":8,
-         "restSeconds":90,
-         "notes":"Empuja la barra sobre la cabeza sin arquear la zona lumbar. Fuerza total de hombros y core.",
-         "orderIndex":9
-      },
-      {
-         "exerciseName":"Sentadilla búlgara",
-         "sets":3,
-         "reps":10,
-         "restSeconds":90,
-         "notes":"Pie trasero elevado en banco. Mayor rango de movimiento y trabajo unilateral de pierna.",
-         "orderIndex":10
-      },
-      {
-         "exerciseName":"Face pull con cable",
-         "sets":3,
-         "reps":15,
-         "restSeconds":60,
-         "notes":"Tira hacia la cara con codos elevados. Trabaja deltoides posterior y manguito rotador.",
-         "orderIndex":11
-      },
-      {
-         "exerciseName":"Plancha con desplazamiento de hombros",
-         "sets":3,
-         "reps":12,
-         "restSeconds":60,
-         "notes":"En plancha alta, toca hombro alterno. Aumenta la demanda anti-rotación del core.",
-         "orderIndex":12
-      },
-      {
-         "exerciseName":"Renegade row",
-         "sets":3,
-         "reps":8,
-         "restSeconds":75,
-         "notes":"En posición de flexión, remos alternos. Combina empuje, jalón y estabilidad de core.",
-         "orderIndex":13
-      },
-      {
-         "exerciseName":"Step-up con mancuernas",
-         "sets":3,
-         "reps":12,
-         "restSeconds":75,
-         "notes":"Sube a un banco con peso. Trabaja glúteos y cuádriceps de forma funcional.",
-         "orderIndex":14
-      },
-      {
-         "exerciseName":"Curl martillo con mancuernas",
-         "sets":3,
-         "reps":12,
-         "restSeconds":60,
-         "notes":"Agarre neutro (pulgar arriba). Trabaja braquial y braquiorradial además del bíceps.",
-         "orderIndex":15
-      },
-      {
-         "exerciseName":"Extensión de tríceps en polea alta",
-         "sets":3,
-         "reps":12,
-         "restSeconds":60,
-         "notes":"Empuja hacia abajo con los codos fijos. Contrae al final del movimiento.",
-         "orderIndex":16
-      },
-      {
-         "exerciseName":"Sentadilla goblet",
-         "sets":3,
-         "reps":12,
-         "restSeconds":75,
-         "notes":"Sostén una mancuerna o kettlebell frente al pecho. Mejora la técnica y trabaja el core.",
-         "orderIndex":17
-      },
-      {
-         "exerciseName":"Swing con kettlebell",
-         "sets":4,
-         "reps":15,
-         "restSeconds":60,
-         "notes":"Potencia de caderas, no sentadilla. Cardio + fuerza posterior. Técnica es clave.",
-         "orderIndex":18
-      },
-      {
-         "exerciseName":"Press de pecho inclinado con mancuernas",
-         "sets":4,
-         "reps":10,
-         "restSeconds":90,
-         "notes":"Mayor énfasis en pecho superior. Controla la trayectoria en arco de las mancuernas.",
-         "orderIndex":19
-      },
-      {
-         "exerciseName":"Sentadilla frontal",
-         "sets":4,
-         "reps":6,
-         "restSeconds":120,
-         "notes":"Barra en clavículas. Más demanda de movilidad y core que la sentadilla trasera.",
-         "orderIndex":20
-      },
-      {
-         "exerciseName":"Elevaciones laterales con mancuernas",
-         "sets":3,
-         "reps":15,
-         "restSeconds":60,
-         "notes":"Codos ligeramente flexionados. Sube hasta la altura del hombro. Deltoides medial.",
-         "orderIndex":21
-      },
-      {
-         "exerciseName":"Good morning con barra",
-         "sets":3,
-         "reps":10,
-         "restSeconds":90,
-         "notes":"Bisagra de cadera con barra. Isquiotibiales y lumbares bajo tensión. Carga moderada.",
-         "orderIndex":22
-      },
-      {
-         "exerciseName":"Fondos en paralelas (dips)",
-         "sets":4,
-         "reps":10,
-         "restSeconds":90,
-         "notes":"Torso inclinado para más pecho, erguido para tríceps. Progresión con lastres.",
-         "orderIndex":23
-      },
-      {
-         "exerciseName":"Remo en máquina T-bar",
-         "sets":4,
-         "reps":10,
-         "restSeconds":90,
-         "notes":"Agarre neutro o prono. Gran activador de la espalda media y baja.",
-         "orderIndex":24
-      },
-      {
-         "exerciseName":"Burpee clásico",
-         "sets":4,
-         "reps":10,
-         "restSeconds":75,
-         "notes":"Flexión + salto. Alta intensidad. Combina fuerza y cardio. Excelente metabólico.",
-         "orderIndex":25
-      },
-      {
-         "exerciseName":"Salto a cajón (box jump)",
-         "sets":4,
-         "reps":8,
-         "restSeconds":75,
-         "notes":"Aterriza con ambos pies, rodillas semiflexionadas. Potencia y coordinación de tren inferior.",
-         "orderIndex":26
-      },
-      {
-         "exerciseName":"Mountain climbers",
-         "sets":4,
-         "reps":20,
-         "restSeconds":60,
-         "notes":"En plancha alta, lleva rodillas alternamente al pecho. Cardio + core de alta demanda.",
-         "orderIndex":27
-      }
-   ],
-   "advanced":[
-      {
-         "exerciseName":"Sentadilla con pausa",
-         "sets":5,
-         "reps":5,
-         "restSeconds":180,
-         "notes":"Aguanta 2-3 segundos en el punto más bajo. Elimina el rebote y aumenta la demanda muscular.",
-         "orderIndex":1
-      },
-      {
-         "exerciseName":"Peso muerto rumano",
-         "sets":4,
-         "reps":8,
-         "restSeconds":120,
-         "notes":"Piernas casi extendidas, bisagra pura de cadera. Máxima tensión en isquiotibiales.",
-         "orderIndex":2
-      },
-      {
-         "exerciseName":"Dominadas con lastre",
-         "sets":5,
-         "reps":5,
-         "restSeconds":180,
-         "notes":"Cinturón con disco o mancuerna. Aumenta la sobrecarga progresiva del ejercicio más completo de jalón.",
-         "orderIndex":3
-      },
-      {
-         "exerciseName":"Press de banca con cadenas o bandas",
-         "sets":5,
-         "reps":5,
-         "restSeconds":180,
-         "notes":"La resistencia aumenta al subir. Desarrolla velocidad y fuerza en el recorrido completo.",
-         "orderIndex":4
-      },
-      {
-         "exerciseName":"Sentadilla olímpica (squat profundo)",
-         "sets":5,
-         "reps":4,
-         "restSeconds":180,
-         "notes":"Rodillas muy abiertas, máxima profundidad. Requiere movilidad de tobillo y cadera avanzada.",
-         "orderIndex":5
-      },
-      {
-         "exerciseName":"Clean and press (halterofilia)",
-         "sets":5,
-         "reps":3,
-         "restSeconds":180,
-         "notes":"Levanta la barra del suelo a hombros y luego sobre la cabeza en un movimiento fluido.",
-         "orderIndex":6
-      },
-      {
-         "exerciseName":"Snatch con barra",
-         "sets":5,
-         "reps":3,
-         "restSeconds":240,
-         "notes":"El levantamiento más técnico del deporte. Requiere meses de práctica técnica antes de cargar.",
-         "orderIndex":7
-      },
-      {
-         "exerciseName":"Peso muerto sumo",
-         "sets":5,
-         "reps":5,
-         "restSeconds":180,
-         "notes":"Stance amplio, agarre interior. Mayor activación de aductores y cadera que el convencional.",
-         "orderIndex":8
-      },
-      {
-         "exerciseName":"Pistol squat (sentadilla a una pierna)",
-         "sets":4,
-         "reps":5,
-         "restSeconds":120,
-         "notes":"Sentadilla completa en una sola pierna. Máxima demanda de fuerza, movilidad y equilibrio.",
-         "orderIndex":9
-      },
-      {
-         "exerciseName":"Flexión con palmada (clapping push-up)",
-         "sets":4,
-         "reps":8,
-         "restSeconds":120,
-         "notes":"Explosividad en el empuje. Desarrolla potencia en tren superior. Caída controlada.",
-         "orderIndex":10
-      },
-      {
-         "exerciseName":"L-sit en paralelas o suelo",
-         "sets":4,
-         "reps":1,
-         "restSeconds":120,
-         "notes":"Piernas extendidas suspendidas. Fuerza de compresión de core e isquiotibiales extrema.",
-         "orderIndex":11
-      },
-      {
-         "exerciseName":"Front lever (progresión)",
-         "sets":4,
-         "reps":1,
-         "restSeconds":180,
-         "notes":"Cuerpo horizontal suspendido de una barra. Requiere meses/años de progresión sistemática.",
-         "orderIndex":12
-      },
-      {
-         "exerciseName":"Handstand push-up",
-         "sets":4,
-         "reps":5,
-         "restSeconds":150,
-         "notes":"Flexión invertida contra la pared. Máxima fuerza de hombros y equilibrio invertido.",
-         "orderIndex":13
-      },
-      {
-         "exerciseName":"Dragon flag",
-         "sets":4,
-         "reps":5,
-         "restSeconds":120,
-         "notes":"Tumbado, mantén el cuerpo recto y bájalo lentamente. Core de élite. Conocido por Rocky IV.",
-         "orderIndex":14
-      },
-      {
-         "exerciseName":"Muscle-up en barra",
-         "sets":4,
-         "reps":4,
-         "restSeconds":180,
-         "notes":"Dominada explosiva que transiciona a fondos. Combina jalón y empuje en un solo gesto.",
-         "orderIndex":15
-      },
-      {
-         "exerciseName":"Sentadilla Zercher",
-         "sets":4,
-         "reps":6,
-         "restSeconds":150,
-         "notes":"Barra en el pliegue de los codos. Alta demanda de core y postura. Poco común, muy efectivo.",
-         "orderIndex":16
-      },
-      {
-         "exerciseName":"Peso muerto con barra hexagonal (trap bar)",
-         "sets":5,
-         "reps":5,
-         "restSeconds":180,
-         "notes":"Postura más vertical, menos estrés lumbar. Permite cargas máximas de forma más segura.",
-         "orderIndex":17
-      },
-      {
-         "exerciseName":"Salto de longitud con sentadilla",
-         "sets":4,
-         "reps":6,
-         "restSeconds":120,
-         "notes":"Salta lo más lejos posible y aterriza en sentadilla. Potencia explosiva y estabilización.",
-         "orderIndex":18
-      },
-      {
-         "exerciseName":"Thruster con barra",
-         "sets":4,
-         "reps":6,
-         "restSeconds":150,
-         "notes":"Sentadilla frontal + press militar en uno. Base del deporte CrossFit. Altísima demanda metabólica.",
-         "orderIndex":19
-      },
-      {
-         "exerciseName":"Farmer's walk con mancuernas pesadas",
-         "sets":4,
-         "reps":1,
-         "restSeconds":120,
-         "notes":"Camina cargando pesos máximos. Trabaja grip, trapecios, core y condicionamiento total.",
-         "orderIndex":20
-      },
-      {
-         "exerciseName":"Remo Pendlay",
-         "sets":5,
-         "reps":5,
-         "restSeconds":150,
-         "notes":"Barra parte desde el suelo en cada rep. Elimina el impulso. Fuerza pura de espalda.",
-         "orderIndex":21
-      },
-      {
-         "exerciseName":"Press de banca con agarre cerrado",
-         "sets":4,
-         "reps":6,
-         "restSeconds":150,
-         "notes":"Agarre estrecho. Tríceps como motor principal. Cuidado con la posición de muñecas.",
-         "orderIndex":22
-      },
-      {
-         "exerciseName":"Sentadilla hack con barra",
-         "sets":4,
-         "reps":6,
-         "restSeconds":150,
-         "notes":"Barra detrás de los talones. Cuádriceps extremo. Requiere movilidad y práctica técnica.",
-         "orderIndex":23
-      },
-      {
-         "exerciseName":"Peso muerto rumano unilateral con mancuernas",
-         "sets":4,
-         "reps":8,
-         "restSeconds":120,
-         "notes":"Máximo trabajo unilateral de isquios y glúteos. Equilibrio y propiocepción avanzados.",
-         "orderIndex":24
-      },
-      {
-         "exerciseName":"Fondos con lastre en paralelas",
-         "sets":5,
-         "reps":5,
-         "restSeconds":180,
-         "notes":"Más de 1.5x el peso corporal total. Solo para atletas con base sólida en fondos.",
-         "orderIndex":25
-      },
-      {
-         "exerciseName":"Sprint en cuesta (hill sprint)",
-         "sets":6,
-         "reps":1,
-         "restSeconds":120,
-         "notes":"10-15 segundos de máxima velocidad cuesta arriba. Potencia, fuerza y cardio de élite.",
-         "orderIndex":26
-      }
-   ]
-}
+====================================================
+EJERCICIOS, CALENTAMIENTO Y RUTINAS DE EJEMPLO
+====================================================
+
+
+────────────────────────────────────────────────────
+CALENTAMIENTO (5-10 minutos antes de entrenar)
+────────────────────────────────────────────────────
+
+1.  Saltar a la comba — 2-3 minutos suave
+2.  Círculos de brazos — 10 hacia adelante, 10 hacia atrás
+3.  Círculos de caderas — 10 a cada lado
+4.  Sentadilla sin peso — 15 repeticiones lentas
+5.  Zancada sin peso — 10 por pierna
+6.  Puente de glúteos — 15 repeticiones
+7.  Rotación de torso — 10 a cada lado de pie
+8.  Rodillas al pecho caminando — 10 pasos
+9.  Talones al glúteo caminando — 10 pasos
+10. Molinillo de brazos cruzado — 20 segundos
+
+
+────────────────────────────────────────────────────
+50 EJERCICIOS
+────────────────────────────────────────────────────
+
+PECHO
+-----
+1.  Flexiones
+    Músculos: pecho, tríceps, hombros
+    Cómo: manos al ancho de hombros, cuerpo recto, baja el pecho al suelo y sube.
+
+2.  Press de banca con barra
+    Músculos: pecho, tríceps, hombros
+    Cómo: tumbado en banco, baja la barra al pecho y empuja hacia arriba.
+
+3.  Press de banca con mancuernas
+    Músculos: pecho, tríceps, hombros
+    Cómo: igual que con barra pero con una mancuerna en cada mano.
+
+4.  Aperturas con mancuernas en banco
+    Músculos: pecho
+    Cómo: tumbado, brazos abiertos en arco hasta juntar las mancuernas arriba.
+
+5.  Flexiones inclinadas (pies en silla)
+    Músculos: pecho superior, hombros
+    Cómo: flexión normal pero con los pies elevados.
+
+ESPALDA
+-------
+6.  Dominadas
+    Músculos: espalda, bíceps
+    Cómo: agarre con palmas hacia fuera, cuelga y tira hasta que la barbilla supere la barra.
+
+7.  Jalón al pecho en polea
+    Músculos: espalda, bíceps
+    Cómo: sentado en máquina, tira de la barra hasta el pecho.
+
+8.  Remo con mancuerna a un brazo
+    Músculos: espalda media, bíceps
+    Cómo: rodilla y mano en banco, tira la mancuerna hacia la cadera.
+
+9.  Remo con barra
+    Músculos: espalda, bíceps, trapecios
+    Cómo: inclinado hacia delante, tira la barra hacia el abdomen.
+
+10. Peso muerto
+    Músculos: espalda, glúteos, isquiotibiales, piernas
+    Cómo: barra en el suelo, espalda recta, levanta empujando con las piernas.
+
+HOMBROS
+-------
+11. Press militar con barra
+    Músculos: hombros, tríceps
+    Cómo: de pie o sentado, empuja la barra desde los hombros hasta arriba de la cabeza.
+
+12. Press de hombros con mancuernas
+    Músculos: hombros, tríceps
+    Cómo: sentado, empuja las mancuernas desde la altura de las orejas hacia arriba.
+
+13. Elevaciones laterales con mancuernas
+    Músculos: hombros (parte lateral)
+    Cómo: de pie, sube los brazos en cruz hasta la altura de los hombros.
+
+14. Elevaciones frontales con mancuernas
+    Músculos: hombros (parte delantera)
+    Cómo: de pie, sube un brazo recto hacia delante hasta la altura del hombro.
+
+15. Pájaros con mancuernas
+    Músculos: hombros (parte trasera)
+    Cómo: inclinado hacia delante, abre los brazos hacia los lados como si volaras.
+
+BÍCEPS
+------
+16. Curl de bíceps con barra
+    Músculos: bíceps
+    Cómo: de pie, dobla los codos llevando la barra hacia los hombros. Sin mover el torso.
+
+17. Curl con mancuernas alternado
+    Músculos: bíceps
+    Cómo: de pie, sube una mancuerna cada vez girando la muñeca hacia arriba.
+
+18. Curl martillo con mancuernas
+    Músculos: bíceps, antebrazo
+    Cómo: igual que el curl pero con las palmas mirando hacia dentro (como un martillo).
+
+19. Curl en banco predicador
+    Músculos: bíceps
+    Cómo: apoya los brazos en el banco inclinado y sube la barra o mancuerna sin despegar los codos.
+
+20. Curl en polea baja
+    Músculos: bíceps
+    Cómo: agarra la polea baja y dobla los codos. Tensión constante durante todo el movimiento.
+
+TRÍCEPS
+-------
+21. Fondos en paralelas
+    Músculos: tríceps, pecho
+    Cómo: agárrate a las barras paralelas, dobla los codos hasta 90° y empuja hacia arriba.
+
+22. Fondos en banco
+    Músculos: tríceps
+    Cómo: manos en el borde del banco, baja el cuerpo doblando los codos y sube.
+
+23. Press francés con barra (o mancuerna)
+    Músculos: tríceps
+    Cómo: tumbado, dobla solo los codos bajando la barra hacia la frente y extiende hacia arriba.
+
+24. Extensión de tríceps en polea alta
+    Músculos: tríceps
+    Cómo: de pie ante la polea, empuja la cuerda o barra hacia abajo extendiendo los codos.
+
+25. Press cerrado en banco
+    Músculos: tríceps, pecho
+    Cómo: igual que press de banca pero con las manos juntas (a unos 20-30 cm entre sí).
+
+PIERNAS
+-------
+26. Sentadilla con barra
+    Músculos: cuádriceps, glúteos, isquiotibiales
+    Cómo: barra en los hombros, baja doblando rodillas y caderas hasta paralelo, sube.
+
+27. Sentadilla con mancuernas
+    Músculos: cuádriceps, glúteos
+    Cómo: igual que con barra pero con una mancuerna en cada mano a los lados.
+
+28. Sentadilla goblet (con mancuerna o kettlebell)
+    Músculos: cuádriceps, glúteos, core
+    Cómo: sostén una mancuerna contra el pecho con ambas manos y haz la sentadilla.
+
+29. Zancadas caminando
+    Músculos: cuádriceps, glúteos, isquiotibiales
+    Cómo: un paso largo hacia delante, baja la rodilla trasera casi al suelo, alterna piernas.
+
+30. Zancadas estáticas con mancuernas
+    Músculos: cuádriceps, glúteos
+    Cómo: un pie adelantado, baja y sube sin cambiar de posición. Repite y cambia pierna.
+
+31. Peso muerto rumano
+    Músculos: isquiotibiales, glúteos, espalda baja
+    Cómo: barra o mancuernas, baja por las piernas doblando las caderas con espalda recta.
+
+32. Curl de piernas en máquina
+    Músculos: isquiotibiales
+    Cómo: tumbado boca abajo en la máquina, dobla las rodillas llevando los talones al glúteo.
+
+33. Extensión de piernas en máquina
+    Músculos: cuádriceps
+    Cómo: sentado en la máquina, extiende las rodillas hasta arriba.
+
+34. Prensa de piernas
+    Músculos: cuádriceps, glúteos, isquiotibiales
+    Cómo: sentado en la máquina, empuja la plataforma con los pies hasta extender las piernas.
+
+35. Elevaciones de talones de pie
+    Músculos: gemelos
+    Cómo: de pie, sube y baja en puntillas. Usa un escalón para mayor recorrido.
+
+GLÚTEOS Y CADENA POSTERIOR
+---------------------------
+36. Puente de glúteos con barra
+    Músculos: glúteos, isquiotibiales
+    Cómo: tumbado, barra sobre las caderas, empuja las caderas hacia arriba y baja.
+
+37. Patada trasera en polea baja
+    Músculos: glúteos
+    Cómo: de pie con tobillera en polea, lleva la pierna hacia atrás y arriba.
+
+38. Step-up con mancuernas (subida al cajón)
+    Músculos: cuádriceps, glúteos
+    Cómo: sube un pie a un banco o cajón, empuja para subir el cuerpo y baja.
+
+ABDOMEN
+-------
+39. Crunch abdominal
+    Músculos: abdomen
+    Cómo: tumbado, rodillas dobladas, sube solo los hombros del suelo contrayendo el abdomen.
+
+40. Plancha
+    Músculos: abdomen, core completo
+    Cómo: apoyado en antebrazos y puntillas, cuerpo recto como una tabla. Aguanta.
+
+41. Plancha lateral
+    Músculos: oblicuos, core
+    Cómo: apoyado en un antebrazo y el lateral del pie, cuerpo recto. Aguanta.
+
+42. Elevación de piernas tumbado
+    Músculos: abdomen inferior
+    Cómo: tumbado boca arriba, sube las piernas juntas y rectas hasta 90° y baja despacio.
+
+43. Abdominales con giro (bicicleta)
+    Músculos: abdomen, oblicuos
+    Cómo: tumbado, lleva codo derecho a rodilla izquierda y alterna como si pedalearas.
+
+44. Rueda abdominal
+    Músculos: abdomen, core completo
+    Cómo: de rodillas con la rueda en el suelo, estira los brazos hacia delante y vuelve.
+
+CARDIO Y FUNCIONAL
+------------------
+45. Burpees
+    Músculos: cuerpo completo
+    Cómo: de pie, agáchate, pon las manos en el suelo, salta los pies atrás (flexión), salta al frente y salta arriba.
+
+46. Escaladores (Mountain climbers)
+    Músculos: abdomen, hombros, piernas
+    Cómo: posición de flexión, lleva las rodillas al pecho alternando rápido.
+
+47. Salto al cajón
+    Músculos: piernas, glúteos
+    Cómo: desde el suelo, salta con los dos pies encima del cajón y baja.
+
+48. Saltos de tijera
+    Músculos: piernas, cardiovascular
+    Cómo: salta abriendo y cerrando piernas y brazos al mismo tiempo.
+
+49. Remo en máquina
+    Músculos: espalda, piernas, brazos, cardiovascular
+    Cómo: empuja con las piernas, inclina el torso atrás y tira del remo al abdomen.
+
+50. Carrera en cinta o al aire libre
+    Músculos: cardiovascular, piernas
+    Cómo: corre a ritmo constante. Empieza 15-20 minutos y aumenta progresivamente.
+
+
+────────────────────────────────────────────────────
+ESTIRAMIENTOS (5-10 minutos al acabar)
+────────────────────────────────────────────────────
+
+1.  Isquiotibiales sentado — Piernas estiradas, inclínate hacia los pies. 30 seg.
+2.  Cuádriceps de pie — Dobla la rodilla llevando el talón al glúteo. 30 seg por pierna.
+3.  Cadera (paloma) — Pierna cruzada en el suelo, inclínate hacia delante. 40 seg por lado.
+4.  Flexor de cadera en zancada — Rodilla trasera en el suelo, empuja la cadera adelante. 40 seg por lado.
+5.  Pecho en marco de puerta — Antebrazo apoyado, gira el cuerpo alejándote. 30 seg por lado.
+6.  Hombros cruzado — Lleva un brazo al pecho y presiona con el otro. 30 seg por lado.
+7.  Tríceps sobre la cabeza — Dobla el codo llevando la mano a la espalda, empuja el codo con la otra mano. 30 seg por lado.
+8.  Espalda baja — Tumbado, abraza las rodillas al pecho. Balancéate suave. 30 seg.
+9.  Gemelos en pared — Un pie adelante, otro atrás estirado con el talón en el suelo. 30 seg por pierna.
+10. Cuello lateral — Inclina la cabeza hacia un hombro dejándola caer por su peso. 20 seg por lado.
+
+
+────────────────────────────────────────────────────
+RUTINAS DE EJEMPLO
+────────────────────────────────────────────────────
+
+======================
+PRINCIPIANTE
+Frecuencia: 3 días/semana (lunes, miércoles, viernes)
+Descanso entre series: 60-90 segundos
+======================
+
+DÍA 1 — CUERPO COMPLETO A
+  Calentamiento general (10 min)
+  Sentadilla con mancuernas      3 series x 12 repeticiones
+  Flexiones                      3 series x 10 repeticiones
+  Remo con mancuerna a un brazo  3 series x 10 rep por brazo
+  Press de hombros con mancuernas 3 series x 12 repeticiones
+  Plancha                        3 series x 30 segundos
+  Estiramientos (5-10 min)
+
+DÍA 2 — CUERPO COMPLETO B
+  Calentamiento general (10 min)
+  Zancadas estáticas             3 series x 10 rep por pierna
+  Press de banca con mancuernas  3 series x 10 repeticiones
+  Jalón al pecho en polea        3 series x 12 repeticiones
+  Curl con mancuernas            3 series x 12 repeticiones
+  Crunch abdominal               3 series x 15 repeticiones
+  Estiramientos (5-10 min)
+
+DÍA 3 — CUERPO COMPLETO C
+  Calentamiento general (10 min)
+  Puente de glúteos              3 series x 15 repeticiones
+  Fondos en banco                3 series x 10 repeticiones
+  Elevaciones laterales          3 series x 12 repeticiones
+  Elevación de piernas tumbado   3 series x 12 repeticiones
+  Saltos de tijera               3 series x 20 repeticiones
+  Estiramientos (5-10 min)
+
+
+======================
+INTERMEDIO
+Frecuencia: 4 días/semana (lunes, martes, jueves, viernes)
+Descanso entre series: 90 segundos
+======================
+
+LUNES — PECHO Y TRÍCEPS
+  Calentamiento (8 min)
+  Press de banca con barra       4 series x 8 repeticiones
+  Press de banca con mancuernas  3 series x 10 repeticiones
+  Aperturas con mancuernas       3 series x 12 repeticiones
+  Fondos en paralelas            3 series x 10 repeticiones
+  Press francés con barra        3 series x 10 repeticiones
+  Extensión tríceps en polea     3 series x 12 repeticiones
+  Estiramientos (5 min)
+
+MARTES — ESPALDA Y BÍCEPS
+  Calentamiento (8 min)
+  Dominadas                      4 series x 6-8 repeticiones
+  Remo con barra                 4 series x 8 repeticiones
+  Jalón al pecho en polea        3 series x 10 repeticiones
+  Curl de bíceps con barra       3 series x 10 repeticiones
+  Curl con mancuernas alternado  3 series x 12 repeticiones
+  Estiramientos (5 min)
+
+JUEVES — PIERNAS
+  Calentamiento (10 min)
+  Sentadilla con barra           4 series x 8 repeticiones
+  Peso muerto rumano             3 series x 10 repeticiones
+  Zancadas caminando             3 series x 10 rep por pierna
+  Curl de piernas en máquina     3 series x 12 repeticiones
+  Elevaciones de talones         4 series x 15 repeticiones
+  Estiramientos (8 min)
+
+VIERNES — HOMBROS Y ABDOMEN
+  Calentamiento (8 min)
+  Press militar con barra        4 series x 8 repeticiones
+  Elevaciones laterales          4 series x 12 repeticiones
+  Pájaros con mancuernas         3 series x 12 repeticiones
+  Plancha                        3 series x 45 segundos
+  Abdominales con giro           3 series x 20 repeticiones
+  Rueda abdominal                3 series x 10 repeticiones
+  Estiramientos (5 min)
+
+
+======================
+AVANZADO
+Frecuencia: 5 días/semana
+Descanso entre series: 60-90 segundos (ejercicios de aislamiento) / 2-3 min (ejercicios compuestos)
+======================
+
+LUNES — PECHO
+  Calentamiento (8 min)
+  Press de banca con barra       5 series x 5 repeticiones (pesado)
+  Press de banca inclinado       4 series x 8 repeticiones
+  Aperturas con mancuernas       4 series x 12 repeticiones
+  Flexiones con pies elevados    3 series x 15 repeticiones
+  Press cerrado en banco         3 series x 10 repeticiones
+  Estiramientos (5 min)
+
+MARTES — ESPALDA
+  Calentamiento (8 min)
+  Peso muerto                    5 series x 4 repeticiones (pesado)
+  Dominadas                      4 series x 8 repeticiones
+  Remo con barra                 4 series x 8 repeticiones
+  Jalón al pecho en polea        3 series x 10 repeticiones
+  Remo con mancuerna a un brazo  3 series x 10 rep por brazo
+  Estiramientos (5 min)
+
+MIÉRCOLES — PIERNAS
+  Calentamiento (10 min)
+  Sentadilla con barra           5 series x 5 repeticiones (pesado)
+  Prensa de piernas              4 series x 10 repeticiones
+  Peso muerto rumano             4 series x 8 repeticiones
+  Zancadas caminando             3 series x 12 rep por pierna
+  Extensión de piernas máquina   3 series x 12 repeticiones
+  Elevaciones de talones         5 series x 15 repeticiones
+  Estiramientos (8 min)
+
+JUEVES — HOMBROS
+  Calentamiento (8 min)
+  Press militar con barra        4 series x 6 repeticiones
+  Press de hombros con mancuernas 4 series x 8 repeticiones
+  Elevaciones laterales          5 series x 12 repeticiones
+  Pájaros con mancuernas         4 series x 12 repeticiones
+  Elevaciones frontales          3 series x 12 repeticiones
+  Estiramientos (5 min)
+
+VIERNES — BÍCEPS, TRÍCEPS Y ABDOMEN
+  Calentamiento (8 min)
+  Fondos en paralelas            4 series x 10 repeticiones
+  Dominadas agarre supino        4 series x 8 repeticiones
+  Press francés con barra        3 series x 10 repeticiones
+  Curl en banco predicador       3 series x 10 repeticiones
+  Curl martillo con mancuernas   3 series x 12 repeticiones
+  Plancha                        4 series x 60 segundos
+  Rueda abdominal                4 series x 12 repeticiones
+  Elevación de piernas tumbado   3 series x 15 repeticiones
+  Estiramientos (8 min)
+
+
+====================================================
+FIN DEL DOCUMENTO
+====================================================
