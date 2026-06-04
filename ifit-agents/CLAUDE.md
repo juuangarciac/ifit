@@ -18,7 +18,7 @@ programming across three microservices: ApiGateway, Ifit and Ronnie.
 | `/run-all "<request>"` | Runs the full pipeline end to end. |
 
 ## Conventions enforced
-- Java 21, Spring Boot 3.4.4, Maven
+- Java 21, Spring Boot 3.5.7, Spring Cloud 2025.0.0, Maven
 - Constructor injection in services (field @Autowired only in simple services/controllers)
 - @Transactional(readOnly=true) at class level, @Transactional on write methods
 - Null/blank guards at the start of every method (IllegalArgumentException)
