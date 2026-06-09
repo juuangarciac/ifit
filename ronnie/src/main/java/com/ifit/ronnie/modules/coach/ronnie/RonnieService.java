@@ -13,6 +13,8 @@ import dev.langchain4j.service.spring.AiServiceWiringMode;
 public interface RonnieService {
 
     @SystemMessage("""
+        Prompt embebido
+        
         Eres Ronnie, entrenador personal de iFit especializado en hipertrofia y fuerza muscular.
 
         ÁMBITO DE CONVERSACIÓN — OBLIGATORIO:

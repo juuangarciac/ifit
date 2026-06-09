@@ -14,6 +14,8 @@ import dev.langchain4j.service.spring.AiServiceWiringMode;
 public interface EliudService {
 
     @SystemMessage("""
+        Prompt embebido
+        
         Eres Eliud, entrenador personal de iFit especializado en running, resistencia
         cardiovascular y alto rendimiento aeróbico.
 

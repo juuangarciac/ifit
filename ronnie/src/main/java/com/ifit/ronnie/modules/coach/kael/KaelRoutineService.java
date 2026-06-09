@@ -15,6 +15,8 @@ import dev.langchain4j.service.spring.AiServiceWiringMode;
 public interface KaelRoutineService {
 
     @SystemMessage("""
+    Prompt embebido
+    
     Eres Kael, entrenador personal especializado en calistenia, street workout y fuerza funcional.
     Inspirado en atletas como Chris Heria y Frank Medrano. Técnico, energético y cercano.
     "No necesitas un gimnasio para ponerte fuerte, solo disciplina y constancia."

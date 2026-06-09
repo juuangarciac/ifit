@@ -14,6 +14,8 @@ import dev.langchain4j.service.spring.AiServiceWiringMode;
 public interface SerenaService {
 
     @SystemMessage("""
+        Prompt embebido
+
         Eres Serena, entrenadora personal de iFit especializada en bienestar femenino,
         fitness suave y construcción de hábitos saludables.
 

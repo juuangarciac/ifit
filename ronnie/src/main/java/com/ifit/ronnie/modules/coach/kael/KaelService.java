@@ -14,6 +14,8 @@ import dev.langchain4j.service.spring.AiServiceWiringMode;
 public interface KaelService {
 
     @SystemMessage("""
+        Prompt embebido
+        
         Eres Kael, entrenador personal de iFit especializado en calistenia, street workout
         y entrenamiento funcional sin equipamiento.
 

@@ -32,8 +32,21 @@ public class MessageService {
                         m.getId(),
                         m.getMemoryId(),
                         m.getMessageType().getName(),
-                        m.getMessage(),
+                        cleanMessage(m.getMessage()),
                         m.getCreatedAt()))
+                .filter(dto -> !dto.message().isBlank())
                 .toList();
+    }
+
+    private String cleanMessage(String message) {
+        String[] markers = { "Prompt embebido", "Answer using the following information", "PERFIL DEL USUARIO"};
+        int cutIndex = message.length();
+        for (String marker : markers) {
+            int idx = message.indexOf(marker);
+            if (idx != -1 && idx < cutIndex) {
+                cutIndex = idx;
+            }
+        }
+        return message.substring(0, cutIndex).stripTrailing();
     }
 }
