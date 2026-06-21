@@ -2,7 +2,31 @@
   "permissions": {
     "allow": [
       "Bash(xargs grep -l -i \"routine\")",
-      "Bash(./mvnw clean *)"
+      "Bash(./mvnw clean *)",
+      "PowerShell(& \\(Get-Content graphify-out\\\\.graphify_python\\) graphify-out\\\\tmp_probe.py)",
+      "PowerShell(& \\(Get-Content graphify-out\\\\.graphify_python\\) graphify-out\\\\tmp_incremental.py)",
+      "Bash(\"/c/Users/Juan GC/pipx/venvs/graphifyy/Scripts/python.exe\" \"graphify-out/.q_controllers.py\")",
+      "Bash(command -v mvn)",
+      "Bash(mvn -version)",
+      "Bash(command -v java)",
+      "Bash(java -version)",
+      "Bash(./mvnw -q -o compile)",
+      "Bash(./mvnw -o compile)",
+      "Bash(echo \"EXIT=$?\")",
+      "Read(//tmp/**)",
+      "Bash($PY *)",
+      "Bash(PYTHONIOENCODING=utf-8 $PY *)",
+      "Bash(grep -niE \"INSERT INTO .user|INSERT INTO .\\\\`user|keycloak_id|role_id\" data.sql)",
+      "Bash(./mvnw -o clean compile -Dmaven.compiler.proc=full)",
+      "Bash(export JAVA_HOME=\"/c/Users/Juan GC/.vscode/extensions/redhat.java-1.54.0-win32-x64/jre/21.0.10-win32-x86_64\")",
+      "Bash('/c/Users/Juan GC/.vscode/extensions/redhat.java-1.54.0-win32-x64/jre/21.0.10-win32-x86_64/bin/java.exe' -version)",
+      "Bash(./mvnw -o clean compile)",
+      "PowerShell($m = \\(Get-Command mvn -ErrorAction SilentlyContinue\\); if \\($m\\) { \"mvn: $\\($m.Source\\)\" } else { \"no mvn\" }; $w = Test-Path \"C:\\\\Users\\\\Juan GC\\\\Desktop\\\\Personal\\\\Universidad\\\\TFG\\\\ifit\\\\admin-panel\\\\mvnw.cmd\"; \"wrapper admin-panel: $w\"; $wr = Test-Path \"C:\\\\Users\\\\Juan GC\\\\Desktop\\\\Personal\\\\Universidad\\\\TFG\\\\ifit\\\\mvnw.cmd\"; \"wrapper root: $wr\"; \"JAVA_HOME=$env:JAVA_HOME\")",
+      "PowerShell(if \\(Test-Path \".\\\\admin-panel\\\\mvnw.cmd\"\\) { $mvn = \".\\\\admin-panel\\\\mvnw.cmd\" } elseif \\(Test-Path \".\\\\mvnw.cmd\"\\) { $mvn = \".\\\\mvnw.cmd\" } else { $mvn = \"mvn\" }; Write-Output \"Using: $mvn\"; & $mvn -q -f \".\\\\admin-panel\\\\pom.xml\" compile -DskipTests)",
+      "PowerShell(& \".\\\\ifit\\\\mvnw.cmd\" -f \".\\\\admin-panel\\\\pom.xml\" compile -q -DskipTests -Dvaadin.skip.frontend=true)",
+      "Bash(./ifit/mvnw -f admin-panel/pom.xml clean compile -q -DskipTests -Dvaadin.skip.frontend=true)",
+      "Bash(python catalog_taxonomy.py)",
+      "Bash(python select_ronnie.py)"
     ]
   }
 }
