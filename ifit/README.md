@@ -96,7 +96,7 @@ Todas las peticiones del frontend pasan por el gateway, que añade el prefijo `/
 | Seguridad | Spring Security + OAuth2 Resource Server |
 | Persistencia | Spring Data JPA / Hibernate |
 | Base de datos | MySQL 8.0+ |
-| Identidades | Keycloak 23.0 |
+| Identidades | Keycloak 21.1.2 (admin-client) |
 | Email | Spring Mail (SMTP Gmail) |
 | Documentación | SpringDoc OpenAPI 3 (Swagger UI) |
 | Build | Maven 3.9+ |
@@ -2098,54 +2098,132 @@ curl -X POST http://localhost:8081/routines/999/day/1/complete \
 
 ### User — Gestión de Usuarios
 
-El módulo de usuario gestiona la entidad `AppUser`, que es la representación local del usuario en la base de datos de IFit (separada del registro en Keycloak).
+El módulo de usuario gestiona la entidad `AppUser`, que es la representación local del usuario en la base de datos de IFit (separada del registro en Keycloak). Incluye asignación de roles, coaches y niveles de experiencia.
 
 #### Entidad AppUser
 
-Campos principales de la tabla `user`:
+```java
+public class AppUser {
+    Long id;                              // PK
+    String name;                          // Nombre completo
+    String email;                         // UNIQUE - username en Keycloak
+    String password;                      // Hash BCrypt (copia local)
+    String keycloakUserId;                // UUID del usuario en Keycloak
+    Boolean isVerified;                   // Email verificado (default: false)
+    String verificationCode;              // Código temporal de 6 dígitos
+    LocalDateTime verificationCodeExpiresAt;  // Expiración (15 min)
+    Boolean isRegistrationComplete;       // Onboarding completado (default: false)
+    AppRole role;                         // FK → AppRole (USER o ADMIN)
+    CoachModelType coachModelType;        // FK → Coach asignado (nullable)
+    ExperienceLevel experienceLevel;      // FK → Nivel asignado (nullable)
+    LocalDateTime createdAt;              // Timestamp auto
+    LocalDateTime updatedAt;              // Timestamp auto
+}
+```
 
-| Campo | Tipo | Descripción |
-|---|---|---|
-| `id` | BIGINT PK | Identificador local. |
-| `name` | VARCHAR | Nombre completo. |
-| `email` | VARCHAR UNIQUE | Email usado como username en Keycloak. |
-| `password` | VARCHAR | Hash BCrypt (copia local por compatibilidad). |
-| `keycloak_user_id` | VARCHAR | UUID del usuario en Keycloak. |
-| `is_verified` | BOOLEAN | True si verificó el email. |
-| `verification_code` | VARCHAR | Código temporal de 6 dígitos. |
-| `verification_code_expires_at` | DATETIME | Expiración del código (15 min). |
-| `is_registration_complete` | BOOLEAN | True cuando completó el onboarding. |
-| `role_id` | FK → approle | Rol: USER o ADMIN. |
-| `coachmodeltype_id` | FK → coachmodeltype | Coach de IA asignado. |
-| `experiencelevel_id` | FK → experiencelevel | Nivel de experiencia asignado. |
+**Relaciones:**
+- N:1 con AppRole (siempre presente)
+- N:1 con CoachModelType (nullable - se asigna en onboarding)
+- N:1 con ExperienceLevel (nullable - se asigna en onboarding)
+- 1:N con Routine (un usuario puede tener múltiples rutinas)
+- 1:N con QuestionnaireResponse (un usuario puede responder cuestionarios)
 
-#### Endpoints del módulo User
+#### Endpoints de AppUserController
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| GET | `/users` | Lista todos los usuarios. |
-| GET | `/users/paginated` | Lista paginada con ordenamiento. |
-| GET | `/users/{id}` | Obtiene usuario por ID. |
-| GET | `/users/email/{email}` | Busca usuario por email. |
-| GET | `/users/exists/email/{email}` | Verifica si un email está registrado (boolean). |
-| POST | `/users` | Crea usuario (uso interno/admin). |
-| PUT | `/users/{id}` | Actualiza datos del usuario. |
-| PATCH | `/users/{userId}/assign-coach/{coachId}` | Asigna tipo de coach al usuario. |
-| PATCH | `/users/{userId}/assign-experience/{levelId}` | Asigna nivel de experiencia. |
-| PATCH | `/users/{userId}/complete-registration` | Marca el onboarding como completado. |
-| DELETE | `/users/{id}` | Elimina usuario. |
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| GET | `/users` | JWT | Lista todos los usuarios. |
+| GET | `/users/paginated` | JWT | Lista paginada (page, size, sortBy, sortDir). |
+| GET | `/users/{id}` | JWT | Por ID. |
+| GET | `/users/email/{email}` | JWT | Por email (búsqueda). |
+| GET | `/users/exists/email/{email}` | JWT | Verifica si email existe (boolean). |
+| POST | `/users` | JWT | Crea usuario manualmente (admin). |
+| PUT | `/users/{id}` | JWT | Actualiza datos del usuario. |
+| PATCH | `/users/{userId}/assign-coach/{coachId}` | JWT | Asigna coach de IA. |
+| PATCH | `/users/{userId}/assign-experience/{levelId}` | JWT | Asigna nivel de experiencia. |
+| PATCH | `/users/{userId}/complete-registration` | JWT | Marca onboarding completado. |
+| DELETE | `/users/{id}` | JWT | Elimina usuario. |
 
-#### Niveles de Experiencia
+#### DTOs del módulo User
 
-La tabla `experiencelevel` define los niveles que un usuario puede tener (Principiante, Intermedio, Avanzado). Se accede vía `ExperienceLevelController` bajo `/experience-levels`:
+**AppUserResponseDto** (respuesta de lectura)
+```java
+Long id
+String name
+String email
+String keycloakUserId
+Boolean isVerified
+Boolean isRegistrationComplete
+String role                 // nombre del rol
+String coachModelType       // nombre del coach (nullable)
+String experienceLevel      // nombre del nivel (nullable)
+LocalDateTime createdAt
+LocalDateTime updatedAt
+```
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| GET | `/experience-levels` | Lista todos los niveles. |
-| GET | `/experience-levels/{id}` | Por ID. |
-| POST | `/experience-levels` | Crea nivel (admin). |
-| PATCH | `/experience-levels/{id}` | Actualiza nivel (admin). |
-| DELETE | `/experience-levels/{id}` | Elimina nivel (admin). |
+**CreateAppUserRequestDto** (POST /users)
+```java
+@NotBlank String name
+@NotBlank @Email String email
+@NotBlank String password
+Long roleId                 // FK a AppRole
+Long coachModelTypeId       // FK opcional
+Long experienceLevelId      // FK opcional
+```
+
+**UpdateAppUserRequestDto** (PUT /users/{id})
+```java
+String name                 // nullable
+String email                // nullable
+Long roleId                 // nullable
+Long coachModelTypeId       // nullable
+Long experienceLevelId      // nullable
+Boolean isRegistrationComplete  // nullable
+```
+
+#### Niveles de Experiencia (ExperienceLevel)
+
+La entidad `ExperienceLevel` define los niveles que un usuario puede tener:
+
+```java
+public class ExperienceLevel {
+    Long id;                              // PK
+    String name;                          // UNIQUE (Principiante, Intermedio, Avanzado)
+    String description;                   // Descripción
+    LocalDateTime createdAt;              // Auto
+}
+```
+
+**Valores típicos predefinidos:**
+- ID 1: Principiante
+- ID 2: Intermedio
+- ID 3: Avanzado
+
+#### Endpoints de ExperienceLevelController
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| GET | `/experience-levels` | JWT | Lista todos los niveles. |
+| GET | `/experience-levels/{id}` | JWT | Por ID. |
+| POST | `/experience-levels` | admin_client_role | Crea nivel. |
+| PATCH | `/experience-levels/{id}` | admin_client_role | Actualiza nivel. |
+| DELETE | `/experience-levels/{id}` | admin_client_role | Elimina nivel. |
+
+#### Roles (AppRole)
+
+La tabla `approle` contiene los roles del sistema:
+
+```java
+public class AppRole {
+    Long id;                              // PK
+    String name;                          // UNIQUE (USER, ADMIN)
+    String description;
+}
+```
+
+**Valores predefinidos:**
+- ID 1: USER (rol estándar de usuario)
+- ID 2: ADMIN (acceso a endpoints administrativos)
 
 ---
 
@@ -2153,40 +2231,184 @@ La tabla `experiencelevel` define los niveles que un usuario puede tener (Princi
 
 La tabla `coachmodeltype` almacena los coaches disponibles en la plataforma. Esta entidad es el registro maestro de coaches; el comportamiento real de cada coach se define en el microservicio Ronnie.
 
-Campos: `id`, `name` (único), `description`, `emoji_character`, `enabled` (soft-delete), `created_at`, `updated_at`.
+#### Entidad CoachModelType
 
-**Soft delete**: el endpoint `DELETE /coach-models/{id}` no elimina el registro, sino que pone `enabled = false`. Los modelos deshabilitados dejan de aparecer en la lista pública pero siguen funcionando para usuarios que ya los tenían asignados.
+```java
+public class CoachModelType {
+    Long id;                              // PK
+    String name;                          // UNIQUE
+    String description;                   // Descripción del coach
+    String emojiCharacter;                // Emoji representativo (ej: "💪")
+    Boolean enabled;                      // Soft-delete flag (default: true)
+    LocalDateTime createdAt;              // Auto
+    LocalDateTime updatedAt;              // Auto
+}
+```
 
-| Método | Ruta | Acceso | Descripción |
+**Valores Predefinidos:**
+- Ronnie (💪): Hipertrofia y fuerza
+- Eliud (🏃): Running y cardio
+- Serena (🎯): Fitness femenino y bienestar
+- Kael (🤸): Calistenia y street workout
+
+#### Soft Delete
+
+El endpoint `DELETE /coach-models/{id}` **no elimina** el registro. En su lugar:
+- Pone `enabled = false`
+- El coach desaparece de listados públicos (`GET /coach-models`)
+- El coach sigue siendo accesible para usuarios que ya lo tienen asignado
+- Puede rehabilitarse con `PATCH /coach-models/{id}/enable`
+
+**Ventaja:** No rompe la integridad referencial de usuarios y rutinas que usaban ese coach.
+
+#### Endpoints de CoachModelTypeController
+
+| Método | Ruta | Auth | Descripción |
 |---|---|---|---|
-| GET | `/coach-models` | Autenticado | Lista coaches habilitados. |
-| GET | `/coach-models/all` | ADMIN | Lista todos (incluye deshabilitados). |
-| GET | `/coach-models/{id}` | Autenticado | Por ID. |
-| GET | `/coach-models/name/{name}` | Autenticado | Por nombre exacto. |
-| POST | `/coach-models` | ADMIN | Crea nuevo tipo de coach. |
-| PUT | `/coach-models/{id}` | ADMIN | Actualiza tipo de coach. |
-| DELETE | `/coach-models/{id}` | ADMIN | Deshabilita (soft delete). |
-| PATCH | `/coach-models/{id}/enable` | ADMIN | Rehabilita coach deshabilitado. |
+| GET | `/coach-models` | JWT | Lista coaches habilitados (enabled=true). |
+| GET | `/coach-models/all` | admin_client_role | Lista todos (incluye deshabilitados). |
+| GET | `/coach-models/{id}` | JWT | Por ID. |
+| GET | `/coach-models/name/{name}` | JWT | Por nombre exacto. |
+| POST | `/coach-models` | admin_client_role | Crea nuevo coach. |
+| PUT | `/coach-models/{id}` | admin_client_role | Actualiza coach. |
+| DELETE | `/coach-models/{id}` | admin_client_role | Deshabilita (soft delete, enabled=false). |
+| PATCH | `/coach-models/{id}/enable` | admin_client_role | Habilita coach deshabilitado (enabled=true). |
+
+#### DTOs
+
+**CoachModelTypeDto** (respuesta)
+```java
+Long id
+String name
+String description
+String emojiCharacter
+Boolean enabled
+LocalDateTime createdAt
+LocalDateTime updatedAt
+```
+
+**CreateCoachModelTypeRequestDto** (POST)
+```java
+@NotBlank String name
+@NotBlank String description
+String emojiCharacter
+```
+
+**UpdateCoachModelTypeRequestDto** (PUT)
+```java
+String name                 // nullable
+String description          // nullable
+String emojiCharacter       // nullable
+Boolean enabled             // nullable
+```
 
 ---
 
 ### Exercises — Catálogo de Ejercicios
 
-El catálogo de ejercicios es una copia de los ejercicios importados desde el microservicio Ronnie. Sirve al frontend para mostrar fichas de ejercicio con imágenes.
+El catálogo de ejercicios es una copia de los ejercicios importados desde el microservicio Ronnie. Proporciona información de ejercicios con imágenes, categorías, equipamiento requerido y músculos trabajados.
 
-Las **imágenes** se sirven directamente desde Ronnie a través del gateway:
+#### Entidad Exercise
+
+```java
+public class Exercise {
+    Long id;                              // PK
+    String name;                          // Nombre único (ej: "Push-up de pecho")
+    String description;                   // Descripción
+    String instructions;                  // Instrucciones detalladas
+    String level;                         // BEGINNER, INTERMEDIATE, ADVANCED
+    String category;                      // STRENGTH, CARDIO, FLEXIBILITY, HIIT, etc.
+    String equipment;                     // BODYWEIGHT, BARBELL, DUMBBELLS, CABLE, etc.
+    List<String> muscleGroups;            // Músculos: ["pecho", "tríceps", "hombro"]
+    String imageUrl;                      // URL de imagen
+    LocalDateTime createdAt;              // Auto
+}
 ```
-GET /ifit/api/v1/exercise-images/{carpeta}/{archivo}.jpg
+
+#### Endpoints de ExerciseCatalogController
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| GET | `/exercises` | JWT | Lista paginada con filtros opcionales. |
+| GET | `/exercises/{id}` | JWT | Detalle completo de un ejercicio. |
+
+#### Parámetros de Búsqueda/Filtro
+
+**Query parameters para GET /exercises:**
+
+```
+?page=0&size=20&sortBy=name&sortDir=ASC
+&level=BEGINNER
+&category=STRENGTH
+&equipment=BARBELL
+&muscle=pecho
 ```
 
-El controlador expone dos endpoints de solo lectura:
+| Parámetro | Tipo | Valores | Descripción |
+|---|---|---|---|
+| `page` | int | 0, 1, 2, ... | Página (default: 0) |
+| `size` | int | 10, 20, 50 | Registros por página (default: 20) |
+| `sortBy` | string | name, level, category | Campo de ordenamiento |
+| `sortDir` | string | ASC, DESC | Dirección de ordenamiento |
+| `level` | string | BEGINNER, INTERMEDIATE, ADVANCED | Filtra por nivel |
+| `category` | string | STRENGTH, CARDIO, FLEXIBILITY, HIIT | Filtra por categoría |
+| `equipment` | string | BODYWEIGHT, BARBELL, DUMBBELLS, CABLE, MACHINE, KETTLEBELL | Filtra por equipamiento |
+| `muscle` | string | cualquier string | Búsqueda parcial en músculos (ej: "pecho") |
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| GET | `/exercises` | Lista paginada con filtros opcionales por `level`, `category`, `equipment`, `muscle`. |
-| GET | `/exercises/{id}` | Detalle completo: instrucciones, músculos trabajados, imágenes. |
+#### Response
 
-Parámetros de filtro del listado: `level` (principiante/intermedio/avanzado), `category` (fuerza/estiramiento/cardio/…), `equipment` (solo_cuerpo/barra/mancuernas/…), `muscle` (búsqueda parcial, ej. "pecho").
+**GET /exercises**
+```json
+{
+  "content": [
+    {
+      "id": 42,
+      "name": "Push-up de pecho",
+      "description": "Ejercicio de calistenia básico...",
+      "level": "BEGINNER",
+      "category": "STRENGTH",
+      "equipment": "BODYWEIGHT",
+      "muscleGroups": ["pecho", "tríceps", "hombro"],
+      "imageUrl": "/exercise-images/strength/pushup.jpg"
+    },
+    ...
+  ],
+  "totalElements": 245,
+  "totalPages": 13,
+  "currentPage": 0,
+  "pageSize": 20
+}
+```
+
+**GET /exercises/{id}**
+```json
+{
+  "id": 42,
+  "name": "Push-up de pecho",
+  "description": "Ejercicio de calistenia básico para desarrollo de fuerza...",
+  "instructions": "1. Acuéstate boca abajo...\n2. Coloca manos...\n3. Empuja...",
+  "level": "BEGINNER",
+  "category": "STRENGTH",
+  "equipment": "BODYWEIGHT",
+  "muscleGroups": ["pecho", "tríceps", "hombro anterior"],
+  "imageUrl": "/exercise-images/strength/pushup.jpg"
+}
+```
+
+#### Imágenes de Ejercicios
+
+Las imágenes se sirven a través del gateway (Ronnie las proporciona):
+
+```
+GET /ifit/api/v1/exercise-images/{category}/{filename}.jpg
+
+Ejemplos:
+/exercise-images/strength/barbell-bench-press.jpg
+/exercise-images/cardio/burpee.jpg
+/exercise-images/flexibility/hamstring-stretch.jpg
+```
+
+**Nota:** Las imágenes se cachean en el cliente; cambios requieren invalidación de caché.
 
 ---
 
@@ -2194,14 +2416,60 @@ Parámetros de filtro del listado: `level` (principiante/intermedio/avanzado), `
 
 El módulo de notificación gestiona el envío de emails transaccionales. El componente principal es `AppEmailService`, que usa **Spring Mail** con SMTP de Gmail.
 
-El email más relevante del sistema es el de **verificación de cuenta**: se genera un código numérico de 6 dígitos, se almacena en la base de datos con una expiración de 15 minutos, y se envía al usuario mediante una plantilla HTML Thymeleaf.
+#### Tipos de Email
 
-La verificación de email se invoca automáticamente:
-- En el registro: se envía tras crear el usuario.
-- En el login sin verificar: IFit reenvía el código automáticamente.
-- En `/auth/resend-verification`: el usuario puede solicitar un nuevo código.
+**1. Verificación de Cuenta (Principal)**
+- Se genera un código numérico de 6 dígitos
+- Se almacena en BD con expiración de 15 minutos
+- Se envía mediante plantilla Thymeleaf: `verificationmail.html`
+- Se invoca automáticamente:
+  - En `POST /auth/register` (nuevo usuario)
+  - En `POST /auth/login` sin verificar (reenvío automático)
+  - En `POST /auth/resend-verification` (solicitud del usuario)
 
-El controlador `AppEmailController` existe como stub en `/appemail` pero actualmente no expone endpoints públicos; los envíos son operaciones internas del servicio de autenticación.
+**2. Ticket de Soporte**
+- Formulario de soporte directo al cliente
+- Plantilla: `supportticket.html`
+- Endpoint público: `POST /appemail/support-ticket`
+
+**3. Reset de Contraseña (Plantilla Preparada)**
+- Plantilla: `resetpassword.html`
+- Actualmente no se usa en endpoints (reservado para futura expansión)
+
+#### Endpoints de AppEmailController
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| POST | `/appemail/support-ticket` | público | Envía ticket de soporte con nombre, email, asunto, mensaje |
+
+**Request:** `SupportTicketRequestDto { name, email, subject, message }`  
+**Response:** `EmailResponseDto { success, message }`
+
+#### Métodos de AppEmailService
+
+```java
+// Envía código de verificación por email
+sendVerificationEmail(AppUser user, String verificationCode)
+
+// Envía respuesta a ticket de soporte
+sendSupportTicketEmail(SupportTicketRequestDto ticket)
+
+// Método genérico para otros emails
+sendEmail(String to, String subject, String htmlContent)
+```
+
+#### Configuración SMTP
+
+```properties
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=${MAIL_USERNAME:adminifit96@gmail.com}
+spring.mail.password=${MAIL_PASSWORD}
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+```
+
+**Credenciales:** Se usan variables de entorno. La contraseña es **contraseña de aplicación de Gmail**, no la contraseña de cuenta.
 
 ---
 
@@ -2285,18 +2553,26 @@ En el código, se usan:
 
 #### Extracción del UserId
 
-`JwtUtils.extractUserId(request, objectMapper)` lee el claim `sub` (subject) del token:
+Se usa el parámetro `@AuthenticationPrincipal Jwt jwt` en controllers para acceder al token JWT:
 
 ```java
-String keycloakUserId = jwtUtils.extractUserId(httpRequest);
-// keycloakUserId = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+@GetMapping("/my-profile")
+public UserProfileDto getMyProfile(@AuthenticationPrincipal Jwt jwt) {
+    String keycloakUserId = jwt.getClaimAsString("preferred_username");
+    // keycloakUserId = "juan@example.com"
+    
+    String userEmail = jwt.getClaimAsString("email");
+    // userEmail = "juan@example.com"
+}
 ```
 
-Este ID es **crítico** porque vincula:
+El `preferred_username` (o `sub` en algunos casos) es **crítico** porque vincula:
 - Usuario en Keycloak (identidad)
 - Usuario en BD local (perfil, coach, experiencia)
 - Rutinas en BD (entrenamientos)
 - Sesión en Ronnie (historial de conversación con LLM)
+
+**Nota:** No existe clase `JwtUtils` central; cada controlador accede directamente a los claims del JWT.
 
 ### CSRF
 
