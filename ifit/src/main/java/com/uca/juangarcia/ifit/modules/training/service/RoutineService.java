@@ -17,7 +17,9 @@ import com.uca.juangarcia.ifit.modules.questionnaire.dto.QuestionnaireResponseSu
 import com.uca.juangarcia.ifit.modules.questionnaire.service.QuestionnaireService;
 import com.uca.juangarcia.ifit.modules.training.client.IFitAIClient;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.CreateRoutineRequestDto;
+import com.uca.juangarcia.ifit.modules.exercises.service.ExerciseNameResolver;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.RoutineDayDto;
+import com.uca.juangarcia.ifit.modules.training.controller.dto.RoutineExerciseDto;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.RoutineResponseDto;
 import com.uca.juangarcia.ifit.modules.training.controller.dto.UpdateRoutineRequestDto;
 import com.uca.juangarcia.ifit.modules.training.model.CoachType;
@@ -67,6 +69,7 @@ public class RoutineService {
     private final RoutineDayMapper dayMapper;
     private final QuestionnaireService questionnaireService;
     private final IFitAIClient aiClient;
+    private final ExerciseNameResolver exerciseNameResolver;
 
     /**
      * Constructor con inyección de dependencias.
@@ -77,7 +80,8 @@ public class RoutineService {
             AppUserRepository userRepository,
             RoutineMapper routineMapper,
             RoutineDayMapper dayMapper, QuestionnaireService questionnaireService,
-            IFitAIClient aiClient) {
+            IFitAIClient aiClient,
+            ExerciseNameResolver exerciseNameResolver) {
         this.routineRepository = routineRepository;
         this.routineDayRepository = routineDayRepository;
         this.userRepository = userRepository;
@@ -85,6 +89,7 @@ public class RoutineService {
         this.dayMapper = dayMapper;
         this.questionnaireService = questionnaireService;
         this.aiClient = aiClient;
+        this.exerciseNameResolver = exerciseNameResolver;
     }
 
     /**
@@ -397,9 +402,52 @@ public class RoutineService {
 
         routineResponseDto.setUserId(userId);
 
+        // 5. Reconciliar los nombres de ejercicio con el catálogo real para que el
+        //    usuario pueda encontrarlos (la IA y el catálogo usan vocabularios distintos).
+        normalizeExerciseNames(routineResponseDto);
+
         logger.info("Routine generated successfully for userId: {}, coach: {}", userId, resolvedCoach);
 
         return routineResponseDto;
+    }
+
+    /**
+     * Sustituye cada nombre de ejercicio generado por la IA por su nombre canónico
+     * en el catálogo ({@code exercise_catalog}) y enlaza el {@code exerciseId}
+     * correspondiente. Si un ejercicio no se puede reconciliar, se conserva el
+     * nombre original sin enlace y se registra para diagnóstico.
+     *
+     * @param routine rutina recién generada (se modifica in situ)
+     */
+    private void normalizeExerciseNames(RoutineResponseDto routine) {
+        if (routine == null || routine.getDays() == null) {
+            return;
+        }
+
+        int total = 0;
+        int linked = 0;
+        for (RoutineDayDto day : routine.getDays()) {
+            if (day.getExercises() == null) {
+                continue;
+            }
+            for (RoutineExerciseDto exercise : day.getExercises()) {
+                total++;
+                String rawName = exercise.getExerciseName();
+                var match = exerciseNameResolver.resolve(rawName);
+                if (match.isPresent()) {
+                    String canonical = match.get().canonicalName();
+                    if (!canonical.equals(rawName)) {
+                        logger.info("Exercise name normalized: '{}' -> '{}'", rawName, canonical);
+                    }
+                    exercise.setExerciseName(canonical);
+                    exercise.setExerciseId(match.get().id());
+                    linked++;
+                } else {
+                    logger.warn("Exercise '{}' not found in catalog; kept as-is without link", rawName);
+                }
+            }
+        }
+        logger.info("Catalog reconciliation: {}/{} exercises linked to the catalog", linked, total);
     }
 
     /**

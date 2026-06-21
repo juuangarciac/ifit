@@ -8,7 +8,7 @@ import dev.langchain4j.service.spring.AiServiceWiringMode;
 
 
 @AiService(wiringMode = AiServiceWiringMode.EXPLICIT,
-    chatModel = "groqChatLanguageModel",
+    chatModel = "groqLlama70b",
     chatMemoryProvider = "messageWindowChatMemory",
     contentRetriever = "kaelEmbeddingStoreContentRetriever")
 public interface KaelService {

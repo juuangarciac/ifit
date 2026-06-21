@@ -31,7 +31,7 @@ import jakarta.validation.Valid;
 @RequestMapping("/kael")
 public class KaelController {
 
-    @Value("classpath:langchain4j/assistants-personality/exercises.txt")
+    @Value("classpath:exercises/kael.txt")
     private Resource exerciseCatalogResource;
 
     private final KaelService kaelService;

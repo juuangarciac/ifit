@@ -10,7 +10,7 @@ import dev.langchain4j.service.spring.AiService;
 import dev.langchain4j.service.spring.AiServiceWiringMode;
 
 @AiService(wiringMode = AiServiceWiringMode.EXPLICIT,
-    chatModel = "groqJsonChatLanguageModel",
+    chatModel = "groqGptOssJson",
     chatMemoryProvider = "messageWindowChatMemory")
 public interface RonnieRoutineService {
 
@@ -31,31 +31,13 @@ public interface RonnieRoutineService {
     ════════════════════════════════════════
     LISTA DE EJERCICIOS — ÚNICOS VÁLIDOS
     ════════════════════════════════════════
-    Usa ÚNICAMENTE nombres de esta lista, en español, sin traducir ni inventar.
-    Puedes añadir un descriptor breve entre paréntesis si es necesario
-    (ej: "Dominadas" → "Dominadas con agarre supino"), pero el nombre base debe ser de la lista.
+    Usa ÚNICAMENTE nombres de esta lista, copiados EXACTAMENTE como aparecen
+    (incluidos sus paréntesis si los tienen). PROHIBIDO traducir, inventar,
+    abreviar, parafrasear o AÑADIR por tu cuenta descriptores o paréntesis que
+    no estén en la lista. El campo "exerciseName" debe coincidir carácter por
+    carácter con una entrada de la lista. Ante la duda, elige el nombre más
+    parecido de la lista, nunca uno nuevo.
 
-    PECHO: Flexiones · Press de banca con barra · Press de banca con mancuernas ·
-           Aperturas con mancuernas en banco · Flexiones inclinadas (pies en silla)
-    ESPALDA: Dominadas · Jalón al pecho en polea · Remo con mancuerna a un brazo ·
-             Remo con barra · Peso muerto
-    HOMBROS: Press militar con barra · Press de hombros con mancuernas ·
-             Elevaciones laterales con mancuernas · Elevaciones frontales con mancuernas ·
-             Pájaros con mancuernas
-    BÍCEPS: Curl de bíceps con barra · Curl con mancuernas alternado ·
-            Curl martillo con mancuernas · Curl en banco predicador · Curl en polea baja
-    TRÍCEPS: Fondos en paralelas · Fondos en banco · Press francés con barra (o mancuerna) ·
-             Extensión de tríceps en polea alta · Press cerrado en banco
-    PIERNAS: Sentadilla con barra · Sentadilla con mancuernas ·
-             Sentadilla goblet (con mancuerna o kettlebell) · Zancadas caminando ·
-             Zancadas estáticas con mancuernas · Peso muerto rumano · Curl de piernas en máquina ·
-             Extensión de piernas en máquina · Prensa de piernas · Elevaciones de talones de pie
-    GLÚTEOS: Puente de glúteos con barra · Patada trasera en polea baja ·
-             Step-up con mancuernas (subida al cajón)
-    ABDOMEN: Crunch abdominal · Plancha · Plancha lateral · Elevación de piernas tumbado ·
-             Abdominales con giro (bicicleta) · Rueda abdominal
-
-    Referencia de ejecución por ejercicio (úsala para rellenar el campo notes de cada ejercicio):
     {exerciseCatalog}
 
     ════════════════════════════════════════
@@ -67,14 +49,16 @@ public interface RonnieRoutineService {
     · Perder peso / quemar grasa:  3-4 series × 12-15 reps · restSeconds: 45
     · Tonificar / bienestar:       3 series   × 12-15 reps · restSeconds: 60
     · Resistencia muscular:        2-3 series × 15-20 reps · restSeconds: 30
-    El campo notes debe contener un consejo técnico breve basado en la sección
-    "Cómo:" del catálogo para ese ejercicio.
+    El campo notes debe contener un consejo técnico breve de ejecución del ejercicio.
 
     ════════════════════════════════════════
     VOLUMEN SEGÚN TIEMPO DE SESIÓN
     ════════════════════════════════════════
-    Ajusta el número de ejercicios al tiempo disponible indicado en el cuestionario.
-    Estos rangos son orientativos; prioriza la coherencia del entrenamiento:
+    Ajusta el número de ejercicios del bloque principal al tiempo indicado en la
+    respuesta a "¿Cuánto tiempo puedes dedicar a cada sesión?". El límite inferior
+    de cada rango es un MÍNIMO, no un objetivo. Asume un ritmo realista (descansos
+    en la parte corta, transiciones ágiles): la gente entrena más rápido que el
+    descanso teórico, así que tiende a la parte alta del rango y nunca bajes del mínimo.
     · 20-30 min → 4-5 ejercicios
     · 30-45 min → 5-7 ejercicios
     · 45-60 min → 6-8 ejercicios
@@ -90,6 +74,9 @@ public interface RonnieRoutineService {
 
     · COHERENCIA: todos los ejercicios del día apuntan al mismo grupo muscular o
       combinación lógica (pecho+tríceps, espalda+bíceps, piernas, hombros, brazos+core).
+    · REPARTO: en los días que combinan dos grupos, repártelos de forma equilibrada;
+      procura que el segundo grupo tenga presencia real y no quede reducido a un
+      único ejercicio de cierre.
     · Un ejercicio no puede repetirse más de una vez en el mismo día.
     · Un ejercicio no puede aparecer en más de dos días distintos de la rutina.
 

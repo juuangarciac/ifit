@@ -31,23 +31,13 @@ public interface SerenaRoutineService {
     ════════════════════════════════════════
     LISTA DE EJERCICIOS — ÚNICOS VÁLIDOS
     ════════════════════════════════════════
-    Usa ÚNICAMENTE nombres de esta lista, en español, sin traducir ni inventar.
-    Puedes añadir un descriptor breve entre paréntesis si es necesario
-    (ej: "Plancha" → "Plancha con rodillas apoyadas"), pero el nombre base debe ser de la lista.
+    Usa ÚNICAMENTE nombres de esta lista, copiados EXACTAMENTE como aparecen
+    (incluidos sus paréntesis si los tienen). PROHIBIDO traducir, inventar,
+    abreviar, parafrasear o AÑADIR por tu cuenta descriptores o paréntesis que
+    no estén en la lista. El campo "exerciseName" debe coincidir carácter por
+    carácter con una entrada de la lista. Ante la duda, elige el nombre más
+    parecido de la lista, nunca uno nuevo.
 
-    PIERNAS Y GLÚTEOS: Sentadilla con mancuernas · Sentadilla goblet (con mancuerna o kettlebell) ·
-                       Zancadas caminando · Zancadas estáticas con mancuernas · Peso muerto rumano ·
-                       Prensa de piernas · Elevaciones de talones de pie · Puente de glúteos con barra ·
-                       Patada trasera en polea baja · Step-up con mancuernas (subida al cajón)
-    TREN SUPERIOR: Flexiones · Press de banca con mancuernas · Remo con mancuerna a un brazo ·
-                   Jalón al pecho en polea · Press de hombros con mancuernas ·
-                   Elevaciones laterales con mancuernas · Pájaros con mancuernas
-    ABDOMEN Y CORE: Crunch abdominal · Plancha · Plancha lateral · Elevación de piernas tumbado ·
-                    Abdominales con giro (bicicleta)
-    CARDIO SUAVE: Saltos de tijera · Carrera en cinta o al aire libre · Remo en máquina ·
-                  Burpees · Escaladores (Mountain climbers)
-
-    Referencia de ejecución por ejercicio (úsala para rellenar el campo notes de cada ejercicio):
     {exerciseCatalog}
 
     ════════════════════════════════════════
@@ -58,14 +48,16 @@ public interface SerenaRoutineService {
     · Perder peso / quemar grasa:  3-4 series × 12-15 reps · restSeconds: 45
     · Ganar fuerza:                3-4 series × 8-10 reps  · restSeconds: 90
     · Resistencia / salud general: 2-3 series × 15-20 reps · restSeconds: 30
-    El campo notes debe contener un consejo técnico breve basado en la sección
-    "Cómo:" del catálogo para ese ejercicio.
+    El campo notes debe contener un consejo técnico breve de ejecución del ejercicio.
 
     ════════════════════════════════════════
     VOLUMEN SEGÚN TIEMPO DE SESIÓN
     ════════════════════════════════════════
-    Ajusta el número de ejercicios al tiempo disponible indicado en el cuestionario.
-    Estos rangos son orientativos; prioriza la coherencia del entrenamiento:
+    Ajusta el número de ejercicios del bloque principal al tiempo indicado en la
+    respuesta a "¿Cuánto tiempo puedes dedicar a cada sesión?". El límite inferior
+    de cada rango es un MÍNIMO, no un objetivo. Asume un ritmo realista (descansos
+    en la parte corta, transiciones ágiles): la gente entrena más rápido que el
+    descanso teórico, así que tiende a la parte alta del rango y nunca bajes del mínimo.
     · 20-30 min → 4-6 ejercicios
     · 30-45 min → 6-8 ejercicios
     · 45-60 min → 7-9 ejercicios
@@ -81,6 +73,8 @@ public interface SerenaRoutineService {
 
     · COHERENCIA: los ejercicios del día tienen un hilo conductor claro: full body
       equilibrado, o enfoque definido en core, glúteos, tren inferior o tren superior.
+    · REPARTO: cuando un día toca varias zonas, repártelas de forma equilibrada;
+      procura que ninguna quede reducida a un único ejercicio de relleno.
     · Un ejercicio no puede repetirse más de una vez en el mismo día.
     · Un ejercicio no puede aparecer en más de dos días distintos de la rutina.
 

@@ -31,20 +31,13 @@ public interface EliudRoutineService {
     ════════════════════════════════════════
     LISTA DE EJERCICIOS — ÚNICOS VÁLIDOS
     ════════════════════════════════════════
-    Usa ÚNICAMENTE nombres de esta lista, en español, sin traducir ni inventar.
-    Puedes añadir un descriptor breve entre paréntesis si es necesario,
-    pero el nombre base debe ser de la lista.
+    Usa ÚNICAMENTE nombres de esta lista, copiados EXACTAMENTE como aparecen
+    (incluidos sus paréntesis si los tienen). PROHIBIDO traducir, inventar,
+    abreviar, parafrasear o AÑADIR por tu cuenta descriptores o paréntesis que
+    no estén en la lista. El campo "exerciseName" debe coincidir carácter por
+    carácter con una entrada de la lista. Ante la duda, elige el nombre más
+    parecido de la lista, nunca uno nuevo.
 
-    CARDIO Y FUNCIONAL: Burpees · Escaladores (Mountain climbers) · Salto al cajón ·
-                        Saltos de tijera · Remo en máquina · Carrera en cinta o al aire libre
-    PIERNAS (fuerza de corredor): Sentadilla con barra · Sentadilla con mancuernas ·
-                                  Zancadas caminando · Zancadas estáticas con mancuernas ·
-                                  Peso muerto rumano · Elevaciones de talones de pie ·
-                                  Step-up con mancuernas (subida al cajón)
-    CORE (estabilidad de corredor): Plancha · Plancha lateral · Crunch abdominal ·
-                                    Elevación de piernas tumbado · Abdominales con giro (bicicleta)
-
-    Referencia de ejecución por ejercicio (úsala para rellenar el campo notes de cada ejercicio):
     {exerciseCatalog}
 
     ════════════════════════════════════════
@@ -56,14 +49,16 @@ public interface EliudRoutineService {
     · Rendimiento / velocidad:       4-5 series × 6-10 reps explosivos    · restSeconds: 90
     · Fuerza funcional corredor:     3-4 series × 10-12 reps              · restSeconds: 60
     Para ejercicios por tiempo (Plancha, Carrera en cinta), usa reps como duración (ej: "45 segundos", "15 minutos").
-    El campo notes debe contener un consejo técnico breve basado en la sección
-    "Cómo:" del catálogo para ese ejercicio.
+    El campo notes debe contener un consejo técnico breve de ejecución del ejercicio.
 
     ════════════════════════════════════════
     VOLUMEN SEGÚN TIEMPO DE SESIÓN
     ════════════════════════════════════════
-    Ajusta el número de ejercicios al tiempo disponible indicado en el cuestionario.
-    Estos rangos son orientativos; prioriza la coherencia del entrenamiento:
+    Ajusta el número de ejercicios del bloque principal al tiempo indicado en la
+    respuesta a "¿Cuánto tiempo puedes dedicar a cada sesión?". El límite inferior
+    de cada rango es un MÍNIMO, no un objetivo. Asume un ritmo realista (descansos
+    en la parte corta, transiciones ágiles): la gente entrena más rápido que el
+    descanso teórico, así que tiende a la parte alta del rango y nunca bajes del mínimo.
     · 20-30 min → 3-5 ejercicios
     · 30-45 min → 4-6 ejercicios
     · 45-60 min → 5-7 ejercicios
@@ -81,6 +76,8 @@ public interface EliudRoutineService {
 
     · COHERENCIA: todos los ejercicios del día tienen componente aeróbico, metabólico
       o funcional de corredor. Sin aislamiento muscular puro.
+    · REPARTO: combina trabajo cardiovascular y de fuerza funcional en el día;
+      procura que ninguno de los dos quede reducido a un único ejercicio.
     · Un ejercicio no puede repetirse más de una vez en el mismo día.
     · Un ejercicio no puede aparecer en más de dos días distintos de la rutina.
 

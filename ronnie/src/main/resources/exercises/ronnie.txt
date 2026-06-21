@@ -1,0 +1,152 @@
+====================================================
+EJERCICIOS VÁLIDOS — RONNIE (hipertrofia y fuerza)
+====================================================
+Nombres exactos del catálogo de iFit. Cópialos carácter por carácter.
+
+PECHO
+  - Press de banca con barra
+  - Press de banca con mancuernas
+  - Press de banca declinado con barra
+  - Aperturas con mancuernas
+  - Crossover con cable
+  - Press de banca en maquina
+  - Flexiones (posiciones de manos cerradas y amplias)
+
+ESPALDA
+  - Dominadas/Pulldowns
+  - Remo inclinado con mancuernas
+  - Remo inclinado con dos mancuernas
+  - Remo con barra en T con asa
+  - Encogimiento de hombros con mancuernas
+
+HOMBROS
+  - Press de hombros con barra
+  - Press de hombros con mancuernas
+  - Press militar de pie
+  - Elevaciones con mancuernas
+  - Elevacion frontal inclinada con mancuernas
+  - Maquina de aperturas inversas
+
+BICEPS
+  - Curl con barra
+  - Curl de biceps con mancuernas
+  - Curl martillo alternativo
+  - Curl predicador con cable
+  - Curl de biceps de pie en polea
+
+TRICEPS
+  - Extension de triceps
+  - Extension de triceps de pie con mancuernas
+  - Extension de triceps con cuerda por encima de la cabeza
+  - Press de banca con agarre cerrado
+  - Fondos en barras paralelas
+  - Fondos en banco
+
+CUADRICEPS
+  - Sentadilla con barra
+  - Sentadilla con mancuernas
+  - Sentadilla frontal (agarre limpio)
+  - Prensa de piernas en maquina Smith
+  - Zancada con barra
+  - Zancadas con mancuernas
+
+ISQUIOTIBIALES
+  - Peso muerto rumano
+  - Curl de piernas tumbado
+  - Flexion de piernas sentado
+  - Elevacion natural de gluteos y isquiotibiales
+
+GLUTEOS
+  - Elevacion de gluteos (puente)
+  - Puente de gluteos con una sola pierna
+  - Step-up con elevacion de rodilla
+
+PANTORRILLAS
+  - Elevacion de pantorrillas con mancuernas
+  - Elevacion de pantorrillas sentado
+  - Prensa de pantorrillas
+
+ABDOMEN
+  - Abdominales
+  - Abdominales con cuerda
+  - Abdominales inversos
+  - Plancha
+  - Giro ruso
+  - Elevacion de piernas en banco plano
+
+====================================================
+RUTINAS DE EJEMPLO (referencia de volumen y reparto)
+====================================================
+Modelo de cuántos ejercicios por día y de cómo equilibrar los grupos en días
+combinados. Adapta al nivel, objetivo y tiempo del usuario; no las copies tal cual.
+
+--- EJEMPLO 4 DÍAS (split) ---
+
+DIA 1 — PECHO Y TRICEPS
+  Press de banca con barra
+  Press de banca con mancuernas
+  Press de banca declinado con barra
+  Aperturas con mancuernas
+  Press de banca con agarre cerrado
+  Fondos en barras paralelas
+  Extension de triceps de pie con mancuernas
+  Extension de triceps con cuerda por encima de la cabeza
+
+DIA 2 — ESPALDA Y BICEPS
+  Dominadas/Pulldowns
+  Remo inclinado con mancuernas
+  Remo con barra en T con asa
+  Encogimiento de hombros con mancuernas
+  Curl con barra
+  Curl de biceps con mancuernas
+  Curl martillo alternativo
+  Curl predicador con cable
+
+DIA 3 — PIERNAS
+  Sentadilla con barra
+  Sentadilla frontal (agarre limpio)
+  Prensa de piernas en maquina Smith
+  Zancada con barra
+  Peso muerto rumano
+  Curl de piernas tumbado
+  Elevacion de pantorrillas con mancuernas
+  Elevacion de gluteos (puente)
+
+DIA 4 — HOMBROS Y ABDOMEN
+  Press de hombros con barra
+  Press de hombros con mancuernas
+  Elevaciones con mancuernas
+  Elevacion frontal inclinada con mancuernas
+  Maquina de aperturas inversas
+  Plancha
+  Abdominales
+  Giro ruso
+
+--- EJEMPLO 3 DÍAS (Empuje / Jalón / Piernas) ---
+
+DIA 1 — EMPUJE
+  Press de banca con barra
+  Press de banca con mancuernas
+  Aperturas con mancuernas
+  Press de hombros con mancuernas
+  Elevaciones con mancuernas
+  Press de banca con agarre cerrado
+  Extension de triceps de pie con mancuernas
+
+DIA 2 — JALON
+  Dominadas/Pulldowns
+  Remo inclinado con mancuernas
+  Remo con barra en T con asa
+  Encogimiento de hombros con mancuernas
+  Curl con barra
+  Curl de biceps con mancuernas
+  Curl martillo alternativo
+
+DIA 3 — PIERNAS
+  Sentadilla con barra
+  Prensa de piernas en maquina Smith
+  Zancadas con mancuernas
+  Peso muerto rumano
+  Curl de piernas tumbado
+  Elevacion de pantorrillas con mancuernas
+  Plancha

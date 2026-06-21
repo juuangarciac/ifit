@@ -39,7 +39,14 @@ public class RoutineExercise {
     
     @Column(name = "exercise_name", nullable = false, length = 255)
     private String exerciseName;
-    
+
+    /**
+     * Referencia al ejercicio del catálogo ({@code exercise_catalog.id}) cuando se
+     * ha podido reconciliar el nombre generado por la IA. Null si no hubo coincidencia.
+     */
+    @Column(name = "exercise_id")
+    private Long exerciseId;
+
     @Column(nullable = true)
     private Integer sets;
     
@@ -88,9 +95,17 @@ public class RoutineExercise {
     public String getExerciseName() {
         return exerciseName;
     }
-    
+
     public void setExerciseName(String exerciseName) {
         this.exerciseName = exerciseName;
+    }
+
+    public Long getExerciseId() {
+        return exerciseId;
+    }
+
+    public void setExerciseId(Long exerciseId) {
+        this.exerciseId = exerciseId;
     }
     
     public Integer getSets() {

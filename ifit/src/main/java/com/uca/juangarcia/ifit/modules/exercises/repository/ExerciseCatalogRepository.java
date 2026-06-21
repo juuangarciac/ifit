@@ -1,14 +1,25 @@
 package com.uca.juangarcia.ifit.modules.exercises.repository;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.uca.juangarcia.ifit.modules.exercises.dto.ExerciseNameRef;
 import com.uca.juangarcia.ifit.modules.exercises.model.ExerciseCatalog;
 
 public interface ExerciseCatalogRepository extends JpaRepository<ExerciseCatalog, Long> {
+
+    /**
+     * Devuelve todos los ejercicios del catálogo como proyección id+nombre.
+     * Usado por el normalizador de nombres para construir su índice en memoria.
+     */
+    @Query("SELECT new com.uca.juangarcia.ifit.modules.exercises.dto.ExerciseNameRef(e.id, e.name) "
+            + "FROM ExerciseCatalog e")
+    List<ExerciseNameRef> findAllNameRefs();
 
     @Query(
         value = """

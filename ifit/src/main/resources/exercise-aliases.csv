@@ -1,0 +1,81 @@
+# ============================================================================
+# CHULETA DE ALIAS  ·  nombre curado (lo que dice la IA)  ->  nombre EXACTO del catalogo (exercise_catalog)
+# ============================================================================
+# BORRADOR generado automaticamente a partir de la auditoria del catalogo (658 filas).
+# AUN NO ESTA CONECTADO: ExerciseNameResolver no lee este fichero todavia.
+#
+# Formato:  nombre_curado ; nombre_catalogo ; flag
+#   - separador: ';'
+#   - lineas que empiezan por '#' son comentarios
+#   - 3a columna 'revisar' = correspondencia dudosa, confirmar a mano
+#   - el resolver normaliza ambos lados (sin acentos/mayusculas), no hace falta clavar tildes
+#
+# Burpees NO aparece: no existe en el catalogo -> se queda huerfano a proposito.
+# ============================================================================
+
+# --- PECHO ---
+Flexiones;Flexiones (posiciones de manos cerradas y amplias)
+Press de banca con barra;Press de banca con barra
+Press de banca con mancuernas;Press de banca con mancuernas
+Aperturas con mancuernas en banco;Aperturas con mancuernas
+Flexiones inclinadas (pies en silla);Flexion inclinada;revisar
+
+# --- ESPALDA ---
+Dominadas;Dominadas/Pulldowns
+Jalon al pecho en polea;Dominadas/Pulldowns;revisar
+Remo con mancuerna a un brazo;Remo inclinado con mancuernas;revisar
+Remo con barra;Remo con barra en T con asa;revisar
+Peso muerto;Peso muerto con bandas;revisar
+
+# --- HOMBROS ---
+Press militar con barra;Press de hombros con barra
+Press de hombros con mancuernas;Press de hombros con mancuernas
+Elevaciones laterales con mancuernas;Elevaciones con mancuernas;revisar
+Elevaciones frontales con mancuernas;Elevaciones frontales con piernas;revisar
+Pajaros con mancuernas;Elevacion deltoides posterior tumbado;revisar
+
+# --- BICEPS ---
+Curl de biceps con barra;Curl con barra
+Curl con mancuernas alternado;Curl de biceps con mancuernas
+Curl martillo con mancuernas;Curl martillo alternativo
+Curl en banco predicador;Curl predicador con cable;revisar
+Curl en polea baja;Curl de biceps de pie en polea;revisar
+
+# --- TRICEPS ---
+Fondos en paralelas;Fondos en barras paralelas
+Fondos en banco;Fondos en banco
+Press frances con barra (o mancuerna);Press declinado con agarre cerrado y skull crusher;revisar
+Extension de triceps en polea alta;Extension de triceps
+Press cerrado en banco;Press de banca con agarre cerrado
+
+# --- PIERNAS ---
+Sentadilla con barra;Sentadilla con barra
+Sentadilla con mancuernas;Sentadilla con mancuernas
+Sentadilla goblet (con mancuerna o kettlebell);Sentadilla con mancuernas;revisar
+Zancadas caminando;Zancada con peso corporal;revisar
+Zancadas estaticas con mancuernas;Zancadas con mancuernas
+Peso muerto rumano;Peso muerto rumano
+Curl de piernas en maquina;Curl de piernas tumbado
+Extension de piernas en maquina;;revisar
+Prensa de piernas;Prensa de piernas en maquina Smith
+Elevaciones de talones de pie;Elevaciones de pantorrillas con maquina;revisar
+
+# --- GLUTEOS / CADENA POSTERIOR ---
+Puente de gluteos con barra;Puente gluteo con barra
+Patada trasera en polea baja;Doble patada trasera con la pierna;revisar
+Step-up con mancuernas (subida al cajon);Step ups con mancuernas
+
+# --- ABDOMEN ---
+Crunch abdominal;Abdominales
+Plancha;Plancha
+Plancha lateral;Puente lateral;revisar
+Elevacion de piernas tumbado;Elevacion de piernas en banco plano;revisar
+Abdominales con giro (bicicleta);Bicicleta aerea
+Rueda abdominal;Ab Roller
+
+# --- CARDIO / FUNCIONAL ---
+Escaladores (Mountain climbers);Escaladores
+Salto al cajon;Salto sobre caja (respuesta multiple);revisar
+Saltos de tijera;Salto de tijera
+Remo en maquina;Remo, Estacionario
+Carrera en cinta o al aire libre;Correr, cinta de correr

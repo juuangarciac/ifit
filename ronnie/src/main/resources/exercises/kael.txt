@@ -1,0 +1,69 @@
+====================================================
+EJERCICIOS VÁLIDOS — KAEL (calistenia, peso corporal)
+====================================================
+Nombres exactos del catálogo de iFit. Cópialos carácter por carácter.
+Todos son de peso corporal: no uses maquinaria de gimnasio.
+
+EMPUJE
+  - Flexiones (posiciones de manos cerradas y amplias)
+  - Flexion amplia
+  - Flexion inclinada
+  - Flexiones en vertical
+  - Fondos en barras paralelas
+  - Fondos en banco
+
+JALON
+  - Dominadas/Pulldowns
+  - Dominada trasera con agarre ancho
+  - Dominadas con peso
+  - Remo invertido con correas
+  - Remo suspendido
+  - Subida de cuerda
+
+PIERNAS
+  - Bodyweight Sentadilla
+  - Sentadilla con salto a mano alzada
+  - Zancada con peso corporal
+  - Elevacion de gluteos (puente)
+  - Puente de gluteos con una sola pierna
+  - Step-up con elevacion de rodilla
+  - Elevacion natural de gluteos y isquiotibiales
+
+CORE
+  - Plancha
+  - Puente lateral
+  - Abdominales
+  - Bicicleta aerea
+  - Giro ruso
+  - Elevacion de piernas en banco plano
+
+====================================================
+RUTINAS DE EJEMPLO (referencia de volumen y reparto)
+====================================================
+Modelo de volumen por día. En días combinados, reparte de forma equilibrada.
+Adapta al nivel del usuario; todo realizable en casa o en un parque.
+
+DIA 1 — EMPUJE
+  Flexiones (posiciones de manos cerradas y amplias)
+  Flexion amplia
+  Flexion inclinada
+  Flexiones en vertical
+  Fondos en barras paralelas
+  Fondos en banco
+
+DIA 2 — JALON
+  Dominadas/Pulldowns
+  Dominada trasera con agarre ancho
+  Remo invertido con correas
+  Remo suspendido
+  Subida de cuerda
+  Dominadas con peso
+
+DIA 3 — PIERNAS Y CORE
+  Bodyweight Sentadilla
+  Sentadilla con salto a mano alzada
+  Zancada con peso corporal
+  Step-up con elevacion de rodilla
+  Elevacion de gluteos (puente)
+  Plancha
+  Abdominales

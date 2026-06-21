@@ -28,7 +28,7 @@ import jakarta.validation.Valid;
 @RequestMapping("/master")
 public class MasterController {
 
-        @Value("classpath:langchain4j/assistants-personality/exercises.txt")
+        @Value("classpath:exercises.txt")
         private Resource masterCatalogResource;
         
         private final Master master;

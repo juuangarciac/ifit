@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -74,6 +75,7 @@ public class QuestionnaireController {
      * 
      * @return Lista de cuestionarios en formato resumido
      */
+    @PreAuthorize("hasRole('admin_client_role')")
     @GetMapping
     @Operation(
         summary = "Listar cuestionarios",
@@ -247,6 +249,7 @@ public class QuestionnaireController {
      * @throws ExperienceLevelNotFoundException si el nivel especificado no existe
      * @throws QuestionNotFoundException si la primera pregunta especificada no existe
      */
+    @PreAuthorize("hasRole('admin_client_role')")
     @PostMapping
     @Operation(
         summary = "Crear cuestionario",
@@ -303,6 +306,7 @@ public class QuestionnaireController {
      * @return Cuestionario actualizado
      * @throws QuestionnaireNotFoundException si no existe el cuestionario
      */
+    @PreAuthorize("hasRole('admin_client_role')")
     @PutMapping("/{id}")
     @Operation(
         summary = "Actualizar cuestionario",
@@ -360,6 +364,7 @@ public class QuestionnaireController {
      * @return Respuesta vacía con código 204
      * @throws QuestionnaireNotFoundException si no existe el cuestionario
      */
+    @PreAuthorize("hasRole('admin_client_role')")
     @DeleteMapping("/{id}")
     @Operation(
         summary = "Eliminar cuestionario",

@@ -31,7 +31,7 @@ import jakarta.validation.Valid;
 @RequestMapping("/eliud")
 public class EliudController {
 
-    @Value("classpath:langchain4j/assistants-personality/exercises.txt")
+    @Value("classpath:exercises/eliud.txt")
     private Resource exerciseCatalogResource;
 
     private final EliudService eliudService;

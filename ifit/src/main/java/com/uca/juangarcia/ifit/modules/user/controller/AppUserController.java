@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -81,6 +82,7 @@ public class AppUserController {
      * 
      * @return ResponseEntity con la lista de usuarios y código 200 OK
      */
+    @PreAuthorize("hasRole('admin_client_role')")
     @GetMapping
     @Operation(
         summary = "Obtener todos los usuarios",
@@ -118,6 +120,7 @@ public class AppUserController {
      * @param sortDir dirección de ordenamiento: asc o desc (por defecto: desc)
      * @return ResponseEntity con la página de usuarios y código 200 OK
      */
+    @PreAuthorize("hasRole('admin_client_role')")
     @GetMapping("/paginated")
     @Operation(
         summary = "Obtener usuarios paginados",
@@ -198,6 +201,7 @@ public class AppUserController {
      * @return ResponseEntity con el usuario y código 200 OK
      * @throws EmailNotFoundException si no existe el usuario
      */
+    @PreAuthorize("hasRole('admin_client_role')")
     @GetMapping("/email/{email}")
     @Operation(
         summary = "Obtener usuario por email",
@@ -237,6 +241,7 @@ public class AppUserController {
      * @return ResponseEntity con el usuario creado y código 201 CREATED
      * @throws EmailAlreadyExistsException si el email ya está registrado
      */
+    @PreAuthorize("hasRole('admin_client_role')")
     @PostMapping
     @Operation(
         summary = "Crear nuevo usuario",
@@ -282,6 +287,7 @@ public class AppUserController {
      * @throws UserIdNotFoundException si no existe el usuario
      * @throws EmailAlreadyExistsException si el nuevo email ya está en uso
      */
+    @PreAuthorize("hasRole('admin_client_role')")
     @PutMapping("/{id}")
     @Operation(
         summary = "Actualizar usuario",
@@ -323,6 +329,7 @@ public class AppUserController {
      * @return ResponseEntity con código 204 NO CONTENT
      * @throws UserIdNotFoundException si no existe el usuario
      */
+    @PreAuthorize("hasRole('admin_client_role')")
     @DeleteMapping("/{id}")
     @Operation(
         summary = "Eliminar usuario",
@@ -460,6 +467,7 @@ public class AppUserController {
      * @param email email a verificar
      * @return ResponseEntity con true/false y código 200 OK
      */
+    @PreAuthorize("hasRole('admin_client_role')")
     @GetMapping("/exists/email/{email}")
     @Operation(
         summary = "Verificar si existe email",

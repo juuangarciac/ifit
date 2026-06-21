@@ -23,7 +23,7 @@ public class RoutineExerciseMapper {
             return null;
         }
         
-        return new RoutineExerciseDto(
+        RoutineExerciseDto dto = new RoutineExerciseDto(
             exercise.getId(),
             exercise.getExerciseName(),
             exercise.getSets(),
@@ -32,6 +32,8 @@ public class RoutineExerciseMapper {
             exercise.getNotes(),
             exercise.getOrderIndex()
         );
+        dto.setExerciseId(exercise.getExerciseId());
+        return dto;
     }
     
     /**
@@ -47,12 +49,13 @@ public class RoutineExerciseMapper {
         exercise.setId(dto.getId());
 
         exercise.setExerciseName(dto.getExerciseName());
+        exercise.setExerciseId(dto.getExerciseId());
         exercise.setSets(dto.getSets());
         exercise.setReps(dto.getReps());
         exercise.setRestSeconds(dto.getRestSeconds());
         exercise.setNotes(dto.getNotes());
         exercise.setOrderIndex(dto.getOrderIndex());
-        
+
         return exercise;
     }
     
@@ -65,6 +68,7 @@ public class RoutineExerciseMapper {
         }
 
         exercise.setExerciseName(dto.getExerciseName());
+        exercise.setExerciseId(dto.getExerciseId());
         exercise.setSets(dto.getSets());
         exercise.setReps(dto.getReps());
         exercise.setRestSeconds(dto.getRestSeconds());

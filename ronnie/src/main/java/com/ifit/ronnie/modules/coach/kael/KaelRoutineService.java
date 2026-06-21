@@ -32,23 +32,13 @@ public interface KaelRoutineService {
     ════════════════════════════════════════
     LISTA DE EJERCICIOS — ÚNICOS VÁLIDOS
     ════════════════════════════════════════
-    Usa ÚNICAMENTE nombres de esta lista, en español, sin traducir ni inventar.
-    Puedes añadir un descriptor breve entre paréntesis si es necesario,
-    pero el nombre base debe ser de la lista. Sin maquinaria de gimnasio.
+    Usa ÚNICAMENTE nombres de esta lista, copiados EXACTAMENTE como aparecen
+    (incluidos sus paréntesis si los tienen). PROHIBIDO traducir, inventar,
+    abreviar, parafrasear o AÑADIR por tu cuenta descriptores o paréntesis que
+    no estén en la lista. El campo "exerciseName" debe coincidir carácter por
+    carácter con una entrada de la lista. Ante la duda, elige el nombre más
+    parecido de la lista, nunca uno nuevo. Sin maquinaria de gimnasio.
 
-    EMPUJE: Flexiones · Flexiones inclinadas (pies en silla) · Fondos en paralelas ·
-            Fondos en banco · Press de hombros con mancuernas
-    JALÓN Y ESPALDA: Dominadas · Remo con mancuerna a un brazo
-    PIERNAS (sin máquinas): Sentadilla con mancuernas · Sentadilla goblet (con mancuerna o kettlebell) ·
-                            Zancadas caminando · Zancadas estáticas con mancuernas ·
-                            Elevaciones de talones de pie · Step-up con mancuernas (subida al cajón) ·
-                            Peso muerto rumano
-    CORE Y CARDIO FUNCIONAL: Plancha · Plancha lateral · Crunch abdominal ·
-                             Elevación de piernas tumbado · Abdominales con giro (bicicleta) ·
-                             Rueda abdominal · Burpees · Escaladores (Mountain climbers) ·
-                             Salto al cajón · Saltos de tijera
-
-    Referencia de ejecución por ejercicio (úsala para rellenar el campo notes de cada ejercicio):
     {exerciseCatalog}
 
     ════════════════════════════════════════
@@ -60,14 +50,16 @@ public interface KaelRoutineService {
     · Resistencia / HIIT:             3-4 series × 15-20 reps · restSeconds: 30
     · Tonificar / bienestar:          3 series   × 12-15 reps · restSeconds: 60
     Para ejercicios isométricos (Plancha), usa reps como duración (ej: "45 segundos").
-    El campo notes debe contener un consejo técnico breve basado en la sección
-    "Cómo:" del catálogo para ese ejercicio.
+    El campo notes debe contener un consejo técnico breve de ejecución del ejercicio.
 
     ════════════════════════════════════════
     VOLUMEN SEGÚN TIEMPO DE SESIÓN
     ════════════════════════════════════════
-    Ajusta el número de ejercicios al tiempo disponible indicado en el cuestionario.
-    Estos rangos son orientativos; prioriza la coherencia del entrenamiento:
+    Ajusta el número de ejercicios del bloque principal al tiempo indicado en la
+    respuesta a "¿Cuánto tiempo puedes dedicar a cada sesión?". El límite inferior
+    de cada rango es un MÍNIMO, no un objetivo. Asume un ritmo realista (descansos
+    en la parte corta, transiciones ágiles): la gente entrena más rápido que el
+    descanso teórico, así que tiende a la parte alta del rango y nunca bajes del mínimo.
     · 20-30 min → 4-6 ejercicios
     · 30-45 min → 5-7 ejercicios
     · 45-60 min → 7-9 ejercicios
@@ -83,6 +75,9 @@ public interface KaelRoutineService {
 
     · COHERENCIA: los ejercicios del día siguen un patrón claro: push, pull, piernas,
       full body o circuito funcional. Combina grupos de forma lógica.
+    · REPARTO: cuando un día combina varios grupos o patrones (p.ej. un empuje de
+      pecho y hombros), repártelos de forma equilibrada; procura que el grupo
+      secundario tenga presencia real, no un único ejercicio de relleno.
     · Un ejercicio no puede repetirse más de una vez en el mismo día.
     · Un ejercicio no puede aparecer en más de dos días distintos de la rutina.
 

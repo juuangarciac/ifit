@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -255,6 +256,7 @@ public class CoachModelTypeController {
      * @param dto datos del nuevo tipo de modelo a crear
      * @return ResponseEntity con el modelo creado y código 201 (Created)
      */
+    @PreAuthorize("hasRole('admin_client_role')")
     @PostMapping
     @Operation(
         summary = "Crear nuevo modelo",
@@ -315,6 +317,7 @@ public class CoachModelTypeController {
      * @return ResponseEntity con el modelo actualizado
      * @throws CoachModelTypeNotFoundException si no existe un modelo con el ID proporcionado
      */
+    @PreAuthorize("hasRole('admin_client_role')")
     @PutMapping("/{id}")
     @Operation(
         summary = "Actualizar modelo",
@@ -392,6 +395,7 @@ public class CoachModelTypeController {
      * @return ResponseEntity vacío con código 204 (No Content)
      * @throws CoachModelTypeNotFoundException si no existe un modelo con el ID proporcionado
      */
+    @PreAuthorize("hasRole('admin_client_role')")
     @DeleteMapping("/{id}")
     @Operation(
         summary = "Deshabilitar modelo",
@@ -446,6 +450,7 @@ public class CoachModelTypeController {
      * @return ResponseEntity con el modelo habilitado
      * @throws CoachModelTypeNotFoundException si no existe un modelo con el ID proporcionado
      */
+    @PreAuthorize("hasRole('admin_client_role')")
     @PatchMapping("/{id}/enable")
     @Operation(
         summary = "Habilitar modelo",

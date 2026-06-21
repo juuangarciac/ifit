@@ -1,0 +1,66 @@
+====================================================
+EJERCICIOS VÁLIDOS — ELIUD (running, cardio y fuerza funcional)
+====================================================
+Nombres exactos del catálogo de iFit. Cópialos carácter por carácter.
+
+CARDIO
+  - Correr, cinta de correr
+  - Bicicleta
+  - Eliptica
+  - Remo, Estacionario
+  - Salto con cuerda
+  - Stairmaster
+
+PLIOMETRIA Y SALTOS
+  - Escaladores
+  - Salto de tijera
+  - Salto en estrella
+  - Salto lateral
+  - Salto frontal sobre caja
+  - Salto rapido
+
+FUERZA FUNCIONAL DE PIERNA
+  - Sentadilla con salto a mano alzada
+  - Zancada con peso corporal
+  - Elevacion de gluteos (puente)
+  - Puente de gluteos con una sola pierna
+  - Step-up con elevacion de rodilla
+  - Elevacion natural de gluteos y isquiotibiales
+
+CORE
+  - Plancha
+  - Puente lateral
+  - Abdominales
+  - Bicicleta aerea
+  - Giro ruso
+  - Elevacion de piernas en banco plano
+
+====================================================
+RUTINAS DE EJEMPLO (referencia de volumen y reparto)
+====================================================
+Modelo de volumen por día. Cada día combina trabajo cardiovascular y de fuerza
+funcional o core; ninguno de los dos queda en un solo ejercicio. Adapta al usuario.
+
+DIA 1 — CARDIO BASE Y CORE
+  Correr, cinta de correr
+  Salto con cuerda
+  Escaladores
+  Plancha
+  Puente lateral
+  Abdominales
+
+DIA 2 — FUERZA FUNCIONAL DE CORREDOR
+  Sentadilla con salto a mano alzada
+  Zancada con peso corporal
+  Elevacion de gluteos (puente)
+  Step-up con elevacion de rodilla
+  Elevacion natural de gluteos y isquiotibiales
+  Plancha
+
+DIA 3 — INTERVALOS Y SALTOS
+  Correr, cinta de correr
+  Salto de tijera
+  Salto lateral
+  Salto frontal sobre caja
+  Escaladores
+  Bicicleta aerea

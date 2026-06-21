@@ -31,7 +31,7 @@ import jakarta.validation.Valid;
 @RequestMapping("/ronnie")
 public class RonnieController {
 
-    @Value("classpath:langchain4j/assistants-personality/exercises.txt")
+    @Value("classpath:exercises/ronnie.txt")
     private Resource exerciseCatalogResource;
 
     private final RonnieService ronnie;

@@ -8,6 +8,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -58,8 +61,8 @@ public class IFitAIClient {
             // Preparar request body
             RonnieMessageDto messageDto = new RonnieMessageDto(memoryId, prompt, keycloakUserId);
 
-            // Configurar headers
-            HttpHeaders headers = new HttpHeaders();
+            // Configurar headers (incluye el Bearer token del usuario autenticado)
+            HttpHeaders headers = buildAuthHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             HttpEntity<RonnieMessageDto> requestEntity = new HttpEntity<>(messageDto, headers);
@@ -104,10 +107,12 @@ public class IFitAIClient {
         logger.debug("Calling Ronnie service for max memory ID at: {}", url);
 
         try {
+            HttpEntity<Void> requestEntity = new HttpEntity<>(buildAuthHeaders());
+
             ResponseEntity<IFitAIMaxMemoryIdResponseDto> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
-                    null,
+                    requestEntity,
                     IFitAIMaxMemoryIdResponseDto.class);
 
             IFitAIMaxMemoryIdResponseDto responseBody = response.getBody();
@@ -130,5 +135,26 @@ public class IFitAIClient {
             logger.error("Unexpected error calling Ronnie service for max memory ID", e);
             throw new RuntimeException("Failed to retrieve max memory ID: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Construye las cabeceras HTTP propagando el token JWT del usuario autenticado.
+     *
+     * <p>Ifit llama a Ronnie directamente (sin pasar por el API Gateway), por lo que
+     * el TokenRelay del gateway no aplica. Ronnie está configurado como OAuth2 Resource
+     * Server y rechaza con 401 cualquier petición sin un Bearer token válido, así que es
+     * necesario reenviar manualmente el token presente en el contexto de seguridad.
+     *
+     * @return cabeceras con el header Authorization si hay un usuario autenticado en contexto
+     */
+    private HttpHeaders buildAuthHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication instanceof JwtAuthenticationToken jwtAuth) {
+            headers.setBearerAuth(jwtAuth.getToken().getTokenValue());
+        } else {
+            logger.warn("No JWT in security context; calling Ronnie without Authorization header");
+        }
+        return headers;
     }
 }

@@ -14,9 +14,12 @@ import jakarta.validation.constraints.Null;
 public class RoutineExerciseDto {
     
     private Long id;
-    
+
     private String exerciseName;
-    
+
+    /** Id del ejercicio en el catálogo si el nombre se reconcilió; null si no. */
+    private Long exerciseId;
+
     private Integer sets;
     
     private String reps;
@@ -54,9 +57,17 @@ public class RoutineExerciseDto {
     public String getExerciseName() {
         return exerciseName;
     }
-    
+
     public void setExerciseName(String exerciseName) {
         this.exerciseName = exerciseName;
+    }
+
+    public Long getExerciseId() {
+        return exerciseId;
+    }
+
+    public void setExerciseId(Long exerciseId) {
+        this.exerciseId = exerciseId;
     }
     
     public Integer getSets() {

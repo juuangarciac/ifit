@@ -7,7 +7,7 @@ import dev.langchain4j.service.spring.AiService;
 import dev.langchain4j.service.spring.AiServiceWiringMode;
 
 @AiService(wiringMode = AiServiceWiringMode.EXPLICIT,
-    chatModel = "groqChatLanguageModel",
+    chatModel = "groqLlama70b",
     chatMemoryProvider = "messageWindowChatMemory",
     contentRetriever = "ronnieEmbeddingStoreContentRetriever")
 public interface RonnieService {

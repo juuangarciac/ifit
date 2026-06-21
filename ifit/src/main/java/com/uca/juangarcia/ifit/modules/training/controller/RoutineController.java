@@ -11,6 +11,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -124,6 +125,7 @@ public class RoutineController {
      * 
      * @return ResponseEntity con la lista de rutinas y código 200 OK
      */
+    @PreAuthorize("hasRole('admin_client_role')")
     @GetMapping
     @Operation(
         summary = "Obtener todas las rutinas",
@@ -344,6 +346,7 @@ public class RoutineController {
      * @return ResponseEntity con la rutina actualizada y código 200 OK
      * @throws RoutineNotFoundException si no existe la rutina
      */
+    @PreAuthorize("hasRole('admin_client_role')")
     @PutMapping("/{id}")
     @Operation(
         summary = "Actualizar rutina",

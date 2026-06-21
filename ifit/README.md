@@ -673,7 +673,7 @@ spring.jpa.hibernate.ddl-auto=update
 # Email (SMTP Gmail)
 spring.mail.host=smtp.gmail.com
 spring.mail.port=587
-spring.mail.username=ifit.communication@gmail.com
+spring.mail.username=adminifit96@gmail.com
 spring.mail.password=<app-password>
 
 # OAuth2 Resource Server — Keycloak

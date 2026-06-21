@@ -31,7 +31,7 @@ import jakarta.validation.Valid;
 @RequestMapping("/serena")
 public class SerenaController {
 
-    @Value("classpath:langchain4j/assistants-personality/exercises.txt")
+    @Value("classpath:exercises/serena.txt")
     private Resource exerciseCatalogResource;
 
     private final SerenaService serenaService;
