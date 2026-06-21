@@ -1,0 +1,148 @@
+Este capítulo cubre el análisis del sistema de información, haciendo uso del lenguaje de modelado UML. A partir de los requisitos definidos en el capítulo anterior, se presentan el modelo conceptual de datos, el modelo de casos de uso, el modelo de interfaz de usuario y, finalmente, el modelo de comportamiento de las operaciones más significativas.
+
+\section{Modelo Conceptual}
+A partir de los requisitos de información (RI-01 a RI-06), se ha elaborado el modelo conceptual de clases que se muestra en la Figura~\ref{fig:modelo-conceptual}. El dominio se articula en torno al \textbf{usuario} y a las tres grandes capacidades de la plataforma: el cuestionario, las rutinas y la conversación con los entrenadores.
+
+El \textit{usuario} se asocia a un \textit{rol} (usuario o administrador), a un \textit{nivel de experiencia} y a un \textit{tipo de entrenador}. El \textit{cuestionario} se modela como un árbol de decisión: se compone de \textit{preguntas}, cada una con sus \textit{opciones}, y cada opción enlaza con la siguiente pregunta, lo que da lugar al comportamiento adaptativo; cuando ese enlace es nulo, la sesión concluye. Cada vez que un usuario responde un cuestionario se crea una \textit{sesión de respuestas}, que agrupa las \textit{respuestas} dadas a cada pregunta.
+
+A partir del perfil obtenido, el sistema genera \textit{rutinas}. Una rutina pertenece a un usuario y se descompone en \textit{días de entrenamiento}, que a su vez contienen \textit{ejercicios} con sus series, repeticiones y descansos. Estos ejercicios referencian el \textit{catálogo de ejercicios} del sistema. Por último, la interacción con los entrenadores se recoge como un \textit{historial de mensajes}, donde cada mensaje se asocia a una conversación, a un usuario y a un entrenador, y se clasifica por su tipo (usuario, IA o sistema).
+
+\begin{figure}[ht]
+\centering
+% \includegraphics[width=\textwidth]{figures/modelo-conceptual.png}
+\fbox{\parbox[c][5cm][c]{0.9\textwidth}{\centering Diagrama conceptual de clases UML (pendiente de insertar)}}
+\caption{Modelo conceptual de clases del sistema.}
+\label{fig:modelo-conceptual}
+\end{figure}
+
+Como restricción adicional relevante, el seguimiento de la rutina semanal no se almacena como un histórico, sino que se \textbf{deriva} a partir de los días de entrenamiento marcados como completados en la sesión activa. Asimismo, la personalización se obtiene únicamente de las respuestas del cuestionario, sin inferir información del uso posterior de la aplicación.
+
+\section{Modelo de Casos de Uso}
+A partir de los requisitos funcionales, se han identificado los casos de uso que representan la interacción entre los actores y el sistema. La Figura~\ref{fig:casos-uso} recoge el diagrama de casos de uso.
+
+\subsection*{Actores}
+\begin{itemize}
+    \item \textbf{Usuario}: persona que utiliza la aplicación para completar el cuestionario, obtener rutinas, realizar su seguimiento y conversar con los entrenadores.
+    \item \textbf{Administrador}: gestiona los cuestionarios, los ejercicios, los entrenadores y los usuarios de la plataforma.
+    \item \textbf{Servidor de identidad} (actor secundario): sistema externo encargado de la autenticación y la emisión de credenciales.
+    \item \textbf{Proveedor de IA} (actor secundario): servicio externo de inferencia que genera las rutinas y las respuestas de los entrenadores.
+\end{itemize}
+
+\begin{figure}[ht]
+\centering
+% \includegraphics[width=\textwidth]{figures/casos-uso.png}
+\fbox{\parbox[c][5cm][c]{0.9\textwidth}{\centering Diagrama de casos de uso (pendiente de insertar)}}
+\caption{Diagrama de casos de uso del sistema.}
+\label{fig:casos-uso}
+\end{figure}
+
+\subsection*{Catálogo de casos de uso}
+\begin{itemize}
+    \item \textbf{CU-01} Registrarse y verificar la cuenta.
+    \item \textbf{CU-02} Iniciar y cerrar sesión.
+    \item \textbf{CU-03} Configurar el perfil (nivel de experiencia y entrenador).
+    \item \textbf{CU-04} Completar el cuestionario adaptativo.
+    \item \textbf{CU-05} Generar una rutina personalizada con IA.
+    \item \textbf{CU-06} Crear y gestionar rutinas manualmente.
+    \item \textbf{CU-07} Realizar el seguimiento de la rutina semanal.
+    \item \textbf{CU-08} Conversar con un entrenador virtual.
+    \item \textbf{CU-09} Consultar el catálogo de ejercicios.
+    \item \textbf{CU-10} Administrar cuestionarios, ejercicios, entrenadores y usuarios.
+\end{itemize}
+
+A continuación se detallan los casos de uso más significativos del sistema.
+
+\subsection*{CU-04: Completar el cuestionario adaptativo}
+\begin{itemize}
+    \item \textbf{Actor principal:} Usuario.
+    \item \textbf{Precondiciones:} el usuario ha iniciado sesión y ha seleccionado un entrenador.
+    \item \textbf{Postcondiciones:} se registra una sesión de respuestas completada con el perfil del usuario.
+\end{itemize}
+\textit{Escenario principal:}
+\begin{enumerate}
+    \item El usuario inicia el cuestionario asociado a su entrenador y nivel.
+    \item El sistema muestra la primera pregunta con sus opciones.
+    \item El usuario responde y el sistema registra la respuesta.
+    \item El sistema determina la siguiente pregunta a partir de la opción elegida.
+    \item Se repiten los pasos 3 y 4 hasta que no existe pregunta siguiente.
+    \item El sistema marca la sesión como completada.
+\end{enumerate}
+\textit{Escenarios alternativos:}
+\begin{itemize}
+    \item \textbf{3a.} El usuario selecciona «Prefiero no responder» en una pregunta sensible: el sistema registra la respuesta como no proporcionada y continúa.
+    \item \textbf{3b.} El usuario retrocede a la pregunta anterior: el sistema elimina la última respuesta y la vuelve a mostrar.
+\end{itemize}
+
+\subsection*{CU-05: Generar una rutina personalizada con IA}
+\begin{itemize}
+    \item \textbf{Actor principal:} Usuario. \textbf{Actor secundario:} Proveedor de IA.
+    \item \textbf{Precondiciones:} el usuario ha completado al menos una sesión de cuestionario.
+    \item \textbf{Postcondiciones:} se crea y almacena una rutina personalizada asociada al usuario.
+\end{itemize}
+\textit{Escenario principal:}
+\begin{enumerate}
+    \item El usuario solicita generar una rutina a partir de un cuestionario completado.
+    \item El sistema construye la petición con el perfil del usuario y el catálogo de ejercicios.
+    \item El sistema solicita al proveedor de IA la generación de la rutina.
+    \item El proveedor de IA devuelve la rutina estructurada.
+    \item El sistema valida, almacena y muestra la rutina al usuario.
+\end{enumerate}
+\textit{Escenarios alternativos:}
+\begin{itemize}
+    \item \textbf{1a.} El usuario añade una indicación específica para la generación: el sistema la incorpora a la petición.
+    \item \textbf{4a.} La respuesta del proveedor de IA no es válida: el sistema informa del error y permite reintentar la generación.
+\end{itemize}
+
+\subsection*{CU-08: Conversar con un entrenador virtual}
+\begin{itemize}
+    \item \textbf{Actor principal:} Usuario. \textbf{Actor secundario:} Proveedor de IA.
+    \item \textbf{Precondiciones:} el usuario ha iniciado sesión.
+    \item \textbf{Postcondiciones:} el mensaje y su respuesta quedan registrados en el historial de la conversación.
+\end{itemize}
+\textit{Escenario principal:}
+\begin{enumerate}
+    \item El usuario envía un mensaje a su entrenador.
+    \item El sistema recupera el contexto de la conversación.
+    \item El sistema solicita la respuesta al proveedor de IA.
+    \item El sistema muestra la respuesta y actualiza el historial.
+\end{enumerate}
+
+\section{Modelo de Interfaz de Usuario}
+La interfaz de la aplicación se diseñó a partir de un prototipo elaborado en Figma. La Figura~\ref{fig:mockup} muestra una selección de las pantallas más representativas, y la Figura~\ref{fig:navegacion} recoge el diagrama de navegación entre ellas.
+
+El flujo de un usuario nuevo comienza en la pantalla de bienvenida, desde la que puede registrarse o iniciar sesión; el registro incluye la verificación del correo. Una vez autenticado, el usuario configura su perfil seleccionando su nivel de experiencia y su entrenador. A partir de ahí accede a la pantalla principal, organizada mediante una barra de navegación inferior que estructura la aplicación en sus secciones principales. Desde ella, el usuario completa el cuestionario, genera o consulta sus rutinas, realiza el seguimiento de la semana, explora el catálogo de ejercicios y conversa con su entrenador.
+
+\begin{figure}[ht]
+\centering
+% \includegraphics[width=\textwidth]{figures/mockup.png}
+\fbox{\parbox[c][6cm][c]{0.9\textwidth}{\centering Prototipo (\textit{mockup}) de las pantallas principales (pendiente de insertar)}}
+\caption{Prototipo de la interfaz de usuario.}
+\label{fig:mockup}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+% \includegraphics[width=\textwidth]{figures/navegacion.png}
+\fbox{\parbox[c][5cm][c]{0.9\textwidth}{\centering Diagrama de navegación entre pantallas (pendiente de insertar)}}
+\caption{Diagrama de navegación de la aplicación.}
+\label{fig:navegacion}
+\end{figure}
+
+\section{Modelo de Comportamiento}
+Para ilustrar el comportamiento del sistema se detalla la operación más representativa, la generación de una rutina con IA, cuyo diagrama de secuencia se muestra en la Figura~\ref{fig:secuencia}. La petición del cliente atraviesa la pasarela de acceso ---que valida las credenciales--- y llega al servicio de negocio, que recupera las respuestas del cuestionario, construye la petición y delega la generación en el servicio de inteligencia artificial; este consulta al proveedor de IA y devuelve la rutina, que el servicio de negocio almacena antes de responder al cliente.
+
+\begin{figure}[ht]
+\centering
+% \includegraphics[width=\textwidth]{figures/secuencia-rutina.png}
+\fbox{\parbox[c][5cm][c]{0.9\textwidth}{\centering Diagrama de secuencia: generación de rutina con IA (pendiente de insertar)}}
+\caption{Diagrama de secuencia de la generación de una rutina.}
+\label{fig:secuencia}
+\end{figure}
+
+El contrato de la operación principal identificada se resume a continuación:
+
+\begin{itemize}
+    \item \textbf{Operación:} \texttt{generarRutina(usuario, sesiónCuestionario, entrenador, nota)}.
+    \item \textbf{Precondiciones:} el usuario existe y la sesión de cuestionario indicada está completada.
+    \item \textbf{Postcondiciones:} se crea una nueva rutina asociada al usuario, compuesta por días y ejercicios pertenecientes al catálogo, y queda almacenada y disponible para su consulta.
+\end{itemize}

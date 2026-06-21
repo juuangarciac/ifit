@@ -1,0 +1,161 @@
+================================================================================
+AUDITORÍA DE ENDPOINTS / ACTIONS - IFit/Services/
+Fecha: 2026-06-15
+Objetivo: identificar qué endpoints usa estrictamente el cliente MAUI y cuáles NO.
+Método: cada método de servicio cruzado con sus llamadas reales desde
+        ViewModels, Views y App.xaml.cs.
+================================================================================
+
+RESUMEN EJECUTIVO
+--------------------------------------------------------------------------------
+- Endpoints REALMENTE usados por el cliente: ~24
+- Métodos / endpoints definidos pero NUNCA invocados: ~30
+  (sobre todo CRUD de administración y métodos duplicados)
+
+Nota: WebService, DatabaseService, NotificationService e ISecureStorageService
+no exponen endpoints propios (transporte HTTP genérico / SQLite local / UI),
+por lo que el análisis se centra en los servicios de dominio.
+
+
+================================================================================
+✅ ENDPOINTS QUE EL CLIENTE SÍ USA
+================================================================================
+
+AuthenticationService
+- LoginAsync                  POST /auth/login                                  -> SignInViewModel
+- RegisterAsync               POST /auth/register                               -> SignUpViewModel
+- VerifyEmailAsync            POST /auth/verify                                 -> VerificationViewModel
+- RefreshTokenAsync           POST /auth/refresh                                -> Interno (TryRestoreSession + auto-refresh 401 de WebService)
+- TryRestoreSessionAsync      (sin endpoint, usa tokens)                        -> App.xaml.cs (auto-login)
+
+AppUserService
+- findUserById                GET   /users/{id}                                 -> Profile, ChatAI, Plan VMs
+- SetCoachModelType           PATCH /users/{id}/assign-coach/{coachId}          -> CoachModelTypeSelection, Profile
+- SetExperienceLevel          PATCH /users/{id}/assign-experience/{level}       -> ExperienceLevel, Profile
+- MarkRegistrationComplete    PATCH /users/{id}/complete-registration           -> RoutineSummaryViewModel
+
+AIRoutineService
+- GenerateRoutineAsync        POST /routines/generate                           -> AIGenerationRoutine, QuestionnaireSummary, RoutineSummary
+- ChatWithCoach               POST /{coachName}/chat                            -> ChatAIViewModel
+- GetExerciseExplanationAsync (-> chat)                                         -> TrainingDayDetailViewModel
+- GetOrCreateConversation     (SQLite local)                                    -> ChatAIViewModel
+- GetUserConversations        (SQLite local)                                    -> ChatAIViewModel
+- GetNewMemoryIdFromServer    GET /messages/max-memory-id                       -> ChatAIViewModel
+  (+ GetMaxMemoryIdFromServer)
+- GetChatHistoryAsync         GET /messages/user/{userId}/coach/{coachName}     -> ChatAIViewModel
+- IsValidCoach                (utilidad)                                        -> TrainingDayDetailViewModel
+
+TrainingService
+- createRoutineAsync          POST  /routines                                   -> ManualRoutineBuilder, RoutineSummary
+- getRoutineByIdAsync         GET   /routines/{id}                              -> Home, WeeklySummary
+- getActivesRoutinesByUserIdAsync (vía getLatestActive...) GET /routines/user/{id}/active
+                                                                                -> Home, Plan, ChatAI, PlanSummary, ManualRoutineBuilder, WeeklySummary
+- getRoutinesByUserIdAsync    GET   /routines/user/{id}                         -> PlanSummaryViewModel
+- getRoutineDayAsync          GET   /routines/{routineId}/day/{day}             -> HomeViewModel
+- cancelRoutineAsync          PATCH /routines/{id}/cancel                       -> PlanViewModel
+- toggleRoutineActiveAsync    PATCH /routines/{id}/toggle-active                -> PlanSummaryViewModel
+- setRoutineDayAsCompletedAsync POST /routines/{routineId}/day/{day}/complete   -> TrainingDayDetailViewModel
+- completeRoutineAsync        POST  /routines/{id}/complete                     -> PlanViewModel
+
+QuestionnaireService
+- GetQuestionnaireByCoachIdAndExperienceLevelId GET /questionnaires/coach/{coachId}/experience-level/{levelId}
+                                                                                -> AppUserQuestionnaireViewModel
+- StartQuestionnaire          POST /questionnaires/{userId}/start/{questionnaireId} -> AppUserQuestionnaireViewModel
+- AnswerQuestion              POST /questionnaires/responses/{id}/answer        -> AppUserQuestionnaireViewModel
+- GoToPreviousQuestion        POST /questionnaires/responses/{id}/previous      -> AppUserQuestionnaireViewModel
+- GetResponseSummary          GET  /questionnaires/responses/{id}/summary       -> AIGenerationRoutine, QuestionnaireSummary
+
+ExerciseCatalogService
+- GetExercisesAsync           GET /exercises                                    -> ExerciseCatalog, ManualRoutineBuilder
+- GetAllExercisesAsync        (-> /exercises paginado)                          -> ExerciseCatalogViewModel
+- GetExerciseByIdAsync        GET /exercises/{id}                               -> ExerciseDetailViewModel
+
+CoachModelTypeService
+- GetCoachModelTypes          GET /coach-models                                 -> CoachModelTypeSelection, Profile
+
+ExperienceLevelService
+- GetExperienceLevels         GET /experience-levels                            -> ExperienceLevel, Profile
+
+AppEmailService
+- SendSupportTicketAsync      POST /appemail/support-ticket                     -> Help, SupportTicket VMs
+
+
+================================================================================
+❌ MÉTODOS / ENDPOINTS NUNCA USADOS POR EL CLIENTE
+================================================================================
+
+AuthenticationService
+- LogoutAsync                 POST /auth/logout
+  -> NUNCA se llama. ProfileViewModel.LogoutAsync solo hace Preferences.Clear()
+     + navega; no invoca el servicio ni limpia los tokens de SecureStorage
+     (_webService.LogoutAsync()).  ⚠️ BUG latente, no solo código muerto.
+
+AppUserService (CRUD de administración)
+- findUserByEmail             GET    /users/email/{email}
+- GetAllUsers                 GET    /users
+- GetUsersPaginated           GET    /users/paginated
+- CreateUser                  POST   /users
+- UpdateUser                  PUT    /users/{id}
+- DeleteUser                  DELETE /users/{id}
+- EmailExists                 GET    /users/exists/email/{email}
+
+AIRoutineService
+- StartNewConversation        (wrapper público sin ningún caller)
+- GetAvailableCoaches         (solo uso interno, no desde VMs)
+- GetCoachDescription         (solo uso interno, no desde VMs)
+
+TrainingService
+- generateRoutineAsync        POST /routines/generate
+  -> DUPLICADO del de AIRoutineService (las VMs usan el de AIRoutineService).
+- getAllRoutinesAsync         GET  /routines
+- getRoutinesByUserIdPaginatedAsync GET /routines/user/{id}/paginated
+- countActiveRoutinesByUserIdAsync  GET /routines/user/{id}/count-active
+- updateRoutineAsync          PUT  /routines/{id}
+
+QuestionnaireService
+- GetAllQuestionnaires        GET    /questionnaires
+- GetQuestionnaireById        GET    /questionnaires/{id}
+- GetQuestionnaireWithFirstQuestion GET /questionnaires/{id}/with-first-question
+- CreateQuestionnaire         POST   /questionnaires
+- UpdateQuestionnaire         PUT    /questionnaires/{id}
+- DeleteQuestionnaire         DELETE /questionnaires/{id}
+- GetMyResponses              GET    /questionnaires/responses/my-responses
+- GetMyCompletedResponses     GET    /questionnaires/responses/my-completed-responses
+- GetMyActiveResponses        GET    /questionnaires/responses/my-active-responses
+
+CoachModelTypeService (todo menos GetCoachModelTypes)
+- GetCoachModelTypeById(string)  GET    /coach-models/{id}
+- GetCoachModelTypeById(long)    GET    /coach-models/{id}
+- GetAllCoachModelTypes          GET    /coach-models/all
+- GetCoachModelTypeByName        GET    /coach-models/name/{name}
+- CreateCoachModelType           POST   /coach-models
+- UpdateCoachModelType           PUT    /coach-models/{id}
+- DeleteCoachModelType           DELETE /coach-models/{id}
+- EnableCoachModelType           PUT    /coach-models/{id}/enable
+
+ExperienceLevelService (todo menos GetExperienceLevels)
+- GetExperienceLevelById         GET    /experience-levels/{id}
+- GetExperienceLevelByName       GET    /experience-levels/{name}
+- CreateExperienceLevel          POST   /experience-levels
+- UpdateExperienceLevel          PATCH  /experience-levels/{id}
+- DeleteExperienceLevel          DELETE /experience-levels/{id}
+
+
+================================================================================
+OBSERVACIONES
+================================================================================
+1. PATRÓN: el cliente solo consume lectura de catálogos + flujo de
+   onboarding/rutinas/chat. Todo el CRUD de administración (crear/editar/borrar
+   usuarios, cuestionarios, coaches, niveles) está implementado pero es código
+   muerto en la app móvil (pensado para un panel admin ajeno al cliente).
+
+2. DUPLICADO: TrainingService.generateRoutineAsync y
+   AIRoutineService.GenerateRoutineAsync pegan al mismo POST /routines/generate.
+   Solo el de AIRoutineService se usa (soporta coachType y note).
+
+3. BUG: el logout nunca llama a /auth/logout ni limpia los tokens seguros
+   (SecureStorage). ProfileViewModel.LogoutAsync solo hace Preferences.Clear().
+
+4. DOC vs CÓDIGO: el docstring de AIRoutineService dice POST /chat/{coachName},
+   pero el código real construye POST /{coachName}/chat (p.ej. /ronnie/chat).
+================================================================================

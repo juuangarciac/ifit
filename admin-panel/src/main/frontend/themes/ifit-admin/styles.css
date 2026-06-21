@@ -1,0 +1,30 @@
+/* ── Tema iFit Admin ────────────────────────────────────────────────────────
+   Mapeo de la identidad visual de la app (res/Colors.xaml + res/Styles.xaml)
+   a variables Lumo. Tema oscuro + acento amarillo + tipografía Montserrat. */
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap');
+
+html {
+  /* Paleta principal (Colors.xaml) */
+  --lumo-base-color: #222831;            /* PrimaryColor / BackgroundPrimaryDark */
+  --lumo-tint-5pct: #393E46;             /* SecondaryColor / superficies */
+  --lumo-primary-color: #FFD369;         /* TertiaryColor (acento amarillo) */
+  --lumo-primary-text-color: #FFD369;
+  --lumo-primary-contrast-color: #222831;/* texto sobre botón amarillo */
+  --lumo-body-text-color: #EEEEEE;       /* QuaternaryColor / TextPrimaryColorLight */
+  --lumo-header-text-color: #FFFFFF;
+  --lumo-border-radius-m: 8px;           /* CornerRadiusRectangle */
+  --lumo-font-family: "Montserrat", system-ui, -apple-system, sans-serif;
+}
+
+/* Superficies (cards, cabecera del Grid, drawer) un punto más claras que el fondo */
+html {
+  --lumo-shade-5pct: #2b323c;
+  --lumo-contrast-5pct: #393E46;
+}
+
+/* Títulos en negrita Montserrat (Styles.xaml: label-Title / label-h*) */
+h1, h2, h3, h4 {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+}
