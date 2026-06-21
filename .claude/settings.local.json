@@ -26,7 +26,12 @@
       "PowerShell(& \".\\\\ifit\\\\mvnw.cmd\" -f \".\\\\admin-panel\\\\pom.xml\" compile -q -DskipTests -Dvaadin.skip.frontend=true)",
       "Bash(./ifit/mvnw -f admin-panel/pom.xml clean compile -q -DskipTests -Dvaadin.skip.frontend=true)",
       "Bash(python catalog_taxonomy.py)",
-      "Bash(python select_ronnie.py)"
+      "Bash(python select_ronnie.py)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "PowerShell(& \".\\\\ifit\\\\mvnw.cmd\" -q -f \".\\\\ifit\\\\pom.xml\" compile -DskipTests -o 2>&1 | Select-Object -Last 5; \"--- intento online si offline falla ---\")",
+      "Bash(python -c ' *)",
+      "Bash(python -m pip install --quiet pyyaml)"
     ]
   }
 }
