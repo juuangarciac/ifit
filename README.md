@@ -2,596 +2,1019 @@
 
 # iFit — Plataforma de Entrenamiento Personalizado con IA
 
-**Arquitectura de microservicios con cuestionario adaptativo, generación de rutinas por LLM y chat con entrenadores virtuales**
+**Sistema distribuido de microservicios con cuestionario adaptativo, generación de rutinas por LLM, chat con entrenadores virtuales y panel de administración back-office.**
 
 ![Java](https://img.shields.io/badge/Java-21-orange?style=flat-square&logo=openjdk)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4.4-6DB33F?style=flat-square&logo=springboot)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5.7-6DB33F?style=flat-square&logo=springboot)
 ![Spring Cloud](https://img.shields.io/badge/Spring_Cloud-2025.0.0-6DB33F?style=flat-square&logo=spring)
 ![Keycloak](https://img.shields.io/badge/Keycloak-23.0-4D4D4D?style=flat-square&logo=keycloak)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=flat-square&logo=mysql)
+![LangChain4j](https://img.shields.io/badge/LangChain4j-latest-orange?style=flat-square&logo=chainlink)
+![Vaadin](https://img.shields.io/badge/Vaadin-24.8-00b4f0?style=flat-square&logo=vaadin)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker)
 
 </div>
 
 ---
 
-## Tabla de contenidos
+## 📚 Cómo leer esta documentación
 
-- [Descripción general](#descripción-general)
-- [Arquitectura del sistema](#arquitectura-del-sistema)
-  - [Mapa de servicios](#mapa-de-servicios)
-  - [Comunicación entre servicios](#comunicación-entre-servicios)
-  - [Flujo completo de una petición](#flujo-completo-de-una-petición)
-- [Microservicios](#microservicios)
-  - [API Gateway — Puerto 8080](#api-gateway--puerto-8080)
-  - [Eureka Server — Puerto 8761](#eureka-server--puerto-8761)
-  - [iFit API — Puerto 8081](#ifit-api--puerto-8081)
-  - [Ronnie API — Puerto 8082](#ronnie-api--puerto-8082)
-- [Flujo principal de la aplicación](#flujo-principal-de-la-aplicación)
-- [Coaches de IA disponibles](#coaches-de-ia-disponibles)
-- [Seguridad y autenticación](#seguridad-y-autenticación)
-  - [Keycloak y el realm ifit-realm](#keycloak-y-el-realm-ifit-realm)
-  - [Doble validación JWT](#doble-validación-jwt)
-  - [Flujo de autenticación completo](#flujo-de-autenticación-completo)
-- [Base de datos](#base-de-datos)
-- [Tecnologías](#tecnologías)
-- [Estructura del proyecto](#estructura-del-proyecto)
-- [Instalación y puesta en marcha](#instalación-y-puesta-en-marcha)
-  - [Arranque con Docker Compose](#arranque-con-docker-compose)
-  - [Ejecución en local](#ejecución-en-local)
-  - [Orden de arranque recomendado](#orden-de-arranque-recomendado)
-- [Variables de entorno](#variables-de-entorno)
-- [Endpoints principales](#endpoints-principales)
+Este proyecto está documentado en capas de especialización, como una cebolla. **Empieza aquí** para entender cómo funcionan los módulos juntos. Luego consulta los READMEs específicos de cada módulo para detalles técnicos.
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ CAPA 0: TÚ ERES AQUÍ (Introducción General)                          │
+│ Cómo se relacionan todos los módulos, terminología, decisiones       │
+│ Este archivo — README.md                                             │
+└──────┬─────────────────────────────────────────────────────────────┘
+       │
+       ├─────────────────────────────────────────────────────────────┐
+       │ CAPA 1: Módulos de Dominio (Lógica de Negocio + IA)        │
+       ├─────────────────────────────────────────────────────────────┤
+       │ • ifit/ — Gestión de usuarios, cuestionarios, rutinas,     │
+       │   integración con Keycloak (autenticación)                  │
+       │   → ifit/README.md                                          │
+       │                                                              │
+       │ • ronnie/ — Motor de IA para generar rutinas y chat,       │
+       │   LangChain4j + modelos Groq                               │
+       │   → ronnie/README.md                                        │
+       └─────────────────────────────────────────────────────────────┘
+       │
+       ├─────────────────────────────────────────────────────────────┐
+       │ CAPA 2: Infraestructura (Red, Descubrimiento, UI)          │
+       ├─────────────────────────────────────────────────────────────┤
+       │ • api-gateway/ — Punto de entrada único, validación de     │
+       │   tokens JWT, enrutamiento reactivo (WebFlux)              │
+       │   → api-gateway/README.md                                   │
+       │                                                              │
+       │ • eureka-server/ — Registro de servicios, permite que      │
+       │   los módulos se encuentren por nombre lógico               │
+       │   → eureka-server/README.md                                 │
+       │                                                              │
+       │ • admin-panel/ — Panel web en Vaadin para administrar      │
+       │   usuarios, ejercicios, coaches, niveles, cuestionarios    │
+       │   → admin-panel/README.md                                   │
+       └─────────────────────────────────────────────────────────────┘
+```
+
+**Flujo de lectura recomendado:**
+1. Lee esta introducción (entiende el sistema como un todo)
+2. Mira "[Arquitectura del Sistema](#arquitectura-del-sistema)" para ver cómo fluye una petición
+3. Luego lee el README específico del módulo que necesites profundizar
 
 ---
 
-## Descripción general
+## 🎯 Descripción General
 
-iFit es una plataforma de entrenamiento personalizado construida sobre una arquitectura de cuatro microservicios. Los usuarios crean rutinas de entrenamiento de forma manual o mediante generación automática con inteligencia artificial, y pueden mantener conversaciones continuas con su entrenador virtual.
+**iFit** es una plataforma inteligente de fitness que:
 
-El sistema combina tres piezas fundamentales:
+1. **Evalúa a los usuarios** mediante un cuestionario adaptativo de 65 preguntas (árbol de decisión dinámico)
+2. **Genera rutinas personalizadas** usando inteligencia artificial (LLM) basadas en el perfil del usuario
+3. **Ofrece chat interactivo** con 4 coaches especializados (musculación, bienestar, calistenia, running)
+4. **Proporciona un panel administrativo** para gestionar usuarios, ejercicios y configuraciones
 
-- Un **cuestionario adaptativo** (árbol de decisiones de 65 preguntas) que captura el perfil del usuario: objetivo, nivel de experiencia, equipamiento disponible, condiciones físicas, preferencias de entrenamiento.
-- Un **motor de generación de rutinas** que construye un prompt enriquecido con los datos del cuestionario y lo envía al microservicio de IA, que devuelve una rutina estructurada en JSON usando un LLM.
-- Un **módulo conversacional** que permite al usuario dialogar con su entrenador virtual. El historial de conversaciones se persiste en MySQL para mantener el contexto entre sesiones.
+El sistema se distribuye en **5 microservicios** independientes que se comunican entre sí, con una única frontera de seguridad: el API Gateway.
 
----
+### Casos de uso principales:
 
-## Arquitectura del sistema
+- **Usuario final (App MAUI)**:
+  1. Registrarse e iniciar sesión (autenticación vía Keycloak)
+  2. Responder el cuestionario de evaluación física
+  3. Recibir una rutina generada por IA
+  4. Chatear con entrenadores virtuales
 
-### Mapa de servicios
-
-```
-                         ┌──────────────────────────────┐
-                         │   Cliente (App .NET MAUI)    │
-                         └──────────────┬───────────────┘
-                                        │ HTTP :8080
-                                        ▼
-                         ┌──────────────────────────────┐
-                         │        API GATEWAY           │
-                         │    Spring Cloud Gateway      │  Puerto 8080
-                         │    (WebFlux — reactivo)      │
-                         └──────────────┬───────────────┘
-                Valida JWT              │  Distribuye según path
-          contra JWKS Keycloak         │
-                                        ├─── /ifit/api/v1/auth/**          (sin auth)
-                                        ├─── /ifit/api/v1/exercise-images/** (sin auth)
-                                        │            ▼
-                                        │      iFit API :8081
-                                        │
-                                        ├─── /ifit/api/v1/ronnie/**
-                                        ├─── /ifit/api/v1/serena/**
-                                        ├─── /ifit/api/v1/kael/**          (con auth)
-                                        ├─── /ifit/api/v1/eliud/**         (+ TokenRelay)
-                                        ├─── /ifit/api/v1/messages/**
-                                        │            ▼
-                                        │      Ronnie API :8082
-                                        │
-                                        └─── /ifit/api/v1/**               (con auth)
-                                                     ▼                    (+ TokenRelay)
-                                               iFit API :8081
-
-┌─────────────────────┐         ┌──────────────────────────────────────────┐
-│   EUREKA SERVER     │         │              KEYCLOAK                    │
-│   Puerto 8761       │◄────────│  Puerto 9090 — realm: ifit-realm         │
-│  Service Discovery  │  todos  │  OAuth2/OIDC, JWT RS256                  │
-│  (standalone)       │  se     │  accessToken: 300 s                      │
-└─────────────────────┘ regist. │  Client: springboot-ifit-client          │
-         ▲                      └──────────────────────────────────────────┘
-         │ lb://IFIT / lb://RONNIE         ▲
-         │ (resolución dinámica)           │ POST /token + Admin REST API
-                                           │
-          ┌────────────────────────────────┼───────────────────────────────┐
-          │           iFit API             │              Ronnie API       │
-          │           Puerto 8081          │              Puerto 8082      │
-          │   Spring Boot + JPA            │   Spring Boot + LangChain4j  │
-          │   MySQL DB: `ifit`             │   MySQL DB: `ronnie`         │
-          └────────────────────┬───────────┴─────────────┬────────────────┘
-                               │   RestTemplate           │
-                               │  POST /{coach}/          │
-                               │  generate-routine        │
-                               └──────────────────────────┘
-                                        │
-                          ┌─────────────┴──────────────┐
-                          │          Groq API           │
-                          │  llama-3.3-70b-versatile    │
-                          │  (chat + rutinas JSON)      │
-                          └─────────────────────────────┘
-```
-
-### Comunicación entre servicios
-
-| Origen | Destino | Protocolo | Propósito |
-|---|---|---|---|
-| API Gateway | iFit API | HTTP (`lb://IFIT` vía Eureka) | Enrutamiento de peticiones privadas y públicas de auth |
-| API Gateway | Ronnie API | HTTP (`lb://RONNIE` vía Eureka) | Enrutamiento de peticiones de chat y generación |
-| API Gateway | Keycloak | HTTPS (JWKS endpoint) | Descarga de clave pública RS256 para validar JWT |
-| iFit API | Keycloak | HTTP (REST Admin API) | Registro de usuarios, obtención de tokens, logout |
-| iFit API | Ronnie API | HTTP (RestTemplate) | Generación de rutinas con IA |
-| iFit API | Eureka | HTTP | Registro y descubrimiento de servicios |
-| Ronnie API | Eureka | HTTP | Registro y descubrimiento de servicios |
-| Ronnie API | Groq API | HTTPS | Inferencia LLM para chat y rutinas |
-
-### Flujo completo de una petición
-
-El siguiente ejemplo ilustra el camino completo de una petición autenticada (generar rutina):
-
-```
-1. Cliente envía:
-   POST /ifit/api/v1/routines/generate
-   Authorization: Bearer <JWT>
-
-2. API Gateway (puerto 8080):
-   - Verifica firma RS256 del JWT contra JWKS de Keycloak
-   - Verifica iss, exp, iat
-   - El path coincide con IFIT-PRIVATE → StripPrefix=3 elimina /ifit/api/v1
-   - TokenRelay copia el Bearer token en la petición interna
-   - Resuelve lb://IFIT → IP real de iFit API vía Eureka
-
-3. iFit API (puerto 8081) recibe:
-   POST /routines/generate
-   Authorization: Bearer <JWT>
-   - Spring Security valida el JWT de nuevo (Resource Server)
-   - RoutineService.generateRoutine() consulta las respuestas del cuestionario
-   - Construye el prompt con datos del usuario + catálogo de ejercicios
-   - IFitAIClient llama a Ronnie:
-     POST http://ronnie:8082/master/generate-routine
-     { memoryId, prompt, keycloakUserId }
-
-4. Ronnie API (puerto 8082):
-   - Master @AiService recibe el prompt
-   - LangChain4j construye el contexto con groqJsonChatLanguageModel
-   - Groq (llama-3.3-70b-versatile, temperature 0.3, json_object) genera la rutina
-   - Devuelve JSON estructurado { routineName, days: [...] }
-
-5. iFit API persiste la rutina en MySQL (DB: ifit)
-6. Responde al cliente con la rutina generada
-```
+- **Administrador (Panel Vaadin)**:
+  1. Gestionar catálogo de ejercicios
+  2. Crear y editar cuestionarios
+  3. Supervisar usuarios
+  4. Configurar coaches y niveles de experiencia
 
 ---
 
-## Microservicios
+## 🏗️ Arquitectura del Sistema
 
-### API Gateway — Puerto 8080
-
-Punto de entrada único a todo el sistema. Implementado con **Spring Cloud Gateway** en modo reactivo (WebFlux/Netty). Ningún microservicio interno es accesible directamente desde el exterior.
-
-**Rutas configuradas** (evaluadas en orden de prioridad):
-
-| ID de ruta | Paths | Destino | Auth | TokenRelay |
-|---|---|---|---|---|
-| `IFIT-PUBLIC` | `/ifit/api/v1/auth/**`, `/ifit/api/v1/exercise-images/**` | iFit API | No | No |
-| `RONNIE` | `/ifit/api/v1/{ronnie,serena,kael,eliud,messages}/**` | Ronnie API | Sí | Sí |
-| `IFIT-PRIVATE` | `/ifit/api/v1/**` (resto) | iFit API | Sí | Sí |
-
-Todas las rutas aplican `StripPrefix=3`, que elimina `/ifit/api/v1` del path antes de reenviar al servicio destino. Los microservicios solo ven sus propias rutas (`/users`, `/routines`, `/ronnie/chat`, etc.) y no conocen el prefijo público.
-
-> Documentación detallada: [api-gateway/README.md](api-gateway/README.md)
-
----
-
-### Eureka Server — Puerto 8761
-
-Registro y descubrimiento de servicios (Netflix OSS, standalone). Todos los microservicios se registran al arrancar con su `spring.application.name`:
-
-| Servicio | Nombre en Eureka |
-|---|---|
-| API Gateway | `ApiGatewayService` |
-| iFit API | `IFIT` |
-| Ronnie API | `ronnie` |
-
-El API Gateway usa el esquema `lb://IFIT` y `lb://RONNIE` para resolver dinámicamente la IP y puerto reales sin URLs estáticas codificadas. Si un servicio escala a múltiples instancias, Eureka devuelve todas y el gateway balancea la carga.
-
----
-
-### iFit API — Puerto 8081
-
-Microservicio principal de negocio. Persiste en la base de datos `ifit` (MySQL).
-
-| Módulo | Responsabilidad |
-|---|---|
-| `auth` | Registro, login, logout, verificación de email, refresco de tokens |
-| `user` | CRUD de perfiles y niveles de experiencia (`ExperienceLevel`) |
-| `questionnaire` | Motor de árbol de decisiones (65 preguntas, 5 subtrees por coach) |
-| `training` | Rutinas, días de entrenamiento, ejercicios; cliente HTTP a Ronnie |
-| `exercises` | Catálogo de ejercicios disponibles para el LLM |
-| `coach` | Tipos de coach disponibles (`CoachModelType`) |
-| `notification` | Emails transaccionales (verificación de cuenta) |
-
-El módulo `training` contiene `IFitAIClient`, un cliente RestTemplate que llama a Ronnie en `/{coachType}/generate-routine` para la generación automática. `CoachType` es un enum (MASTER, RONNIE, SERENA, ELIUD, KAEL) que define el endpoint destino.
-
-> Documentación detallada: [ifit/README.md](ifit/README.md)
-
----
-
-### Ronnie API — Puerto 8082
-
-Microservicio de inteligencia artificial. Implementado con **LangChain4j**. Persiste el historial de conversaciones en la base de datos `ronnie` (MySQL).
-
-| Módulo | Responsabilidad |
-|---|---|
-| `master` | Genera rutinas en JSON a partir del prompt construido por iFit |
-| `ronnie` | Chat con el coach Ronnie (hipertrofia y fuerza) |
-| `serena` | Chat con la coach Serena (fitness femenino y bienestar) |
-| `kael` | Chat con el coach Kael (calistenia y fuerza funcional) |
-| `eliud` | Chat con el coach Eliud (running y cardio) |
-| `message` | Historial de conversaciones persistido por sesión de memoria |
-
-Cada coach es un `@AiService` de LangChain4j (`wiringMode=EXPLICIT`) respaldado por:
-- Un `groqChatLanguageModel` (temperature 0.5) para conversación fluida.
-- Un `groqJsonChatLanguageModel` (temperature 0.3, `json_object`) exclusivo de `Master` para generación estructurada.
-- Un `PersistentChatMemoryStore` sobre MySQL para memoria entre sesiones.
-- Un `EmbeddingStoreContentRetriever` (RAG) que inyecta la personalidad del coach desde un fichero `.txt` en cada mensaje.
-
-> Documentación detallada: [ronnie/README.md](ronnie/README.md)
-
----
-
-## Flujo principal de la aplicación
-
-1. **Registro y verificación.** El usuario se registra. iFit crea la cuenta en Keycloak y en MySQL de forma transaccional. Keycloak envía un código de verificación de 6 dígitos al email del usuario.
-
-2. **Login.** iFit llama al endpoint `grant_type=password` de Keycloak y devuelve el `access_token` (JWT RS256, 300 s de vida) y `refresh_token` al cliente.
-
-3. **Cuestionario adaptativo.** El usuario responde el cuestionario. Hay 65 preguntas organizadas en 5 sub-árboles: preguntas generales (Q1-Q13) comunes a todos los coaches, y un bloque específico por coach (Ronnie Q14-Q26, Serena Q27-Q39, Kael Q40-Q52, Eliud Q53-Q65). Cada opción determina la siguiente pregunta mediante `next_question_id`. Las preguntas sensibles (peso, lesiones) incluyen una opción "Prefiero no responder" que el sistema serializa como `[No respondida]` en el prompt.
-
-4. **Generación de rutina.** iFit construye el prompt con los datos del cuestionario + catálogo completo de ejercicios (`exercises.txt`) y llama a Ronnie vía RestTemplate. Ronnie devuelve la rutina en JSON. iFit la persiste y devuelve al cliente.
-
-5. **Chat con el entrenador.** El usuario puede chatear con cualquiera de los 4 coaches. El historial se mantiene por `memoryId` (identificador de conversación) y persiste entre sesiones en MySQL. El contexto de personalidad se inyecta en cada mensaje mediante RAG desde ficheros `.txt`.
-
----
-
-## Coaches de IA disponibles
-
-| Coach | Especialidad | Modelo de chat | Temperatura |
-|---|---|---|---|
-| **Master** | Entrenador general (solo generación de rutinas) | `groqJsonChatLanguageModel` | 0.3 |
-| **Ronnie** | Hipertrofia y fuerza muscular, alto volumen | `groqChatLanguageModel` | 0.5 |
-| **Eliud** | Running, cardio y rendimiento aeróbico | `groqChatLanguageModel` | 0.5 |
-| **Serena** | Fitness femenino, tonificación y bienestar | `groqChatLanguageModel` | 0.5 |
-| **Kael** | Calistenia y fuerza funcional sin equipamiento | `groqChatLanguageModel` | 0.5 |
-
-Todos usan el modelo `llama-3.3-70b-versatile` de Groq. Master usa `responseFormat("json_object")` para garantizar salida estructurada; los coaches de chat usan texto libre.
-
----
-
-## Seguridad y autenticación
-
-### Keycloak y el realm ifit-realm
-
-El servidor de identidad es **Keycloak 23.0**, configurado con el realm `ifit-realm`:
-
-| Parámetro | Valor |
-|---|---|
-| Realm | `ifit-realm` |
-| Algoritmo de firma | RS256 |
-| Vida del access token | 300 segundos (5 minutos) |
-| Client ID | `springboot-ifit-client` |
-| Client type | Confidential |
-| Direct Access Grants | Habilitado (`grant_type=password`) |
-| Roles | `user`, `admin` |
-
-El realm puede importarse directamente desde el fichero `ifit-realm-export.json` incluido en la raíz del proyecto, lo que evita la configuración manual.
-
-El JWKS endpoint de Keycloak es:
-```
-http://localhost:9090/realms/ifit-realm/protocol/openid-connect/certs
-```
-
-Spring Security lo descarga al arrancar y cachea la clave pública para validar tokens sin consultar Keycloak en cada petición.
-
-### Doble validación JWT
-
-El JWT se valida de forma independiente en dos puntos del sistema:
+### Componentes y cómo se relacionan
 
 ```
-1. API Gateway (Spring Cloud Gateway + SecurityConfig)
-   - Verifica firma RS256 contra JWKS de Keycloak
-   - Verifica iss, exp, iat
-   - Bloquea peticiones con token inválido/ausente (excepto rutas públicas)
+                      ┌──────────────────────────────────┐
+                      │  Cliente (App .NET MAUI)         │
+                      │  O Administrador (Vaadin)        │
+                      └──────────────┬────────────────────┘
+                                     │ HTTPS/JWT
+                                     ▼
+                      ┌──────────────────────────────────┐
+                      │  API GATEWAY (Puerto 8080)       │
+                      │  • Valida JWT tokens             │
+                      │  • Enruta peticiones              │
+                      │  • WebFlux (reactivo)             │
+                      └──────────────┬────────────────────┘
+                                     │
+                   ┌─────────────────┼─────────────────┐
+                   │                 │                 │
+                   ▼                 ▼                 ▼
+       ┌────────────────────┐  ┌─────────────┐  ┌──────────────────┐
+       │  IFIT (8081)       │  │ RONNIE(8082)│  │ ADMIN PANEL(8090)│
+       │  • Usuarios        │  │ • IA        │  │ • Gestión        │
+       │  • Cuestionarios   │  │ • Chat      │  │ • Panel web      │
+       │  • Rutinas         │  │ • Prompts   │  │ • Vaadin         │
+       └──────────┬─────────┘  └──────┬──────┘  └──────────────────┘
+                  │                   │
+       ┌──────────┴───────────────────┴──────────────┐
+       │  Consultan a Eureka (8761) para descubrirse │
+       │  Registran su nombre lógico (IFIT, RONNIE) │
+       └──────────────────────────────────────────────┘
 
-2. Microservicio destino (iFit o Ronnie)
-   - iFit: Spring Security como OAuth2 Resource Server
-   - Ronnie: JwtUtils.extractUserId() lee el claim 'sub' del Bearer token
-   - Cada servicio puede aplicar @PreAuthorize con sus propias reglas
+                            ↕ Persistencia
+
+       ┌──────────────────┐         ┌──────────────────┐
+       │  MySQL IFIT      │         │  MySQL RONNIE    │
+       │  • users         │         │  • message       │
+       │  • questionnaire │         │    (chat history)│
+       │  • routine       │         │                  │
+       │  • exercise      │         │                  │
+       └──────────────────┘         └──────────────────┘
+
+       ┌──────────────────────────────────────────────┐
+       │  KEYCLOAK (8761) — Autenticación            │
+       │  • OAuth2 / OpenID Connect                   │
+       │  • Emite JWT tokens firmados                 │
+       │  • Realm: ifit-realm                         │
+       └──────────────────────────────────────────────┘
 ```
 
-Esta arquitectura de defensa en profundidad garantiza que aunque un atacante bypassease el gateway, los microservicios internos seguirían rechazando tokens inválidos.
-
-### Flujo de autenticación completo
+### Flujo completo de una petición (paso a paso)
 
 ```
-Registro:
-  POST /ifit/api/v1/auth/register (público)
-    → iFit crea usuario en Keycloak (Admin REST API)
-    → iFit guarda perfil en MySQL (DB: ifit)
-    → Si Keycloak falla → rollback en MySQL (@Transactional)
-    → Keycloak envía email con código de 6 dígitos
+1. USUARIO SE AUTENTICA
+   Cliente → Keycloak: POST /auth/login {email, password}
+   Keycloak → Cliente: JWT token firmado con RSA
 
-  POST /ifit/api/v1/auth/verify (público)
-    → iFit valida el código y activa la cuenta en Keycloak
+2. USUARIO COMPLETA EL CUESTIONARIO
+   Cliente → Gateway: POST /ifit/api/v1/questionnaires/{userId}/start/{qId}
+   Gateway valida JWT → reenvía a IFIT (con el token)
+   IFIT guarda sesión → retorna primera pregunta
 
-Login:
-  POST /ifit/api/v1/auth/login (público)
-    → iFit llama a Keycloak: grant_type=password
-    → Keycloak devuelve { access_token, refresh_token, expires_in }
-    → iFit lo reenvía al cliente (sin almacenar tokens)
+   (Cliente responde cada pregunta...)
+   Cliente → Gateway: POST /ifit/api/v1/questionnaires/responses/{id}/answer
+   Gateway → IFIT → valida y retorna siguiente pregunta
 
-Peticiones autenticadas:
-  Authorization: Bearer <access_token>
-    → Gateway valida → TokenRelay → microservicio destino
-    → Microservicio valida de nuevo → procesa la petición
+   (Ciclo hasta que no hay más preguntas)
 
-Refresco:
-  POST /ifit/api/v1/auth/refresh
-    → iFit llama a Keycloak con el refresh_token
-    → Devuelve nuevo access_token al cliente
+3. GENERACIÓN DE RUTINA CON IA
+   Cliente → Gateway: POST /ifit/api/v1/routines/generate
+                      {userId, responseId, coachType}
+   
+   Gateway → IFIT: extrae respuestas del cuestionario
+   IFIT → Ronnie: POST /ronnie/generate-routine 
+                  {prompt con perfil + respuestas + catálogo de ejercicios}
+   
+   Ronnie (LangChain4j) → Groq API: procesa con LLM
+   Groq → Ronnie: JSON estructurado de rutina
+   
+   Ronnie → IFIT: retorna rutina en JSON
+   IFIT reconcilia nombres → retorna al Cliente
 
-Logout:
-  POST /ifit/api/v1/auth/logout
-    → iFit llama a Keycloak para invalidar la sesión
+4. CHAT CON ENTRENADOR
+   Cliente → Gateway: POST /ifit/api/v1/ronnie/chat
+                      {memoryId, message, userId}
+   
+   Gateway → Ronnie: Ronnie carga historial de MySQL
+   Ronnie (LangChain4j) → Groq: procesa con LLM + RAG
+   Groq → Ronnie: respuesta del coach
+   
+   Ronnie persiste en MySQL → retorna al Cliente
 ```
 
 ---
 
-## Base de datos
-
-El proyecto utiliza **dos bases de datos MySQL independientes**, creadas automáticamente por `init-db.sql` al levantar el contenedor de MySQL:
-
-| Base de datos | Servicio propietario | Contenido |
-|---|---|---|
-| `ifit` | iFit API | Usuarios, cuestionarios, respuestas, rutinas, ejercicios, coaches |
-| `ronnie` | Ronnie API | Historial de mensajes, tipos de mensaje (`user`, `ai`, `system`) |
-
-Cada microservicio accede exclusivamente a su propia base de datos. No hay acceso cruzado ni esquema compartido.
-
-**Notas de inicialización:**
-- iFit: `spring.sql.init.mode=always` ejecuta `data.sql` en cada arranque, que contiene los INSERTs del catálogo de preguntas y ejercicios. Los INSERTs usan `ON DUPLICATE KEY UPDATE` para ser idempotentes.
-- Ronnie: `data.sql` borra y recrea los tipos de mensaje (`user`, `ai`, `system`) en cada arranque. Solo afecta a la tabla de tipos, no al historial de conversaciones.
-
----
-
-## Tecnologías
-
-| Capa | Tecnología |
-|---|---|
-| Lenguaje | Java 21 |
-| Framework | Spring Boot 3.4.4 |
-| Arquitectura | Spring Cloud 2025.0.0 (Gateway, Eureka/Netflix OSS) |
-| Reactivo | Spring WebFlux, Project Reactor, Netty |
-| Seguridad | Keycloak 23.0 (OAuth2/OIDC), Spring Security, JWT RS256 |
-| IA / LLM | LangChain4j, Groq API (`llama-3.3-70b-versatile`), Ollama (local) |
-| RAG | LangChain4j InMemoryEmbeddingStore, EmbeddingStoreContentRetriever |
-| Persistencia | Spring Data JPA, Hibernate, MySQL 8.0 |
-| HTTP interno | RestTemplate (IFit → Ronnie) |
-| Documentación API | SpringDoc OpenAPI 3 (Swagger UI) |
-| Emails | Spring Mail |
-| Contenedores | Docker, Docker Compose |
-| Build | Maven (Maven Wrapper incluido) |
-
----
-
-## Estructura del proyecto
+## 🗂️ Estructura del Proyecto
 
 ```
 ifit/
-├── docker-compose.yml          # Solo MySQL (3306) y Keycloak (9090) activos por defecto
-├── init-db.sql                 # Crea las bases de datos `ifit` y `ronnie`
-├── ifit-realm-export.json      # Exportación del realm Keycloak — importar para evitar config manual
+├── docker-compose.yml          # Infraestructura DOCKERIZADA (MySQL + Keycloak únicamente)
+├── init-db.sql                 # Script de creación de esquemas (ejecutado automáticamente)
+├── ifit-realm-export.json      # Configuración del realm de Keycloak (importar manualmente)
 │
-├── api-gateway/                # Spring Cloud Gateway (WebFlux reactivo) — Puerto 8080
-│   └── src/main/
-│       ├── java/.../config/
-│       │   └── SecurityConfig.java      # @EnableWebFluxSecurity, OAuth2 Resource Server
-│       └── resources/
-│           └── application.yaml         # Rutas IFIT-PUBLIC, RONNIE, IFIT-PRIVATE
+├── api-gateway/                # Punto de entrada único (Puerto 8080) — Ejecutar con ./mvnw
+│   ├── README.md               → Detalles sobre WebFlux, OAuth2, rutas
+│   └── src/main/resources/application.yaml
 │
-├── eureka-server/              # Netflix Eureka standalone — Puerto 8761
-│   └── src/main/resources/
-│       └── application.yml
+├── eureka-server/              # Registro de servicios (Puerto 8761) — Ejecutar con ./mvnw
+│   ├── README.md               → Detalles sobre descubrimiento
+│   └── src/main/resources/application.yml
 │
-├── ifit/                       # Microservicio principal — Puerto 8081
-│   └── src/main/java/.../
-│       └── modules/
-│           ├── auth/           # Login, registro, verificación, Keycloak REST
-│           ├── user/           # Perfiles y ExperienceLevel
-│           ├── questionnaire/  # Árbol de 65 preguntas con next_question_id
-│           ├── training/       # Rutinas, IFitAIClient, CoachType enum
-│           ├── exercises/      # Catálogo de ejercicios
-│           ├── coach/          # CoachModelType
-│           └── notification/   # Emails transaccionales
+├── ifit/                       # Lógica de negocio principal (Puerto 8081) — Ejecutar con ./mvnw
+│   ├── README.md               → Módulos: Auth, Questionnaire, Training, etc.
+│   ├── src/main/resources/application.properties
+│   └── src/main/resources/data.sql  # Datos iniciales (importados automáticamente)
 │
-└── ronnie/                     # Microservicio IA — Puerto 8082
-    └── src/main/
-        ├── java/.../
-        │   ├── configuration/
-        │   │   ├── GroqModelConfiguration.java          # groqChatLanguageModel + groqJsonChatLanguageModel
-        │   │   ├── EmbeddingStoreContentConfiguration.java  # RAG + PersistentChatMemoryStore
-        │   │   └── ChatContext.java                     # InheritableThreadLocal userId/coachName
-        │   └── modules/
-        │       ├── coach/
-        │       │   ├── master/     # @AiService para generación de rutinas en JSON
-        │       │   ├── ronnie/     # @AiService + RAG para chat
-        │       │   ├── serena/     # @AiService + RAG para chat
-        │       │   ├── kael/       # @AiService + RAG para chat
-        │       │   └── eliud/      # @AiService + RAG para chat
-        │       └── message/        # Persistencia del historial de conversaciones
-        └── resources/
-            └── langchain4j/
-                └── assistants-personality/
-                    ├── exercises.txt     # Catálogo JSON de ejercicios para el LLM
-                    ├── ronnie.txt        # Personalidad del coach Ronnie (RAG)
-                    ├── serena.txt        # Personalidad de Serena (RAG)
-                    ├── kael.txt          # Personalidad de Kael (RAG)
-                    └── eliud.txt         # Personalidad de Eliud (RAG)
+├── ronnie/                     # Motor de IA (Puerto 8082) — Ejecutar con ./mvnw
+│   ├── README.md               → LangChain4j, prompts, coaches, memoria
+│   ├── src/main/resources/application.properties
+│   └── src/main/resources/data.sql  # Tipos de mensajes (importados automáticamente)
+│
+└── admin-panel/                # Panel administrativo (Puerto 8090) — Ejecutar con ./mvnw
+    ├── README.md               → Vaadin, seguridad, vistas
+    └── src/main/resources/application.properties
+```
+
+**Nota sobre Docker:**
+- ✅ **Dockerizados**: MySQL (contenedor `ifit-mysql`) y Keycloak (contenedor `keycloak-ifit`)
+- ❌ **NO dockerizados**: Todos los microservicios (Eureka, Gateway, IFIT, Ronnie, Admin Panel)
+  - Se ejecutan directamente con `./mvnw spring-boot:run` en tu máquina
+  - Esto facilita el desarrollo, debugging y hot-reload
+
+---
+
+## 🔑 Conceptos Clave
+
+Estos términos aparecen frecuentemente en la documentación. Aquí está su explicación simple:
+
+### Autenticación y Seguridad
+
+**Keycloak** — Servidor de identidades (¿Quién eres?)
+- Almacena usuarios y contraseñas de forma segura
+- Emite tokens JWT (credenciales digitales)
+- Implementa OAuth2 / OpenID Connect (estándares internacionales)
+- El gateway y los microservicios **validan** estos tokens, no los crean
+
+**JWT (JSON Web Token)** — Credencial digital
+- Token firmado criptográficamente con RSA
+- Contiene información del usuario (id, roles, email)
+- Se envía en cada petición: `Authorization: Bearer {token}`
+- No se puede falsificar sin la clave privada de Keycloak
+
+**Doble validación** — El token se valida en dos lugares:
+1. En el Gateway (frontera de seguridad)
+2. En cada microservicio (defensa en profundidad)
+
+### Microservicios y Comunicación
+
+**Eureka** — Guía telefónica de servicios
+- Cada microservicio al arrancar se registra: "Soy IFIT, estoy en puerto 8081"
+- El Gateway consulta Eureka: "¿Dónde está IFIT?" → "En 8081"
+- Permite que servicios se muevan sin cambiar configuración
+
+**WebFlux** — Modelo reactivo (no bloqueante)
+- El Gateway usa WebFlux en lugar de Servlet (más eficiente)
+- Puede manejar miles de conexiones con pocos hilos
+- Basado en Project Reactor y Netty
+
+**REST / HTTP** — Protocolo de comunicación entre servicios
+- IFIT llama a Ronnie mediante HTTP POST
+- Ronnie llama a Groq API mediante HTTPS
+
+### IA y Procesamiento
+
+**LangChain4j** — Framework para aplicaciones con IA
+- Simplifica la integración con LLMs (modelos de lenguaje)
+- Implementado en Ronnie
+- Gestiona prompts, memoria, RAG (búsqueda contextual)
+
+**LLM (Large Language Model)** — Inteligencia artificial
+- Groq API: modelos `llama-3.3-70b` (chat) y `openai/gpt-oss-120b` (rutinas)
+- Procesa el prompt (instrucción) y devuelve respuestas
+
+**RAG (Retrieval-Augmented Generation)** — IA contextualizada
+- Combina un LLM con una base de datos de conocimiento
+- Ronnie usa RAG en chat para dar respuestas específicas sobre fitness
+- No usa RAG en rutinas (menos necesario, más control)
+
+**Prompt** — Instrucción para la IA
+- Ejemplo: "Eres Ronnie, especialista en musculación. Genera una rutina para..."
+- El prompt incluye: perfil del usuario, respuestas del cuestionario, catálogo de ejercicios
+- Temperatura (0.3 = determinístico, 0.5 = variado): controla creatividad
+
+### Datos y Persistencia
+
+**Soft delete** — No eliminar, marcar como "desactivo"
+- `is_enabled = false` en lugar de `DELETE`
+- Preserva el historial
+
+**Transaccionalidad** — Atomicidad: todo o nada
+- Si algo falla, se deshace todo (rollback)
+- Ejemplo: si insertar usuario en MySQL falla, se revierte su creación en Keycloak
+
+### Interfaz de Usuario
+
+**Vaadin** — Framework para interfaces web en Java
+- Panel administrativo sin HTML/JS manual
+- Todo se escribe en Java
+- Tema `ifit-admin` en variante oscura
+
+---
+
+## 🔄 Cómo Interactúan los Módulos
+
+### Ciclo completo: Usuario nuevo
+
+```
+Usuario descarga App MAUI
+  ↓
+MÓDULO: api-gateway
+  ├─ Valida que sea ruta pública (/auth/register)
+  ├─ Permite sin JWT
+  └─ Reenvia a IFIT
+
+MÓDULO: ifit (AUTH)
+  ├─ POST /auth/register recibe: {name, email, password}
+  ├─ Llama a Keycloak: "Crea usuario"
+  ├─ Keycloak devuelve OK
+  ├─ IFIT inserta en su BD
+  ├─ Envía email de verificación (código 6 dígitos)
+  └─ Retorna: {userId, email}
+
+Usuario recibe email y verifica
+  ↓
+MÓDULO: api-gateway + ifit (AUTH)
+  ├─ POST /auth/verify {email, code}
+  ├─ IFIT verifica código en BD
+  ├─ Llama a Keycloak: "Emite token"
+  ├─ Keycloak devuelve JWT firmado
+  └─ Retorna: {accessToken, refreshToken}
+
+Usuario contesta cuestionario
+  ↓
+MÓDULO: api-gateway + ifit (QUESTIONNAIRE)
+  ├─ GET /questionnaires/coach/{id}/experience-level/{id}
+  ├─ IFIT busca cuestionario por coach + nivel
+  ├─ POST /questionnaires/{userId}/start/{qId}
+  ├─ IFIT crea sesión de cuestionario
+  └─ Retorna: pregunta 1 + opciones
+
+  (Usuario responde cada pregunta...)
+  ├─ POST /questionnaires/responses/{id}/answer
+  ├─ IFIT guarda respuesta
+  ├─ Retorna: siguiente pregunta (o fin si no hay más)
+
+Usuario genera rutina
+  ↓
+MÓDULO: ifit (TRAINING) → ronnie (ROUTINE GENERATION)
+  ├─ POST /routines/generate {userId, responseId, coachType}
+  ├─ IFIT obtiene resumen del cuestionario
+  ├─ IFIT construye prompt: perfil + respuestas + catálogo de ejercicios
+  ├─ IFIT llama a Ronnie: POST /ronnie/generate-routine
+  ├─ Ronnie (LangChain4j) → Groq LLM
+  ├─ Groq procesa y retorna JSON estructurado
+  ├─ Ronnie retorna a IFIT
+  ├─ IFIT reconcilia nombres de ejercicios con catálogo
+  └─ Retorna: rutina preview (sin guardar aún)
+
+Usuario guarda rutina (opcional)
+  ↓
+MÓDULO: ifit (TRAINING)
+  ├─ POST /routines {userId, description, days[]}
+  ├─ IFIT guarda Routine + RoutineDay + RoutineExercise en BD
+  └─ Retorna: rutina guardada con ID
+
+Usuario chatea con coach
+  ↓
+MÓDULO: api-gateway + ronnie (CHAT)
+  ├─ POST /ifit/api/v1/ronnie/chat {memoryId, message}
+  ├─ Ronnie carga últimas 10 mensajes de MySQL (ventana deslizante)
+  ├─ Ronnie (LangChain4j) + RAG → Groq LLM
+  ├─ Groq devuelve respuesta
+  ├─ Ronnie persiste en MySQL
+  └─ Retorna: respuesta del coach
+```
+
+### Acceso administrativo
+
+```
+Admin abre panel Vaadin
+  ↓
+MÓDULO: admin-panel (LoginView)
+  ├─ Admin ingresa credenciales
+  ├─ Calls AuthService
+  └─ RestClient hace POST al Gateway: /ifit/api/v1/auth/login
+
+MÓDULO: api-gateway + ifit (AUTH)
+  ├─ Valida contra Keycloak
+  ├─ Verifica que admin tenga rol 'admin_client_role'
+  └─ Retorna: JWT token
+
+Admin gestiona cuestionarios
+  ↓
+MÓDULO: admin-panel (QuestionnairesView)
+  ├─ GET /ifit/api/v1/questionnaires
+  ├─ RestClient (con JWT en header) → Gateway
+  ├─ Gateway valida JWT → reenvía a IFIT
+  ├─ IFIT obtiene de BD → retorna lista
+  └─ Vaadin renderiza tabla
+
+Admin crea nuevo cuestionario
+  ├─ POST /ifit/api/v1/questionnaires
+  ├─ IFIT inserta en BD
+  ├─ Retorna: cuestionario creado
+  └─ Vaadin muestra confirmación
 ```
 
 ---
 
-## Instalación y puesta en marcha
+## 🛠️ Tecnologías Utilizadas
+
+| Componente | Tecnología | Por qué |
+|---|---|---|
+| **Lenguaje** | Java 21 | Type-safe, productivo, buen ecosistema |
+| **Framework Base** | Spring Boot 3.5.7 | Estándar de la industria, excelente documentación |
+| **Orquestación en Contenedores** | Docker / Docker Compose | Reproducibilidad, facilita desarrollo y deploy |
+| **Autenticación** | Keycloak 23.0 | OAuth2/OpenID estándar, gestión centralizada de usuarios |
+| **Persistencia** | MySQL 8.0 + JPA/Hibernate | Relacional, ACID, confiable |
+| **Punto de Entrada** | Spring Cloud Gateway | WebFlux reactivo, eficiente, único acceso |
+| **Descubrimiento** | Spring Cloud Eureka | Service mesh descentralizado, registro dinámico |
+| **IA** | LangChain4j + Groq | Integración sencilla con LLMs, prompts versionables |
+| **Interfaz Admin** | Vaadin Flow 24.8 | Todo en Java, sin HTML/JS manual |
+
+---
+
+## ⚙️ Guía Completa de Configuración desde Cero
+
+Esta es una guía **MEGA detallada** para arrancar iFit desde cero, incluyendo la configuración de Keycloak, bases de datos y todos los microservicios. Si algún día tienes que tirar de aquí y no recuerdas cómo hacerlo, sigue exactamente estos pasos.
 
 ### Requisitos previos
 
-- Docker y Docker Compose
-- Java 21 y Maven 3.9+ (para ejecutar los microservicios en local)
-- API Key de Groq (o Ollama instalado localmente para el modo offline)
+- **Docker Desktop** (para MySQL y Keycloak únicamente)
+- **Java Development Kit (JDK) 21** o superior
+- **Maven 3.9+** (o usa los Maven Wrappers: `./mvnw`)
+- **Variable de entorno `GROQ_API_KEY`** (obtén en https://console.groq.com)
 
-### Arranque con Docker Compose
-
-El `docker-compose.yml` levanta únicamente **MySQL** y **Keycloak** por defecto. El resto de servicios están comentados para permitir ejecutarlos en local durante el desarrollo.
+### PASO 1: Levantar la Infraestructura (MySQL + Keycloak)
 
 ```bash
-# 1. Clonar el repositorio
-git clone <url-del-repositorio>
-cd ifit
-
-# 2. Levantar la infraestructura base
+# En la raíz del proyecto
 docker-compose up -d
-
-# Servicios activos:
-#   MySQL    → localhost:3306  (crea automáticamente las DBs `ifit` y `ronnie`)
-#   Keycloak → localhost:9090  (admin: admin / admin)
 ```
 
-**Configurar Keycloak** (una sola vez): En el panel de administración (`http://localhost:9090`), importar el fichero `ifit-realm-export.json` para crear el realm `ifit-realm` con toda la configuración preestablecida (roles, cliente, algoritmo RS256, tiempos de vida de tokens).
+Esto levanta **dos contenedores ÚNICAMENTE**:
+- **MySQL**: `localhost:3306` con usuario `root` / contraseña `root`
+- **Keycloak**: `http://localhost:9090` con usuario `admin` / contraseña `admin`
 
-### Ejecución en local
-
+**Verifica que estén corriendo:**
 ```bash
-# Terminal 1 — Eureka Server
+docker ps
+# Deberías ver dos contenedores: mysql y keycloak
+```
+
+**Espera a que ambos estén listos** (~30-45 segundos). Si ves errores de conexión en los siguientes pasos, espera más.
+
+### PASO 2: Importar el Realm de Keycloak y Obtener Credenciales
+
+**A. Accede a Keycloak:**
+1. Abre tu navegador: `http://localhost:9090`
+2. Haz clic en "Administration Console"
+3. Ingresa: usuario `admin`, contraseña `admin`
+
+**B. Importa el realm `ifit-realm`:**
+1. En la esquina superior izquierda, verás "Master" (realm actual)
+2. Haz clic → "Create realm" (o busca opción de importar)
+3. Alterna a "Import" si está disponible, o:
+   - Ve a la sección "Realms" (izquierda)
+   - Haz clic en el icono ⚙️ (importar)
+   - Selecciona el archivo `ifit-realm-export.json` del repositorio
+   - Haz clic en "Create"
+
+**C. Verifica que se creó correctamente:**
+- En la esquina superior izquierda debe aparecerte "ifit-realm"
+- Ve a "Clients" (izquierda) y verás `springboot-ifit-client`
+
+**D. Obtén las credenciales de Keycloak para los microservicios:**
+
+Vamos a extraer el `client-secret` que necesitan IFIT y Ronnie:
+
+1. **En Keycloak**, ve a: **Realm: ifit-realm** → **Clients** → `springboot-ifit-client`
+2. Abre la pestaña **Credentials**
+3. Copia el valor en **Client Secret** (es un string largo)
+   - Este es tu `KEYCLOAK_CLIENT_SECRET`
+
+4. Ten a mano estos valores:
+   - `KEYCLOAK_CLIENT_ID`: `springboot-ifit-client`
+   - `KEYCLOAK_CLIENT_SECRET`: (lo que copiaste arriba)
+   - `KEYCLOAK_REALM`: `ifit-realm`
+   - `KEYCLOAK_SERVER_URL`: `http://localhost:9090`
+
+### PASO 3: Verificar que MySQL Creó las Bases de Datos
+
+**A. Conéctate a MySQL:**
+```bash
+mysql -h localhost -u root -p
+# Contraseña: root
+```
+
+**B. Verifica que existen las bases de datos:**
+```sql
+SHOW DATABASES;
+-- Deberías ver: ifit, ronnie, y las demás por defecto (mysql, information_schema, etc.)
+```
+
+**C. Verifica las tablas (opcional ahora, se crearán al arrancar los servicios):**
+```sql
+USE ifit;
+SHOW TABLES;
+-- Estará vacío por ahora, las tablas se crean automáticamente con Hibernate
+```
+
+**D. Sal de MySQL:**
+```sql
+EXIT;
+```
+
+### PASO 4: Configurar Variables de Entorno
+
+**A. Obtén tu API Key de Groq:**
+1. Ve a https://console.groq.com
+2. Inicia sesión (crea cuenta si no tienes)
+3. Ve a "API Keys"
+4. Copia una key activa (empieza con `gsk_`)
+
+**B. Configura la variable de entorno:**
+
+**En Linux/Mac:**
+```bash
+export GROQ_API_KEY="gsk_Tu_API_Key_Aqui"
+```
+
+**En Windows (PowerShell):**
+```powershell
+$env:GROQ_API_KEY = "gsk_Tu_API_Key_Aqui"
+```
+
+**En Windows (Command Prompt):**
+```cmd
+set GROQ_API_KEY=gsk_Tu_API_Key_Aqui
+```
+
+**Verifica que se configuró:**
+```bash
+# Linux/Mac
+echo $GROQ_API_KEY
+
+# Windows PowerShell
+echo $env:GROQ_API_KEY
+
+# Windows CMD
+echo %GROQ_API_KEY%
+```
+
+### PASO 5: Arrancar los Microservicios (EN ORDEN)
+
+**Abre 5 terminales independientes** y ejecuta estos comandos EN ESTE ORDEN EXACTO:
+
+**Terminal 1 - EUREKA SERVER (espera 5 segundos antes de pasar a la siguiente):**
+```bash
 cd eureka-server
 ./mvnw spring-boot:run
+# Deberías ver: "Started EurekaServerApplication"
+```
 
-# Terminal 2 — API Gateway
+**Terminal 2 - API GATEWAY (espera 5 segundos):**
+```bash
 cd api-gateway
 ./mvnw spring-boot:run
+# Deberías ver: "Started ApiGatewayServiceApplication"
+```
 
-# Terminal 3 — iFit API
+**Terminal 3 - IFIT (espera 5 segundos):**
+```bash
 cd ifit
 ./mvnw spring-boot:run
+# Deberías ver: "Started IfitApplication"
+# Verás líneas sobre Hibernate creando tablas: "Creating tables for key binding"
+```
 
-# Terminal 4 — Ronnie API (requiere GROQ_API_KEY en el entorno o en application.properties)
+**Terminal 4 - RONNIE (requiere la variable GROQ_API_KEY):**
+```bash
 cd ronnie
 ./mvnw spring-boot:run
+# Deberías ver: "Started RonnieApplication"
+# Verá tablas siendo creadas también
 ```
 
-### Orden de arranque recomendado
-
-El orden importa porque cada servicio depende de los anteriores para registrarse correctamente:
-
-```
-1. MySQL          → localhost:3306   (DB ifit + DB ronnie se crean al arrancar)
-2. Keycloak       → localhost:9090   (debe estar activo antes de que iFit valide tokens)
-3. Eureka Server  → localhost:8761   (debe estar activo antes de que los demás se registren)
-4. API Gateway    → localhost:8080   (necesita Eureka para resolver lb:// y Keycloak para JWKS)
-5. iFit API       → localhost:8081   (se registra en Eureka; necesita Keycloak y MySQL)
-6. Ronnie API     → localhost:8082   (se registra en Eureka; necesita MySQL y Groq API Key)
+**Terminal 5 - ADMIN PANEL (opcional):**
+```bash
+cd admin-panel
+./mvnw spring-boot:run
+# Deberías ver: "Started AdminPanelApplication"
+# Se abrirá automáticamente un navegador en http://localhost:8090
 ```
 
-> El gateway puede arrancar antes que iFit y Ronnie — Eureka actualizará el registro cuando estén disponibles. Pero Keycloak y Eureka deben estar activos antes de que el gateway inicie.
+### PASO 6: Verificar que Todo Está Corriendo
+
+**A. Eureka Dashboard (para ver servicios registrados):**
+- Abre: http://localhost:8761
+- Deberías ver:
+  - `APIGATEWAYSERVICE` en estado UP
+  - `IFIT` en estado UP
+  - `RONNIE` en estado UP
+
+**B. Swagger de IFIT (documentación de API):**
+- Abre: http://localhost:8081/swagger-ui.html
+- Deberías ver todos los endpoints documentados
+
+**C. Swagger de Ronnie (documentación de IA):**
+- Abre: http://localhost:8082/swagger-ui.html
+
+**D. Admin Panel (Vaadin):**
+- Si ejecutaste Terminal 5, se abrió automáticamente en: http://localhost:8090
+- Si no, abre manualmente
+
+### PASO 7: Cargar Datos Iniciales (Cuestionarios, Coaches, Ejercicios)
+
+**Los datos se cargan automáticamente PERO solo si es la primera vez:**
+
+Cuando IFIT arranca, ejecuta automáticamente `src/main/resources/data.sql`, que inserta:
+- Niveles de experiencia (Principiante, Intermedio, Avanzado)
+- Coaches (Ronnie, Serena, Kael, Eliud)
+- Preguntas del cuestionario (árbol de decisión completo)
+- Opciones de respuesta
+- Cuestionarios predefinidos
+
+**Para Ronnie:**
+Cuando Ronnie arranca, ejecuta automáticamente `src/main/resources/data.sql`, que inserta:
+- Tipos de mensajes (user, ai, system)
+
+**Si necesitas resetear los datos:**
+```sql
+-- Conéctate a MySQL
+mysql -h localhost -u root -p
+
+USE ifit;
+-- Borra datos pero mantiene tablas
+DELETE FROM user_answer;
+DELETE FROM questionnaire_response;
+DELETE FROM questionnaire;
+DELETE FROM question_option;
+DELETE FROM question;
+-- etc. (cuidado, también borra usuarios)
+
+-- Luego reinicia IFIT y se recargará data.sql
+```
+
+### PASO 8: Crear un Usuario de Prueba
+
+**A. Usa el endpoint de registro:**
+```bash
+curl -X POST http://localhost:8080/ifit/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Juan García",
+    "email": "test@example.com",
+    "password": "Password123!"
+  }'
+```
+
+**Respuesta esperada:**
+```json
+{
+  "userId": 1,
+  "email": "test@example.com",
+  "message": "User registered successfully. Check your email for verification code."
+}
+```
+
+**B. Recibirás un código de verificación en la consola (en desarrollo, los emails no se envían):**
+- Revisa los logs de IFIT, busca un código como `123456`
+
+**C. Verifica el email:**
+```bash
+curl -X POST http://localhost:8080/ifit/api/v1/auth/verify \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test@example.com",
+    "verificationCode": "123456"
+  }'
+```
+
+**Respuesta esperada:**
+```json
+{
+  "accessToken": "eyJhbGc...",
+  "refreshToken": "eyJhbGc...",
+  "keycloakUserId": "uuid-aqui"
+}
+```
+
+Guarda el `accessToken`, lo usarás en peticiones futuras.
+
+### PASO 9: Testear el Flujo Completo
+
+**A. Obtener lista de cuestionarios:**
+```bash
+curl -X GET http://localhost:8080/ifit/api/v1/questionnaires \
+  -H "Authorization: Bearer TU_ACCESS_TOKEN"
+```
+
+**B. Iniciar un cuestionario:**
+```bash
+curl -X POST http://localhost:8080/ifit/api/v1/questionnaires/1/start/1 \
+  -H "Authorization: Bearer TU_ACCESS_TOKEN"
+```
+
+**C. Responder una pregunta:**
+```bash
+curl -X POST http://localhost:8080/ifit/api/v1/questionnaires/responses/1/answer \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TU_ACCESS_TOKEN" \
+  -d '{
+    "questionId": 1,
+    "selectedOptionId": 1,
+    "additionalText": null
+  }'
+```
+
+### PASO 10: Troubleshooting
+
+| Problema | Causa | Solución |
+|---|---|---|
+| `Connection refused: localhost:3306` | MySQL no está corriendo | `docker-compose ps` y `docker-compose up -d` |
+| `Connection refused: localhost:9090` | Keycloak no está listo | Espera 30-45 seg más y recarga |
+| `unauthorized_client` en login | El realm no importó bien | Reimporta `ifit-realm-export.json` en Keycloak |
+| IFIT no ve a Ronnie | Eureka no se registró | Verifica que Eureka está en `localhost:8761` |
+| `401 Unauthorized` en peticiones | Token inválido o expirado | Obtén uno nuevo con `/auth/login` |
+| Ronnie lanza error `GROQ_API_KEY not found` | Variable de entorno no configurada | Configura `GROQ_API_KEY` antes de `./mvnw spring-boot:run` |
+| Admin Panel no carga | Gateway no está activo | Verifica que API Gateway está en `localhost:8080` |
 
 ---
 
-## Variables de entorno
+## 📋 Checklist de Arranque Rápido
 
-### iFit API
+Si necesitas arrancar rápido sin leer todo:
 
-| Variable | Descripción | Ejemplo |
-|---|---|---|
-| `SPRING_DATASOURCE_URL` | URL de conexión a MySQL | `jdbc:mysql://localhost:3306/ifit` |
-| `SPRING_DATASOURCE_USERNAME` | Usuario de base de datos | `root` |
-| `SPRING_DATASOURCE_PASSWORD` | Contraseña de base de datos | `root` |
-| `KEYCLOAK_TOKEN-URL` | Endpoint de tokens de Keycloak | `http://localhost:9090/realms/ifit-realm/protocol/openid-connect/token` |
-| `KEYCLOAK_ADMIN-URL` | URL de la API de administración | `http://localhost:9090` |
-| `RONNIE_SERVICE_URL` | URL base del microservicio Ronnie | `http://localhost:8082` |
-| `EUREKA_CLIENT_SERVICEURL_DEFAULTZONE` | URL del servidor Eureka | `http://localhost:8761/eureka/` |
+- [ ] 1. `docker-compose up -d` (MySQL + Keycloak)
+- [ ] 2. Accede a `http://localhost:9090` → importa `ifit-realm-export.json`
+- [ ] 3. En Keycloak, obtén `Client Secret` de `springboot-ifit-client`
+- [ ] 4. Configura `export GROQ_API_KEY="gsk_..."`
+- [ ] 5. Terminal 1: `cd eureka-server && ./mvnw spring-boot:run`
+- [ ] 6. Terminal 2: `cd api-gateway && ./mvnw spring-boot:run`
+- [ ] 7. Terminal 3: `cd ifit && ./mvnw spring-boot:run`
+- [ ] 8. Terminal 4: `cd ronnie && ./mvnw spring-boot:run`
+- [ ] 9. Terminal 5: `cd admin-panel && ./mvnw spring-boot:run` (opcional)
+- [ ] 10. Verifica en `http://localhost:8761` que todos están en UP
+- [ ] 11. Listo para usarlos
 
-### Ronnie API
-
-| Variable | Descripción | Ejemplo |
-|---|---|---|
-| `GROQ_API_KEY` | API Key de Groq — **nunca hardcodear en ficheros versionados** | `gsk_...` |
-| `GROQ_BASE-URL` | URL base de la API de Groq | `https://api.groq.com/openai/v1` |
-| `GROQ_MODEL-NAME` | Modelo de lenguaje a usar | `llama-3.3-70b-versatile` |
-| `OLLAMA_BASE-URL` | URL base de Ollama (modo local) | `http://localhost:11434` |
-| `SPRING_DATASOURCE_URL` | URL de conexión a MySQL | `jdbc:mysql://localhost:3306/ronnie` |
 
 ---
 
-## Endpoints principales
+## 📖 Documentación de Cada Módulo
 
-La documentación completa de la API está disponible en **Swagger UI** una vez arrancados los servicios:
+Cada módulo tiene su propio README con detalles técnicos profundos:
 
-- **iFit API:** `http://localhost:8081/swagger-ui.html`
-- **Ronnie API:** `http://localhost:8082/swagger-ui.html`
+### 🧠 [ifit/README.md](ifit/README.md) — Lógica de Negocio
 
-Todos los endpoints se exponen al cliente con el prefijo `/ifit/api/v1/` a través del API Gateway (`http://localhost:8080/ifit/api/v1/...`).
+Cubre los módulos internos:
+- **Auth** — Integración con Keycloak, flujos de registro, login, token refresh
+- **Questionnaire** — Árbol de decisión adaptativo, sesiones de usuario, validaciones
+- **Training** — Generación de rutinas, orquestación hacia Ronnie, persistencia
+- **User** — Gestión de usuarios, niveles de experiencia
+- **Coach** — Tipos de coaches (Ronnie, Serena, Kael, Eliud)
+- **Exercises** — Catálogo de ejercicios
+- **Notification** — Envío de emails
 
-### Autenticación (públicos, sin token)
+### 🤖 [ronnie/README.md](ronnie/README.md) — Motor de IA
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| `POST` | `/auth/register` | Registro de nuevo usuario |
-| `POST` | `/auth/verify` | Verificar email con código de 6 dígitos |
-| `POST` | `/auth/login` | Login — devuelve access_token y refresh_token |
-| `POST` | `/auth/refresh` | Renovar access_token con refresh_token |
-| `POST` | `/auth/logout` | Cerrar sesión e invalidar la sesión en Keycloak |
+Cubre:
+- Configuración dual de modelos LLM (Llama 70B para chat, GPT-OSS 120B para rutinas)
+- LangChain4j y estructuras de prompts
+- Memoria conversacional persistente en MySQL
+- Los 4 coaches especializados (Ronnie, Serena, Kael, Eliud)
+- Endpoints de generación de rutinas y chat
 
-### Cuestionario
+### 🔀 [api-gateway/README.md](api-gateway/README.md) — Punto de Entrada
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| `GET` | `/questionnaires` | Listar cuestionarios disponibles |
-| `POST` | `/questionnaires/{id}/start` | Iniciar cuestionario (elige coach) |
-| `POST` | `/questionnaires/responses/{responseId}/answer` | Responder una pregunta |
-| `GET` | `/questionnaires/responses/{responseId}` | Consultar respuestas registradas |
+Cubre:
+- WebFlux y modelo reactivo
+- OAuth2 Resource Server
+- Validación de JWT contra Keycloak
+- StripPrefix y TokenRelay
+- Rutas configuradas (IFIT-PUBLIC, RONNIE, IFIT-PRIVATE)
+- Doble validación de tokens
 
-### Rutinas
+> Incluye un apéndice completo: [ANEXO_CONCEPTOS_OAUTH2_WEBFLUX.md](api-gateway/ANEXO_CONCEPTOS_OAUTH2_WEBFLUX.md)
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| `POST` | `/routines/generate` | Generar rutina con IA a partir de un cuestionario |
-| `POST` | `/routines` | Crear rutina manualmente |
-| `GET` | `/routines/user/{userId}` | Listar rutinas de un usuario |
-| `GET` | `/routines/{routineId}` | Obtener detalle de una rutina |
-| `PUT` | `/routines/{routineId}` | Actualizar rutina |
-| `DELETE` | `/routines/{routineId}` | Eliminar rutina |
+### 📍 [eureka-server/README.md](eureka-server/README.md) — Descubrimiento
 
-### Chat con coaches (enrutado a Ronnie API)
+Cubre:
+- Service discovery descentralizado
+- Registro dinámico de servicios
+- Dashboard web
+- Configuración del cliente en cada servicio
 
-| Método | Ruta | Descripción |
-|---|---|---|
-| `POST` | `/ronnie/chat` | Enviar mensaje al coach Ronnie |
-| `POST` | `/serena/chat` | Enviar mensaje a la coach Serena |
-| `POST` | `/kael/chat` | Enviar mensaje al coach Kael |
-| `POST` | `/eliud/chat` | Enviar mensaje al coach Eliud |
-| `GET` | `/messages/{memoryId}` | Obtener historial de una conversación |
-| `GET` | `/messages/max-memory-id` | Obtener el ID de conversación más reciente |
+### 🎨 [admin-panel/README.md](admin-panel/README.md) — Interfaz Administrativa
+
+Cubre:
+- Vaadin Flow y componentes UI
+- Vistas (usuarios, ejercicios, coaches, cuestionarios, rutinas)
+- Integración con Gateway mediante RestClient
+- Seguridad y sesión
 
 ---
 
-## Autor
+## 🚀 Decisiones Arquitectónicas Clave
+
+### Por qué 5 microservicios y no uno monolito
+
+- **Escalabilidad**: Ronnie (IA) puede escalarse independientemente
+- **Resiliencia**: Si Ronnie falla, IFIT sigue funcionando
+- **Equipos**: Diferentes equipos pueden trabajar en Ronnie, IFIT y admin-panel sin conflictos
+- **Despliegue**: Actualizar admin-panel no requiere redeploy de IFIT
+
+### Por qué WebFlux en el Gateway y Servlet en los demás
+
+- **Gateway**: Miles de conexiones concurrentes esperando respuestas de upstream → WebFlux reactivo es más eficiente
+- **IFIT/Ronnie**: Lógica sincrónica de negocio → Servlet (Spring Boot Web) es más sencillo de razonar
+
+### Por qué Keycloak centralizado
+
+- **Única fuente de verdad** para identidades
+- **Estándar OAuth2** — interoperable con otros sistemas
+- **No reinventar la rueda** — seguridad auditada por expertos
+
+### Por qué dos modelos LLM (Llama + GPT-OSS)
+
+- **Chat**: Llama 70B es más rápido y conversacional (temperatura 0.5)
+- **Rutinas**: GPT-OSS 120B es más determinístico y respeta el JSON (temperatura 0.3)
+- **Coste**: Menos dinero que usar GPT-4 para todo
+
+### Por qué RAG solo en chat
+
+- **Chat**: Necesita contexto sobre fitness → RAG ayuda
+- **Rutinas**: Puede ser más determinístico → RAG añade complejidad innecesaria
+
+---
+
+## 📊 Flujo de Datos
+
+```
+Usuario Final (App MAUI)
+  │
+  ├─→ Autentica → Keycloak emite JWT
+  │
+  ├─→ Completa cuestionario (65 preguntas)
+  │   IFIT.BD ← respuestas guardadas
+  │
+  ├─→ Genera rutina
+  │   IFIT obtiene perfil
+  │   IFIT construye prompt
+  │   IFIT → Ronnie → Groq LLM → JSON rutina
+  │   IFIT.BD ← rutina guardada
+  │
+  └─→ Chatea con coach
+      Ronnie carga historial de BD
+      Ronnie → Groq LLM (+ RAG contextual)
+      Ronnie.BD ← nuevo mensaje guardado
+
+Administrador (Panel Vaadin)
+  │
+  ├─→ Autentica → Keycloak valida rol admin
+  │
+  ├─→ Gestiona usuarios
+  │   IFIT.BD ← usuarios manipulados
+  │
+  ├─→ Gestiona cuestionarios
+  │   IFIT.BD ← cuestionarios editados
+  │
+  ├─→ Gestiona ejercicios
+  │   IFIT.BD ← catálogo actualizado
+  │
+  └─→ Gestiona coaches
+      IFIT.BD ← coaches activados/desactivados
+```
+
+---
+
+## 🔍 Troubleshooting Rápido
+
+| Problema | Causa Probable | Solución |
+|---|---|---|
+| "401 Unauthorized" al hacer login | Keycloak no está corriendo | `docker-compose ps` — asegura que keycloak esté en `Up` |
+| Gateway no ve IFIT/Ronnie | Eureka no está corriendo | Arranca eureka-server primero |
+| "Connection refused" desde Gateway a IFIT | Orden de arranque | Espera a que IFIT se registre en Eureka (~10 seg) |
+| Rutinas con ejercicios inventados | Modelo LLM incorrecto | Verifica `groq.routine-model-name=openai/gpt-oss-120b` en Ronnie |
+| Token vencido | JWT expirado | Usuario debe hacer login de nuevo (obtener nuevo token) |
+| Admin panel no carga | Gateway no está corriendo | Arranca: Gateway → IFIT → Admin Panel |
+
+---
+
+---
+
+## 📝 Notas Técnicas sobre Scripts SQL y Carga de Datos
+
+### Estructura de SQL en iFit
+
+El proyecto usa **Hibernate con `ddl-auto=update`**, lo que significa:
+
+1. **Creación de tablas**: Ocurre automáticamente cuando arranca IFIT o Ronnie
+   - `CREATE TABLE` solo ejecuta si la tabla no existe
+   - Cambios a esquemas existentes se adaptan automáticamente
+
+2. **Carga de datos iniciales**: Ocurre automáticamente después de crear tablas
+   - Archivo: `ifit/src/main/resources/data.sql`
+   - Se ejecuta UNA SOLA VEZ (usa `ON DUPLICATE KEY UPDATE` para evitar duplicados)
+   - Inserta: niveles, coaches, preguntas, opciones, cuestionarios
+
+3. **Para Ronnie**: Similar a IFIT
+   - Archivo: `ronnie/src/main/resources/data.sql`
+   - Inserta: tipos de mensajes (user, ai, system)
+
+### Archivos SQL Importantes
+
+| Archivo | Propósito | Ejecutado por | Cuándo |
+|---|---|---|---|
+| `init-db.sql` | Crear bases de datos `ifit` y `ronnie` | Docker (mysql init-script) | Al hacer `docker-compose up` |
+| `ifit/src/main/resources/data.sql` | Insertar datos iniciales (coaches, cuestionarios, etc.) | Hibernate/Spring | Al arrancar IFIT la primera vez |
+| `ronnie/src/main/resources/data.sql` | Insertar tipos de mensajes | Hibernate/Spring | Al arrancar Ronnie la primera vez |
+
+### Si Necesitas Resetear Datos
+
+**Opción 1: Reseteo suave (mantiene estructura):**
+```sql
+-- Conéctate a MySQL
+mysql -h localhost -u root -p
+
+-- Borra datos pero mantiene tablas
+USE ifit;
+TRUNCATE TABLE user_answer;
+TRUNCATE TABLE questionnaire_response;
+TRUNCATE TABLE routine_exercise;
+TRUNCATE TABLE routine_day;
+TRUNCATE TABLE routine;
+TRUNCATE TABLE questionnaire;
+TRUNCATE TABLE question_option;
+TRUNCATE TABLE question;
+-- ... (trunca más si necesitas)
+
+-- Luego reinicia IFIT y se recargará data.sql automáticamente
+```
+
+**Opción 2: Reseteo completo (borra todo, incluyendo usuarios):**
+```bash
+# Detén los contenedores
+docker-compose down
+
+# Borra los volúmenes de MySQL (CUIDADO: borra TODO)
+docker volume rm ifit_mysql_data  # Ajusta según tu docker-compose.yml
+
+# Levanta nuevamente
+docker-compose up -d
+
+# Luego arranca los microservicios, se crearán tablas y datos desde 0
+```
+
+### Flujo de Inicialización Cuando Arranca IFIT
+
+1. Spring Boot inicia
+2. Hibernate conecta a MySQL
+3. `spring.jpa.hibernate.ddl-auto=update` → crea/actualiza tablas
+4. `spring.sql.init.mode=always` → ejecuta `data.sql`
+5. Todas las inserciones usan `ON DUPLICATE KEY UPDATE`
+   - Si la fila YA EXISTE (por PK), la ACTUALIZA
+   - Si NO EXISTE, la INSERTA
+   - **Resultado**: Es seguro ejecutar varias veces sin duplicados
+
+### Dónde Están los Scripts SQL
+
+```
+ifit/
+├── src/main/resources/
+│   ├── data.sql                         # Datos de IFIT (coaches, cuestionarios, etc.)
+│   ├── application.properties           # Config de IFIT
+│   └── schema.sql                       # (Opcional, para definiciones personalizadas)
+
+ronnie/
+├── src/main/resources/
+│   ├── data.sql                         # Datos de Ronnie (tipos de mensaje)
+│   └── application.properties           # Config de Ronnie
+
+# En raíz del proyecto
+├── init-db.sql                          # Crear BBDD (ejecutado por docker-compose)
+└── ifit-realm-export.json               # Configuración de Keycloak (importar manualmente)
+```
+
+### Verificar que los Datos Se Cargaron Correctamente
+
+```bash
+# Conéctate a MySQL
+mysql -h localhost -u root -p
+# Contraseña: root
+
+# Verifica IFIT
+USE ifit;
+SELECT COUNT(*) FROM coachmodeltype;        # Deberías ver: 5 (Ronnie, Serena, Kael, Eliud, Default)
+SELECT COUNT(*) FROM experiencelevel;       # Deberías ver: 3 (Principiante, Intermedio, Avanzado)
+SELECT COUNT(*) FROM question;              # Deberías ver: 65 (todas las preguntas del árbol)
+SELECT COUNT(*) FROM questionnaire;         # Deberías ver: 9 (cuestionarios predefinidos)
+
+# Verifica Ronnie
+USE ronnie;
+SELECT COUNT(*) FROM message_type;          # Deberías ver: 3 (user, ai, system)
+```
+
+---
+
+## 📞 Autor
 
 **Juan García Candón**  
 Universidad de Cádiz — Escuela Superior de Ingeniería  
 Trabajo Final de Grado (TFG), 2024–2025
+
+**Última actualización**: Junio 2025  
+**Versión**: 3.2 (Con guía mega detallada de setup desde cero)
