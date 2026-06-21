@@ -1,0 +1,39 @@
+{
+  "name": "ifit-api-tests",
+  "version": "2.0.0",
+  "description": "Suite de tests funcionales E2E para iFit API",
+  "type": "module",
+  "scripts": {
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:watch": "vitest watch",
+    "test:api": "vitest run functional/api",
+    "test:auth": "vitest run functional/api/auth.spec.ts",
+    "test:users": "vitest run functional/api/users.spec.ts",
+    "test:ronnie": "vitest run functional/api/ronnie.spec.ts",
+    "test:ronnie:mock": "vitest run functional/api/ronnie.mock.spec.ts",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
+    "test:all": "npm run test:run -- --reporter=verbose"
+  },
+  "keywords": [
+    "testing",
+    "api",
+    "e2e",
+    "vitest",
+    "axios"
+  ],
+  "author": "Juan Garcia Candon",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@vitest/ui": "^1.1.0",
+    "@vitest/coverage-v8": "^1.1.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.1.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.5",
+    "dotenv": "^16.3.1"
+  }
+}

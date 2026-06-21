@@ -10,6 +10,7 @@ import org.springframework.web.client.RestClient;
 
 import com.uca.juangarcia.adminpanel.dto.CreateQuestionnaireRequestDto;
 import com.uca.juangarcia.adminpanel.dto.QuestionnaireDto;
+import com.uca.juangarcia.adminpanel.dto.QuestionnaireWithFirstQuestionDto;
 import com.uca.juangarcia.adminpanel.dto.UpdateQuestionnaireRequestDto;
 
 /**
@@ -46,6 +47,15 @@ public class QuestionnaireApiClient {
                 .header(HttpHeaders.AUTHORIZATION, bearer())
                 .retrieve()
                 .body(QuestionnaireDto.class);
+    }
+
+    /** {@code GET /ifit/api/v1/questionnaires/{id}/with-first-question} — obtener cuestionario con primera pregunta. */
+    public QuestionnaireWithFirstQuestionDto getByIdWithFirstQuestion(Long id) {
+        return client.get()
+                .uri("/ifit/api/v1/questionnaires/{id}/with-first-question", id)
+                .header(HttpHeaders.AUTHORIZATION, bearer())
+                .retrieve()
+                .body(QuestionnaireWithFirstQuestionDto.class);
     }
 
     /** {@code POST /ifit/api/v1/questionnaires} — crear cuestionario (admin). */

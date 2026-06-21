@@ -1,0 +1,76 @@
+{
+  "info": {
+    "_postman_id": "82abce51-fe79-44eb-8007-f4f749045c22",
+    "name": "keycloak",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "33218545"
+  },
+  "item": [
+    {
+      "name": "/realms/ifit-realm/protocol/openid-connect/token",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "username",
+            "value": "juan00516@gmail.com",
+            "type": "default",
+            "disabled": true
+          },
+          {
+            "key": "password",
+            "value": "1234",
+            "type": "default",
+            "disabled": true
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "client_id",
+              "value": "springboot-ifit-client",
+              "type": "default"
+            },
+            {
+              "key": "client_secret",
+              "value": "JMDn1Tih39AflFF8xJE9P9YYLnIcPuIK",
+              "type": "default"
+            },
+            {
+              "key": "grant_type",
+              "value": "password",
+              "type": "default"
+            },
+            {
+              "key": "username",
+              "value": "juan00516@gmail.com",
+              "type": "default"
+            },
+            {
+              "key": "password",
+              "value": "1234",
+              "type": "default"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:9090/realms/ifit-realm/protocol/openid-connect/token",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "9090",
+          "path": [
+            "realms",
+            "ifit-realm",
+            "protocol",
+            "openid-connect",
+            "token"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

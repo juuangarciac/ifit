@@ -1,0 +1,76 @@
+{
+  "info": {
+    "_postman_id": "f12fcd38-e92e-490c-bbdc-68209e75c474",
+    "name": "Ronnie",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "33218545"
+  },
+  "item": [
+    {
+      "name": "/max-id",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJYemgwdmY3VWhxbUFyZmdUTFBCSHA5V0dsNWVVMlRwU2R1WkxqaGtEVkxFIn0.eyJleHAiOjE3NzAwNjA3NjYsImlhdCI6MTc3MDA2MDQ2NiwianRpIjoiYTI3NzQwN2YtY2IyMS00OWM4LWFiNGUtOTRmODE0NTcxNzc4IiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo5MDkwL3JlYWxtcy9pZml0LXJlYWxtIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjQ1NmZlMDM1LTNhMmEtNGRmNC1iYzA0LTg0M2M2ZjRiNmJiMCIsInR5cCI6IkJlYXJlciIsImF6cCI6InNwcmluZ2Jvb3QtaWZpdC1jbGllbnQiLCJzZXNzaW9uX3N0YXRlIjoiYzJjZjNiYmUtZTYzMi00ZTYwLWEwZjAtNzEyYzg5MGNiYmNmIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLWlmaXQtcmVhbG0iLCJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIiwidXNlciJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfSwic3ByaW5nYm9vdC1pZml0LWNsaWVudCI6eyJyb2xlcyI6WyJ1c2VyX2NsaWVudF9yb2xlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwic2lkIjoiYzJjZjNiYmUtZTYzMi00ZTYwLWEwZjAtNzEyYzg5MGNiYmNmIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJuZXd1c2VyMjY1IHN1cm5hbWUyNjUiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJuZXd1c2VyMjY1QGV4YW1wbGUuY29tIiwiZ2l2ZW5fbmFtZSI6Im5ld3VzZXIyNjUiLCJmYW1pbHlfbmFtZSI6InN1cm5hbWUyNjUiLCJlbWFpbCI6Im5ld3VzZXIyNjVAZXhhbXBsZS5jb20ifQ.I9Rl59Zbs5Gm2aXxEs_EsDnMWgMxPNiRNMilsl1jlXcvaZ4YLHR-oUU5JuXiuf0X9p_U0ks0dVu_rnZHzUaQI74qmYEcs_o7Jv04RRDmhSoKMXjR-oK0ibMfGq22YTKVEx4_AjGbE1bj9WUmhuvsQRgdgP_zfqS3wfT3qul0Iuho4ucaEmlmkUwrInepS6spZZ1IlGr9KCVLMtGO5gby4QWk5ojvekNO4VL0MKov0FmQJtsx1UiJKqWlQDbg_PAfMGHmqErXf-P8l8SNXQpU6Qtb1UCn9caWcjuTQ5L-6zgi7ry-HP2zItc6qo0BPUiBEQjhGm800lGJPa-TNQNPdA",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/messages/max-memory-id",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "messages",
+            "max-memory-id"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/chat/ronnie",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"memoryId\": 1,\r\n    \"message\": \"RESPUESTAS AL CUESTIONARIO \\n• ¿Cuál es tu objetivo principal de entrenamiento?\\n  Respuesta: Ganar masa muscular\\n\\n• ¿Tienes alguna condición médica o lesión que debamos considerar?\\n  Respuesta: Tengo limitaciones de movilidad\\n  Detalles: Problemas en la espalda\\n\\n• ¿Cuántas veces a la semana puedes entrenar?\\n  Respuesta: 3-4 veces por semana\\n\\n• ¿Dónde prefieres entrenar?\\n  Respuesta: Solo en casa (con equipamiento básico)\\n\\n• ¿Cuál es tu edad?\\n  Respuesta: 18-25 años\\n\\n• ¿Cuál es tu peso actual (kg)?\\n  Respuesta: Ingresar peso\\n  Detalles: 75\\n\\n• ¿Cuál es tu altura (cm)?\\n  Respuesta: Ingresar altura\\n  Detalles: 171\\n\\n• ¿Cómo describirías tu nivel de actividad física diaria?\\n  Respuesta: Sedentario (trabajo de oficina, poca actividad)\\n\\n• ¿Has entrenado con regularidad anteriormente?\\n  Respuesta: Sí, pero hace más de 1 año\\n\\n• ¿Te sientes cómodo/a siguiendo rutinas estructuradas?\\n  Respuesta: Sí, prefiero planes detallados y estructurados\\n\\n• ¿Prefieres entrenamientos cortos e intensos o largos y moderados?\\n  Respuesta: Moderados (45-60 min)\\n\\n• ¿Tienes alguna preferencia alimentaria o restricción dietética?\\n  Respuesta: No, como de todo\\n\\n\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8082/ronnie/generate-routine",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8082",
+          "path": [
+            "ronnie",
+            "generate-routine"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

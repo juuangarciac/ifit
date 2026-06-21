@@ -1,0 +1,1619 @@
+{
+  "info": {
+    "_postman_id": "faf4a871-0776-47a3-ad84-f07823547138",
+    "name": "ifit-api",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "33218545"
+  },
+  "item": [
+    {
+      "name": "AppUser",
+      "item": [
+        {
+          "name": "/users",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Generate a random name, email, and password for the new user.\r",
+                  "var randomNum = Math.floor(Math.random() * 1000) + 1;  \r",
+                  "var name = \"newuser\" + randomNum;\r",
+                  "var email = \"newuser\" + randomNum + \"@example.com\";\r",
+                  "var password = \"P@ssword\";\r",
+                  "\r",
+                  "// Set the request body with the new user data\r",
+                  "pm.request.body.update({\r",
+                  "    mode: 'raw',\r",
+                  "    raw: JSON.stringify({\r",
+                  "        \"name\": name,\r",
+                  "        \"email\": email,\r",
+                  "        \"password\": password\r",
+                  "    })\r",
+                  "});\r",
+                  "\r",
+                  "// Set Content-Type header\r",
+                  "pm.request.headers.add({\r",
+                  "    key: 'Content-Type',\r",
+                  "    value: 'application/json'\r",
+                  "});\r",
+                  "\r",
+                  "// Set environment variables for the new user.\r",
+                  "pm.environment.set(\"newName\", name);\r",
+                  "pm.environment.set(\"newEmail\", email);\r",
+                  "pm.environment.set(\"newPassword\", password);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test the response status code\r",
+                  "pm.test(\"Status code is 201, Created, or 409, Conflict\", function(){\r",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 409]);\r",
+                  "})\r",
+                  "\r",
+                  "const contentJson = pm.response.json();\r",
+                  "// Test the response body\r",
+                  "if (pm.response.code === 201) {\r",
+                  "    pm.test(\"Response body contains the correct fields\", function () {\r",
+                  "        pm.expect(contentJson).to.have.property(\"id\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"name\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"email\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"createdAt\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"updatedAt\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"roleName\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"coachModelTypeName\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"experienceLevelName\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"registrationComplete\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"verified\");\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test('Response body contains the correct data types for the fields', function () {\r",
+                  "        pm.expect(contentJson.id).to.be.a('number');\r",
+                  "        pm.expect(contentJson.name).to.be.a('string');\r",
+                  "        pm.expect(contentJson.email).to.be.a('string');\r",
+                  "        pm.expect(contentJson.createdAt).to.be.a('string');\r",
+                  "        pm.expect(contentJson.updatedAt).to.be.oneOf([null, 'string']);\r",
+                  "        pm.expect(contentJson.roleName).to.be.a('string');\r",
+                  "        pm.expect(contentJson.coachModelTypeName).to.be.oneOf([null, 'string']);\r",
+                  "        pm.expect(contentJson.experienceLevelName).to.be.oneOf([null, 'string']);\r",
+                  "        pm.expect(contentJson.registrationComplete).to.be.a('boolean');\r",
+                  "        pm.expect(contentJson.verified).to.be.a('boolean');\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test('New user has correct data', function(){\r",
+                  "        pm.expect(contentJson.name).to.equal(pm.environment.get(\"newName\"));\r",
+                  "        pm.expect(contentJson.email).to.equal(pm.environment.get(\"newEmail\"));\r",
+                  "        pm.expect(contentJson.roleName).to.equal(\"ROLE_USER\");\r",
+                  "    });\r",
+                  "    \r",
+                  "    // update enviroment\r",
+                  "    pm.environment.set(\"userId\", contentJson.id);\r",
+                  "\r",
+                  "} else if (pm.response.code === 409) {\r",
+                  "    pm.test(\"Conflict response body contains the correct message\", function () {\r",
+                  "        pm.expect(contentJson.message).to.equal(\"User already exists\");\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/users",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/users",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse the JSON response",
+                  "const jsonData = pm.response.json();",
+                  "",
+                  "// Test: Status code should be 200 (users exist) or 500 (no users in database)",
+                  "pm.test(\"Status code is 200 (users found) or 500 (no users)\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 500]);",
+                  "});",
+                  "",
+                  "// Handle response based on status code",
+                  "if (pm.response.code === 200) {",
+                  "    // Success case: Users exist in the database",
+                  "    ",
+                  "    // Access the first element of the array",
+                  "    const firstUser = jsonData[0];",
+                  "    console.log(\"First user:\", firstUser);",
+                  "    console.log(\"First user name:\", firstUser.name);",
+                  "    console.log(\"First user email:\", firstUser.email);",
+                  "",
+                  "    // Loop through all users and assert each has correct properties",
+                  "    pm.test(\"All users have correct properties\", function () {",
+                  "        jsonData.forEach(function (user, index) {",
+                  "            pm.expect(user).to.have.property(\"id\");",
+                  "            pm.expect(user).to.have.property(\"name\");",
+                  "            pm.expect(user).to.have.property(\"email\");",
+                  "            pm.expect(user).to.have.property(\"createdAt\");",
+                  "            pm.expect(user).to.have.property(\"updatedAt\");",
+                  "            pm.expect(user).to.have.property(\"roleName\");",
+                  "            pm.expect(user).to.have.property(\"coachModelTypeName\");",
+                  "            pm.expect(user).to.have.property(\"experienceLevelName\");",
+                  "            pm.expect(user).to.have.property(\"registrationComplete\");",
+                  "            pm.expect(user).to.have.property(\"verified\");",
+                  "        });",
+                  "    });",
+                  "",
+                  "    pm.test(\"All users have correct values\", function () {",
+                  "        jsonData.forEach(function (user, index) {",
+                  "            pm.expect(user.id).to.be.a('number');",
+                  "            pm.expect(user.name).to.be.a('string');",
+                  "            pm.expect(user.email).to.be.a('string');",
+                  "            pm.expect(user.createdAt).to.be.a('string');",
+                  "            pm.expect(user.updatedAt).to.be.oneOf([null, 'string']);",
+                  "            pm.expect(user.roleName).to.be.a('string');",
+                  "            if (user.coachModelTypeName !== null) pm.expect(user.coachModelTypeName).to.be.a('string');",
+                  "            if (user.experienceLevelName !== null) pm.expect(user.experienceLevelName).to.be.a('string');",
+                  "            pm.expect(user.registrationComplete).to.be.a('boolean');",
+                  "            pm.expect(user.verified).to.be.a('boolean');",
+                  "        });",
+                  "    });",
+                  "",
+                  "    // Test: Created user is in the list",
+                  "    pm.test(\"Created user exists in the users list\", function () {",
+                  "        const createdUserId = pm.environment.get(\"userId\");",
+                  "        const createdUserEmail = pm.environment.get(\"newEmail\");",
+                  "        ",
+                  "        // Find the created user in the array",
+                  "        const foundUser = jsonData.find(user => user.id === createdUserId);",
+                  "        ",
+                  "        // Assert the user was found",
+                  "        pm.expect(foundUser).to.not.be.undefined;",
+                  "        pm.expect(foundUser.email).to.equal(createdUserEmail);",
+                  "        ",
+                  "        console.log(\"✅ Created user found:\", foundUser);",
+                  "    });",
+                  "",
+                  "} else if (pm.response.code === 500) {",
+                  "    // Error case: No users in the database",
+                  "    ",
+                  "    pm.test(\"Error response indicates no users found\", function () {",
+                  "        pm.expect(jsonData).to.have.property(\"error\");",
+                  "        pm.expect(jsonData).to.have.property(\"message\");",
+                  "        pm.expect(jsonData.message).to.include(\"No users found\");",
+                  "    });",
+                  "    ",
+                  "    console.log(\"Database is empty - no users found\");",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/users",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/users/paginated",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "// Parse the JSON response\r",
+                  "const jsonData = pm.response.json();\r",
+                  "\r",
+                  "// Test: Status code should be 200 (users exist) or 500 (no users in database)\r",
+                  "pm.test(\"Status code is 200 (users found)\", function () {\r",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200]);\r",
+                  "});\r",
+                  "\r",
+                  "// Handle response based on status code\r",
+                  "if (pm.response.code === 200) {\r",
+                  "    // Response body contains content array\r",
+                  "\r",
+                  "    // Response body contains pageable object\r",
+                  "    pm.test(\"Should contain pageable object\", function(){\r",
+                  "        pm.expect(jsonData).to.have.property('pageable');\r",
+                  "        pm.expect(jsonData.pageable).to.have.property('pageNumber');\r",
+                  "        pm.expect(jsonData.pageable).to.have.property('pageSize');\r",
+                  "        pm.expect(jsonData.pageable).to.have.property('sort');\r",
+                  "    });\r",
+                  "\r",
+                  "    // Loop through all users and assert each has correct properties\r",
+                  "    pm.test(\"All users have correct properties\", function () {\r",
+                  "        jsonData.content.forEach(function (user, index) {\r",
+                  "            pm.expect(user).to.have.property(\"id\");\r",
+                  "            pm.expect(user).to.have.property(\"name\");\r",
+                  "            pm.expect(user).to.have.property(\"email\");\r",
+                  "            pm.expect(user).to.have.property(\"createdAt\");\r",
+                  "            pm.expect(user).to.have.property(\"updatedAt\");\r",
+                  "            pm.expect(user).to.have.property(\"roleName\");\r",
+                  "            pm.expect(user).to.have.property(\"coachModelTypeName\");\r",
+                  "            pm.expect(user).to.have.property(\"experienceLevelName\");\r",
+                  "            pm.expect(user).to.have.property(\"registrationComplete\");\r",
+                  "            pm.expect(user).to.have.property(\"verified\");\r",
+                  "        });\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test(\"All users have correct values\", function () {\r",
+                  "        jsonData.content.forEach(function (user, index) {\r",
+                  "            pm.expect(user.id).to.be.a('number');\r",
+                  "            pm.expect(user.name).to.be.a('string');\r",
+                  "            pm.expect(user.email).to.be.a('string');\r",
+                  "            pm.expect(user.createdAt).to.be.a('string');\r",
+                  "            pm.expect(user.updatedAt).to.be.oneOf([null, 'string']);\r",
+                  "            pm.expect(user.roleName).to.be.a('string');\r",
+                  "            if (user.coachModelTypeName !== null) pm.expect(user.coachModelTypeName).to.be.a('string');\r",
+                  "            if (user.experienceLevelName !== null) pm.expect(user.experienceLevelName).to.be.a('string');\r",
+                  "            pm.expect(user.registrationComplete).to.be.a('boolean');\r",
+                  "            pm.expect(user.verified).to.be.a('boolean');\r",
+                  "        });\r",
+                  "    });\r",
+                  "\r",
+                  "    // Test: Created user is in the list\r",
+                  "    pm.test(\"Created user exists in the users list\", function () {\r",
+                  "        const createdUserId = pm.environment.get(\"userId\");\r",
+                  "        const createdUserEmail = pm.environment.get(\"newEmail\");\r",
+                  "        \r",
+                  "        // Find the created user in the array\r",
+                  "        const foundUser = jsonData.content.find(user => user.id === createdUserId);\r",
+                  "        \r",
+                  "        // Assert the user was found\r",
+                  "        pm.expect(foundUser).to.not.be.undefined;\r",
+                  "        pm.expect(foundUser.email).to.equal(createdUserEmail);\r",
+                  "    });\r",
+                  "\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJYemgwdmY3VWhxbUFyZmdUTFBCSHA5V0dsNWVVMlRwU2R1WkxqaGtEVkxFIn0.eyJleHAiOjE3Njc4OTUyOTgsImlhdCI6MTc2Nzg5NDk5OCwianRpIjoiZDU2ZjJhZmUtNGM2My00YzRlLWJhYTgtNmNjNmUyYzE2NDg1IiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo5MDkwL3JlYWxtcy9pZml0LXJlYWxtIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjljZTJhZWI3LTc4N2UtNDQyYy05ZTQzLTRkZGIwOGE4YzdkNSIsInR5cCI6IkJlYXJlciIsImF6cCI6InNwcmluZ2Jvb3QtaWZpdC1jbGllbnQiLCJzZXNzaW9uX3N0YXRlIjoiYjJmODhmOGQtNDhjNy00YjM4LWE0ZGEtZTkzYjY3ZDZjMGVmIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLWlmaXQtcmVhbG0iLCJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwic2lkIjoiYjJmODhmOGQtNDhjNy00YjM4LWE0ZGEtZTkzYjY3ZDZjMGVmIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJKdWFuIEdhcmNpYSIsInByZWZlcnJlZF91c2VybmFtZSI6Imp1YW4iLCJnaXZlbl9uYW1lIjoiSnVhbiIsImZhbWlseV9uYW1lIjoiR2FyY2lhIiwiZW1haWwiOiJqdWFuMDA1MTZAZ21haWwuY29tIn0.F4OoXaOQq8R0X9Q4vNqaQCaZ8pr1f_9nHGWO9RNjp-cU2rvQyMGUPieGXyMWidg3TUHjdwLn0Rs3wX8OqfBG0QuN-VdSSBPwmw5Xk96QQZW8i2eHNB8mMi5S4E7FO64I5BJerXUf0xtmjCydiYsgBTdTl-UDnR0JEcDWHrlymcgO_HFmdb41D2ThGGrxgzB6izK3ZrAfkA2j-dxQjqhOguS4iHk96k72Dj7fVuk22ouagqeuzHfPd0ejR2rsEyBSk9WXH2hb3xNVpMnH7zU_jJr3RUJsMA5MhX89CtAfpZhal7opAUbDRQogGy_jINZF_M8T5x4P3PphNDgytntgaA",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/users/paginated",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "users",
+                "paginated"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/users/{id}",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const contentJson = pm.response.json();\r",
+                  "\r",
+                  "// Test status code\r",
+                  "pm.test(\"Status code is 200, or 404 if user does not exist\", function () {\r",
+                  "    pm.expect(pm.response.code).have.to.be.oneOf([200, 404]);\r",
+                  "});\r",
+                  "\r",
+                  "if (pm.response.code === 200) {\r",
+                  "     pm.test(\"Response body contains the correct fields\", function () {\r",
+                  "        pm.expect(contentJson).to.have.property(\"id\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"name\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"email\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"createdAt\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"updatedAt\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"roleName\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"coachModelTypeName\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"experienceLevelName\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"registrationComplete\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"verified\");\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test('Response body contains the correct data types for the fields', function () {\r",
+                  "        pm.expect(contentJson.id).to.be.a('number');\r",
+                  "        pm.expect(contentJson.name).to.be.a('string');\r",
+                  "        pm.expect(contentJson.email).to.be.a('string');\r",
+                  "        pm.expect(contentJson.createdAt).to.be.a('string');\r",
+                  "        pm.expect(contentJson.updatedAt).to.be.oneOf([null, 'string']);\r",
+                  "        pm.expect(contentJson.roleName).to.be.a('string');\r",
+                  "        pm.expect(contentJson.coachModelTypeName).to.be.oneOf([null, 'string']);\r",
+                  "        pm.expect(contentJson.experienceLevelName).to.be.oneOf([null, 'string']);\r",
+                  "        pm.expect(contentJson.registrationComplete).to.be.a('boolean');\r",
+                  "        pm.expect(contentJson.verified).to.be.a('boolean');\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test('New user has correct data', function(){\r",
+                  "        pm.expect(contentJson.name).to.equal(pm.environment.get(\"newName\"));\r",
+                  "        pm.expect(contentJson.email).to.equal(pm.environment.get(\"newEmail\"));\r",
+                  "        pm.expect(contentJson.roleName).to.equal(\"ROLE_USER\");\r",
+                  "    });\r",
+                  "}else{\r",
+                  "    pm.test('404 response contains the correct message', function(){\r",
+                  "        pm.expect(contentJson.message).to.equal(\"User not found\");\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/users/{{userId}}",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/users/email/{email}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const contentJson = pm.response.json();\r",
+                  "\r",
+                  "// Test status code\r",
+                  "pm.test(\"Status code is 200, or 404 if user does not exist\", function () {\r",
+                  "    pm.expect(pm.response.code).have.to.be.oneOf([200, 404]);\r",
+                  "});\r",
+                  "\r",
+                  "if (pm.response.code === 200) {\r",
+                  "     pm.test(\"Response body contains the correct fields\", function () {\r",
+                  "        pm.expect(contentJson).to.have.property(\"id\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"name\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"email\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"createdAt\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"updatedAt\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"roleName\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"coachModelTypeName\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"experienceLevelName\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"registrationComplete\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"verified\");\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test('Response body contains the correct data types for the fields', function () {\r",
+                  "        pm.expect(contentJson.id).to.be.a('number');\r",
+                  "        pm.expect(contentJson.name).to.be.a('string');\r",
+                  "        pm.expect(contentJson.email).to.be.a('string');\r",
+                  "        pm.expect(contentJson.createdAt).to.be.a('string');\r",
+                  "        pm.expect(contentJson.updatedAt).to.be.oneOf([null, 'string']);\r",
+                  "        pm.expect(contentJson.roleName).to.be.a('string');\r",
+                  "        pm.expect(contentJson.coachModelTypeName).to.be.oneOf([null, 'string']);\r",
+                  "        pm.expect(contentJson.experienceLevelName).to.be.oneOf([null, 'string']);\r",
+                  "        pm.expect(contentJson.registrationComplete).to.be.a('boolean');\r",
+                  "        pm.expect(contentJson.verified).to.be.a('boolean');\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.test('New user has correct data', function(){\r",
+                  "        pm.expect(contentJson.name).to.equal(pm.environment.get(\"newName\"));\r",
+                  "        pm.expect(contentJson.email).to.equal(pm.environment.get(\"newEmail\"));\r",
+                  "        pm.expect(contentJson.roleName).to.equal(\"ROLE_USER\");\r",
+                  "    });\r",
+                  "}else{\r",
+                  "    pm.test('404 response contains the correct message', function(){\r",
+                  "        pm.expect(contentJson.message).to.equal(\"User not found\");\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJYemgwdmY3VWhxbUFyZmdUTFBCSHA5V0dsNWVVMlRwU2R1WkxqaGtEVkxFIn0.eyJleHAiOjE3NjkzNjQwOTMsImlhdCI6MTc2OTM2Mzc5MywianRpIjoiZWMzMGM5NWItMDI1NC00ZDE0LTllNmItOTE1YmMwMDQzNmE1IiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo5MDkwL3JlYWxtcy9pZml0LXJlYWxtIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6Ijc1ZmVjOTJmLWU3YTktNDc5Zi1iNzczLWYyYjM0MGEwYTRiNyIsInR5cCI6IkJlYXJlciIsImF6cCI6InNwcmluZ2Jvb3QtaWZpdC1jbGllbnQiLCJzZXNzaW9uX3N0YXRlIjoiZThkMjA0MmItNmQ4MS00MTdhLTljZGUtNDRmZWVlNWVlMTRkIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLWlmaXQtcmVhbG0iLCJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIiwidXNlciJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfSwic3ByaW5nYm9vdC1pZml0LWNsaWVudCI6eyJyb2xlcyI6WyJ1c2VyX2NsaWVudF9yb2xlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwic2lkIjoiZThkMjA0MmItNmQ4MS00MTdhLTljZGUtNDRmZWVlNWVlMTRkIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJuZXd1c2VyMTUwIHN1cm5hbWUxNTAiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJuZXd1c2VyMTUwQGV4YW1wbGUuY29tIiwiZ2l2ZW5fbmFtZSI6Im5ld3VzZXIxNTAiLCJmYW1pbHlfbmFtZSI6InN1cm5hbWUxNTAiLCJlbWFpbCI6Im5ld3VzZXIxNTBAZXhhbXBsZS5jb20ifQ.byr0vFgxIaCVi-cY9josYd6rQOAlTflvqYqySOVFamfPinU5tmQk3_9CeO_4wnjSUKGmGD9Q8nlp9nT6XxtaoaRpcnb7JdDdvzR53eoyVDbV_GNfOHyFTMo02Xmxhlm5MXDuWJmR5ymNe27YSQ_7hVzwApvtkb-rUFNdJNRITMApUBtbmnhMNrfulwkRa1mC1BYr7A2fnlyphxAQ3JyiBEa2Avqs4biAtJDkbI_Z_uvoeKe4oc0RCDhzkAx9-M9kY1TRHPtks326UYe0rNBuNY5peOBYL5FT0egbor60ujApO7McW9DRgS6VaqMR5aoht3TfGhBURFhf9WRXFelN7w",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/users/exists/email/{{newEmail}}",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "users",
+                "exists",
+                "email",
+                "{{newEmail}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/users/{userId}/experience-level/{experienceId}",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const experienceLevels = [\r",
+                  "    { id: 1, name: 'Principiante' },\r",
+                  "    { id: 2, name: 'Intermedio' },\r",
+                  "    { id: 3, name: 'Avanzado' }\r",
+                  "];\r",
+                  "\r",
+                  "// Set the experienceId to a random level\r",
+                  "const randomLevel = experienceLevels[Math.floor(Math.random() * experienceLevels.length)];\r",
+                  "\r",
+                  "const experienceId = randomLevel.id;\r",
+                  "const experienceName = randomLevel.name;\r",
+                  "\r",
+                  "// Set the environment variable for experienceId\r",
+                  "pm.environment.set(\"experienceId\", experienceId);\r",
+                  "pm.environment.set(\"experienceName\", experienceName);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 or 404 (User or Experience level not found)\", function(){\r",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);\r",
+                  "});\r",
+                  "\r",
+                  "const contentJson = pm.response.json();\r",
+                  "\r",
+                  "if(pm.response.code === 404){\r",
+                  "    pm.test(\"Response body contains error message\", function(){\r",
+                  "        pm.expect(contentJson.error).to.eql(\"Error: UserIdNotFoundException\");\r",
+                  "        pm.expect(contentJson.status).to.eql(404);\r",
+                  "    });\r",
+                  "}\r",
+                  "\r",
+                  "if(pm.response.code === 200){\r",
+                  "    pm.test(\"Experience level updated successfully\", function () {\r",
+                  "        pm.expect(contentJson.experienceLevelName).be.not.to.eqls(null);\r",
+                  "        pm.expect(contentJson.experienceLevelName).to.eql(pm.environment.get(\"experienceName\"));\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJYemgwdmY3VWhxbUFyZmdUTFBCSHA5V0dsNWVVMlRwU2R1WkxqaGtEVkxFIn0.eyJleHAiOjE3Njc4OTUyOTgsImlhdCI6MTc2Nzg5NDk5OCwianRpIjoiZDU2ZjJhZmUtNGM2My00YzRlLWJhYTgtNmNjNmUyYzE2NDg1IiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo5MDkwL3JlYWxtcy9pZml0LXJlYWxtIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjljZTJhZWI3LTc4N2UtNDQyYy05ZTQzLTRkZGIwOGE4YzdkNSIsInR5cCI6IkJlYXJlciIsImF6cCI6InNwcmluZ2Jvb3QtaWZpdC1jbGllbnQiLCJzZXNzaW9uX3N0YXRlIjoiYjJmODhmOGQtNDhjNy00YjM4LWE0ZGEtZTkzYjY3ZDZjMGVmIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLWlmaXQtcmVhbG0iLCJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwic2lkIjoiYjJmODhmOGQtNDhjNy00YjM4LWE0ZGEtZTkzYjY3ZDZjMGVmIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJKdWFuIEdhcmNpYSIsInByZWZlcnJlZF91c2VybmFtZSI6Imp1YW4iLCJnaXZlbl9uYW1lIjoiSnVhbiIsImZhbWlseV9uYW1lIjoiR2FyY2lhIiwiZW1haWwiOiJqdWFuMDA1MTZAZ21haWwuY29tIn0.F4OoXaOQq8R0X9Q4vNqaQCaZ8pr1f_9nHGWO9RNjp-cU2rvQyMGUPieGXyMWidg3TUHjdwLn0Rs3wX8OqfBG0QuN-VdSSBPwmw5Xk96QQZW8i2eHNB8mMi5S4E7FO64I5BJerXUf0xtmjCydiYsgBTdTl-UDnR0JEcDWHrlymcgO_HFmdb41D2ThGGrxgzB6izK3ZrAfkA2j-dxQjqhOguS4iHk96k72Dj7fVuk22ouagqeuzHfPd0ejR2rsEyBSk9WXH2hb3xNVpMnH7zU_jJr3RUJsMA5MhX89CtAfpZhal7opAUbDRQogGy_jINZF_M8T5x4P3PphNDgytntgaA",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/users/{{userId}}/assign-experience/{{experienceId}}",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}",
+                "assign-experience",
+                "{{experienceId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/users/{userId}/assign-coach/{coachId}",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const coachModelTypes = [\r",
+                  "    { id: 1, name: \"Default\" },\r",
+                  "    {id : 2, name : \"Ronnie\"},\r",
+                  "    { id: 3, name: \"Serena\" },\r",
+                  "    { id: 4, name: \"Eliud\" },\r",
+                  "    { id: 5, name: \"Kael\" },\r",
+                  "]\r",
+                  "\r",
+                  "const randomCoach = coachModelTypes[Math.floor(Math.random() * coachModelTypes.length)];\r",
+                  "\r",
+                  "const coachId = randomCoach.id;\r",
+                  "const coachName = randomCoach.name;\r",
+                  "\r",
+                  "pm.environment.set(\"coachId\", coachId);\r",
+                  "pm.environment.set(\"coachName\", coachName);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const contentJson = pm.response.json();\r",
+                  "\r",
+                  "// Test the response status code 200, 404\r",
+                  "pm.test(\"Status code is 200 or 404\", function () {\r",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);\r",
+                  "});\r",
+                  "\r",
+                  "// Test the response body\r",
+                  "if(pm.response.code === 200){\r",
+                  "    pm.test(\"Experience level updated successfully\", function () {\r",
+                  "        pm.expect(contentJson.coachModelTypeName).be.not.to.eqls(null);\r",
+                  "        pm.expect(contentJson.coachModelTypeName).to.eql(pm.environment.get(\"coachName\"));\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJYemgwdmY3VWhxbUFyZmdUTFBCSHA5V0dsNWVVMlRwU2R1WkxqaGtEVkxFIn0.eyJleHAiOjE3Njc4OTUyOTgsImlhdCI6MTc2Nzg5NDk5OCwianRpIjoiZDU2ZjJhZmUtNGM2My00YzRlLWJhYTgtNmNjNmUyYzE2NDg1IiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo5MDkwL3JlYWxtcy9pZml0LXJlYWxtIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjljZTJhZWI3LTc4N2UtNDQyYy05ZTQzLTRkZGIwOGE4YzdkNSIsInR5cCI6IkJlYXJlciIsImF6cCI6InNwcmluZ2Jvb3QtaWZpdC1jbGllbnQiLCJzZXNzaW9uX3N0YXRlIjoiYjJmODhmOGQtNDhjNy00YjM4LWE0ZGEtZTkzYjY3ZDZjMGVmIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLWlmaXQtcmVhbG0iLCJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwic2lkIjoiYjJmODhmOGQtNDhjNy00YjM4LWE0ZGEtZTkzYjY3ZDZjMGVmIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJKdWFuIEdhcmNpYSIsInByZWZlcnJlZF91c2VybmFtZSI6Imp1YW4iLCJnaXZlbl9uYW1lIjoiSnVhbiIsImZhbWlseV9uYW1lIjoiR2FyY2lhIiwiZW1haWwiOiJqdWFuMDA1MTZAZ21haWwuY29tIn0.F4OoXaOQq8R0X9Q4vNqaQCaZ8pr1f_9nHGWO9RNjp-cU2rvQyMGUPieGXyMWidg3TUHjdwLn0Rs3wX8OqfBG0QuN-VdSSBPwmw5Xk96QQZW8i2eHNB8mMi5S4E7FO64I5BJerXUf0xtmjCydiYsgBTdTl-UDnR0JEcDWHrlymcgO_HFmdb41D2ThGGrxgzB6izK3ZrAfkA2j-dxQjqhOguS4iHk96k72Dj7fVuk22ouagqeuzHfPd0ejR2rsEyBSk9WXH2hb3xNVpMnH7zU_jJr3RUJsMA5MhX89CtAfpZhal7opAUbDRQogGy_jINZF_M8T5x4P3PphNDgytntgaA",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/users/{{userId}}/assign-coach/{{coachId}}",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}",
+                "assign-coach",
+                "{{coachId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/users/{userId}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test status code first (before parsing JSON)\r",
+                  "pm.test(\"Status code is 204 or 404\", function () {\r",
+                  "    pm.expect(pm.response.code).to.be.oneOf([204, 404]);\r",
+                  "});\r",
+                  "\r",
+                  "// Handle response based on status code\r",
+                  "if (pm.response.code === 204) {\r",
+                  "    // 204 No Content - response body should be empty\r",
+                  "    pm.test(\"Response body is empty for 204\", function () {\r",
+                  "        pm.expect(pm.response.text()).to.be.empty;\r",
+                  "    });\r",
+                  "    \r",
+                  "    console.log(\"✅ User deleted successfully\");\r",
+                  "\r",
+                  "} else if (pm.response.code === 404) {\r",
+                  "    // 404 Not Found - parse JSON and check error\r",
+                  "    const contentJson = pm.response.json();\r",
+                  "    \r",
+                  "    pm.test(\"Response body contains error message\", function () {\r",
+                  "        pm.expect(contentJson).to.have.property(\"error\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"status\");\r",
+                  "        pm.expect(contentJson.error).to.include(\"UserIdNotFoundException\");\r",
+                  "        pm.expect(contentJson.status).to.eql(404);\r",
+                  "    });\r",
+                  "    \r",
+                  "    console.log(\"❌ User not found\");\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/users/{{userId}}",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "StartFragment\n\n### Pruebas E2E del endpoint `/ifit/api/v1/users`\n\nEste conjunto de pruebas end-to-end valida el ciclo completo de vida de un usuario dentro del sistema, asegurando que los endpoints funcionan correctamente y que los datos se persisten y recuperan de forma coherente.\n\n**1\\. POST** **`/users`**\n\nCrea un usuario ficticio de prueba.\n\nEl usuario generado se almacena en el _environment_ para ser reutilizado en las pruebas posteriores (ID, email, etc.).\n\n**2\\. GET** **`/users`**\n\nRecupera todos los usuarios almacenados en la base de datos.\n\nSe comprueba que el JSON devuelto por el servidor contiene al usuario de prueba creado previamente.\n\n**3\\. GET** **`/users/paginated`**\n\nRecupera los usuarios de forma paginada.\n\nAdemás de verificar que el usuario de prueba está presente, se comprueba que la respuesta incluye correctamente el objeto `Pageable` con la información de paginación.\n\n**4\\. GET** **`/users/{id}`**\n\nObtiene el usuario a partir del `id` almacenado en el _environment_.\n\nSe valida que:\n\n- El usuario existe.\n    \n- Todos sus campos son válidos.\n    \n- Los datos devueltos en el body coinciden exactamente con los introducidos durante la creación del usuario.\n    \n\n**5\\. GET** **`/users/{email}`**\n\nBusca el usuario por su email, siguiendo la misma lógica que la prueba anterior.\n\nSe comprueba que el usuario existe y que la información devuelta es correcta.\n\n**6\\. PATCH** **`/users/{userId}/assign-level/{levelId}`**\n\nAsigna un nivel de experiencia al usuario.\n\nEl nivel se selecciona desde un _pre-request script_, almacenando su `id` y su nombre.\n\nTras recibir la respuesta, se valida que el campo `experienceLevelName` coincide con el nivel seleccionado.\n\n**7\\. PATCH** **`/users/{userId}/assign-coach/{coachId}`**\n\nAsigna un entrenador al usuario.\n\nSigue la misma lógica que la prueba anterior, verificando que el modelo del entrenador se actualiza correctamente en la respuesta.\n\n**8\\. DELETE** **`/users/{userId}`**\n\nElimina el usuario creado y utilizado durante las pruebas, dejando el sistema en un estado limpio tras la ejecución del flujo completo.\n\nEndFragment",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJYemgwdmY3VWhxbUFyZmdUTFBCSHA5V0dsNWVVMlRwU2R1WkxqaGtEVkxFIn0.eyJleHAiOjE3Njg1ODYzODAsImlhdCI6MTc2ODU4NjA4MCwianRpIjoiZGYyZmIwYTctODNjOS00ZjZiLWI0ZDUtMWJhYWRjODI0ZjM5IiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo5MDkwL3JlYWxtcy9pZml0LXJlYWxtIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjZjYzliY2M1LWRmNzctNGFjMS05ZDMxLWU2ZTJhMDk3N2E4MSIsInR5cCI6IkJlYXJlciIsImF6cCI6InNwcmluZ2Jvb3QtaWZpdC1jbGllbnQiLCJzZXNzaW9uX3N0YXRlIjoiZjQzZmU0NWQtYjhhMi00ZDg5LWJhYTYtMmQ1MTlhMzhlNmU2IiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLWlmaXQtcmVhbG0iLCJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIiwidXNlciJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfSwic3ByaW5nYm9vdC1pZml0LWNsaWVudCI6eyJyb2xlcyI6WyJ1c2VyX2NsaWVudF9yb2xlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwic2lkIjoiZjQzZmU0NWQtYjhhMi00ZDg5LWJhYTYtMmQ1MTlhMzhlNmU2IiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJuZXd1c2VyMzc2IHN1cm5hbWUzNzYiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJuZXd1c2VyMzc2QGV4YW1wbGUuY29tIiwiZ2l2ZW5fbmFtZSI6Im5ld3VzZXIzNzYiLCJmYW1pbHlfbmFtZSI6InN1cm5hbWUzNzYiLCJlbWFpbCI6Im5ld3VzZXIzNzZAZXhhbXBsZS5jb20ifQ.Cd9REAqRUbZdYNAGYSs3fhpLmrVpBdJEkMQFu8N8JjZg4gweK4efbOoWr6j6tDoMTT9oF6oHKVlPQWjvpF2YcjbAQZYNvof-cszDGoDYAf7IwMkabjF_AgMmqKkyJtR7qhrwfNtJlEeNggbURoSnwHnGAioekbhDJBHd4CLC9sGO0Djke5PbNsxlQPKJOHCtCtaPFXeoN1swE23_zbuZHi4RkvSvDmY5tvraRI4rSmzOBd6yZKKURVbku6ZJplxWTqNlIYvH_KtPsrOTiTtPq2JMw9tFq8EBBK4IqZqgZ9oL1DPi1mZ8d26gi4iFDtVqdQKx8O0CWgfj3EG1h9GLSQ",
+            "type": "string"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Questionnaires",
+      "item": [
+        {
+          "name": "/questionnaires",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const jsonData = pm.response.json();",
+                  "",
+                  "// Test Response code",
+                  "pm.test(\"Status code is 200 or 500\", function(){",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 500]);",
+                  "});",
+                  "",
+                  "if(pm.response.code === 200){",
+                  "    ",
+                  "    pm.test(\"Response body is an array\", function(){",
+                  "        pm.expect(jsonData).to.be.an('array');",
+                  "    });",
+                  "",
+                  "    // Test every element of array contains the correct properties",
+                  "    pm.test(\"Every element of array contains the correct properties\", function(){",
+                  "        jsonData.forEach(function(item){",
+                  "            pm.expect(item).to.have.property('id');",
+                  "            pm.expect(item).to.have.property('name');",
+                  "            pm.expect(item).to.have.property('description');",
+                  "            pm.expect(item).to.have.property('coachModelTypeName');",
+                  "            pm.expect(item).to.have.property('coachModelTypeEmoji');",
+                  "            pm.expect(item).to.have.property('experienceLevelName');",
+                  "            pm.expect(item).to.have.property('isEnabled');",
+                  "        });",
+                  "    });",
+                  "",
+                  "    // Set environment data (only if array has items)",
+                  "    if (jsonData.length > 0) {",
+                  "        const randomIndex = Math.floor(Math.random() * jsonData.length);",
+                  "        const questionnaire = jsonData[randomIndex];",
+                  "",
+                  "        pm.environment.set(\"questionnaireId\", questionnaire.id);",
+                  "        pm.environment.set(\"questionnaireCoachName\", questionnaire.coachModelTypeName);",
+                  "        pm.environment.set(\"questionnaireExperienceName\", questionnaire.experienceLevelName)",
+                  "    }",
+                  "",
+                  "    // Log environment data",
+                  "    console.log(\"questionnaireId: \", pm.environment.get(\"questionnaireId\"));",
+                  "    console.log(\"questionnaireCoachName: \", pm.environment.get(\"questionnaireCoachName\"));",
+                  "    console.log(\"questionnaireExperienceName: \", pm.environment.get(\"questionnaireExperienceName\"));",
+                  "",
+                  "} else if(pm.response.code === 500){",
+                  "    pm.test(\"Response body is an object\", function(){",
+                  "        pm.expect(pm.response.json()).to.be.an('object');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "UItW6z_OXkFCKcWtxolDbUn5a7GqyVja_noi8z7cMs24t6FfhsyltqcGRkDi8Vk8lj72A5tCg54xMwLb3xlvsWtX_PkSa3QvbnqMMPPJ9dagaR60EGhjI2TURPbEihmixgpqeVBvS_0LV6WD0M6UfT-Br2clLDmHp122hRN_2fak2n3HQGeAlpTeu4GZd3OjII34FQRU9KBH1kQAajFQWYyL84_ouNxOJ0KP3RWGQomLZ-KIsw5BpLERx0SIxqrJoqEPVO_jobDw9WMBa5kEVDj7cuVOJvDBY5l23Fv8ycTDMzfZ8dYcPmpUfmIjnohPwakqfityUtgDG47x_y5o1Q",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/questionnaires",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "questionnaires"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/{questionnaireId}/with-first-question",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test the status code\r",
+                  "pm.test(\"Status code is 200, 404 or 500\", function(){\r",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 404, 500]);\r",
+                  "});\r",
+                  "\r",
+                  "const contentJson = pm.response.json();\r",
+                  "\r",
+                  "// Test the response body\r",
+                  "if (pm.response.code === 200) {\r",
+                  "    pm.test(\"Response body is not empty\", function () {\r",
+                  "        pm.expect(contentJson).to.not.be.empty;\r",
+                  "    });\r",
+                  "\r",
+                  "    // Response body contains questionnaire data\r",
+                  "    pm.test(\"Response body contains questionnaire data\", function () {\r",
+                  "        pm.expect(contentJson).to.have.property(\"id\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"name\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"description\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"coachModelTypeName\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"experienceLevelName\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"isEnabled\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"createdAt\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"updatedAt\");\r",
+                  "    });\r",
+                  "\r",
+                  "    // Response body contains first question data\r",
+                  "    pm.test(\"Response body contains first question data\", function () {\r",
+                  "        pm.expect(contentJson).to.have.property(\"firstQuestion\");\r",
+                  "        pm.expect(contentJson.firstQuestion).to.have.property(\"id\");\r",
+                  "        pm.expect(contentJson.firstQuestion).to.have.property(\"text\");\r",
+                  "        pm.expect(contentJson.firstQuestion).to.have.property(\"type\");\r",
+                  "        pm.expect(contentJson.firstQuestion).to.have.property(\"options\");\r",
+                  "    });\r",
+                  "\r",
+                  "    // Test first question data is an array\r",
+                  "    pm.test(\"First question options is an array\", function () {\r",
+                  "        pm.expect(contentJson.firstQuestion.options).to.be.an(\"array\");\r",
+                  "    });\r",
+                  "} else if (pm.response.code === 404 || pm.response.code === 500) {\r",
+                  "    // Test if response body contains an error message\r",
+                  "    pm.test(\"Response body contains an error message\", function () {\r",
+                  "        pm.expect(contentJson).to.have.property(\"error\");\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIwd2RHX3lxUW5qOU5fLWw5U296RnZLSHQxenk4R241VTl6a2Yxb1dFNTJBIn0.eyJleHAiOjE3NzA0ODMwNDQsImlhdCI6MTc3MDQ4Mjc0NCwianRpIjoiNzY5NjBhZDUtYTliNC00MjVlLTliMDctZWE1ZjdmMDU2NzRlIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo5MDkwL3JlYWxtcy9pZml0LXJlYWxtIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjY0N2VhZTc5LTA4YjktNDdlNi1hZmNkLWIwNDY2NWZkZjQyYSIsInR5cCI6IkJlYXJlciIsImF6cCI6InNwcmluZ2Jvb3QtaWZpdC1jbGllbnQiLCJzZXNzaW9uX3N0YXRlIjoiZTY0ZjU0ZTctZjM1Yi00ZTlkLWFkMDEtY2M1NzYzZjJiZTE4IiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLWlmaXQtcmVhbG0iLCJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIiwidXNlciJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfSwic3ByaW5nYm9vdC1pZml0LWNsaWVudCI6eyJyb2xlcyI6WyJ1c2VyX2NsaWVudF9yb2xlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwic2lkIjoiZTY0ZjU0ZTctZjM1Yi00ZTlkLWFkMDEtY2M1NzYzZjJiZTE4IiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJuZXd1c2VyOTExIHN1cm5hbWU5MTEiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJuZXd1c2VyOTExQGV4YW1wbGUuY29tIiwiZ2l2ZW5fbmFtZSI6Im5ld3VzZXI5MTEiLCJmYW1pbHlfbmFtZSI6InN1cm5hbWU5MTEiLCJlbWFpbCI6Im5ld3VzZXI5MTFAZXhhbXBsZS5jb20ifQ.eowZzcFjTxTiqMAjOgwy246UAmwltG9FJG_Owxpq5gTRxl0JTgAADkn31fRMlDyBN5qwWQXYKjTHA__ZFaTZDbf0b2_8aWrvUOfePbuFeJub10FUEFbOO6NG98V7PPwBBYF4jRo1m52in3EtaW61lpZv2NY-mZUGPm7FyeaLTAdUAEvJ0ISwMhIQmFNCEnuDNq0mUQfqDo-CJUgHYJTPHVue1gDKWbRdoDctgI2pwWvv-f8LOe-bXkTxacFjnuxkTiO4gfkuV8FAEOfQSdetsSf7zRiCQSo4MVtB_kKLNbak_lGvPmqivSuSF-fZV9m7_cWpKJWGouZLkzStQSUslw",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/questionnaires/{{questionnaireId}}/with-first-question",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "questionnaires",
+                "{{questionnaireId}}",
+                "with-first-question"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/questionnaires/{questionnaireId}/start",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const DEFAULT_USER_ID = 1;\r",
+                  "\r",
+                  "const baseUrl = pm.environment.get(\"baseURL\");\r",
+                  "const usersUrl = `${baseUrl}/users`;\r",
+                  "\r",
+                  "// Call users endpoint before sending the request to /questionnaires\r",
+                  "pm.sendRequest({\r",
+                  "    url: usersUrl,\r",
+                  "    method: 'GET',\r",
+                  "}, (err, res) => {\r",
+                  "    if (err) {\r",
+                  "        console.log(\"Error llamando a /users:\", err);\r",
+                  "        return;\r",
+                  "    }\r",
+                  "    const userData = res.json();\r",
+                  "    if (userData && userData.length > 0) {\r",
+                  "        const randomIndex = Math.floor(Math.random() * userData.length);\r",
+                  "        const user = userData[randomIndex];\r",
+                  "        pm.environment.set(\"userId\", user.id);\r",
+                  "    }else{\r",
+                  "        console.log(\"No users found in the response\");\r",
+                  "        pm.environment.set(\"userId\", DEFAULT_USER_ID); \r",
+                  "    }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test Response Status Code\r",
+                  "pm.test(\"Status code is 201 or 404\", function(){\r",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 404]);\r",
+                  "})\r",
+                  "\r",
+                  "const contentJson = pm.response.json();\r",
+                  "\r",
+                  "// Test Response Body\r",
+                  "if (pm.response.code === 201) {\r",
+                  "    pm.test(\"Response body has correct structure\", function () {\r",
+                  "        pm.expect(contentJson).to.have.property(\"responseId\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"currentQuestion\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"isCompleted\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"totalQuestionsAnswered\");\r",
+                  "    });\r",
+                  "\r",
+                  "    // Test for currentQuestion properties\r",
+                  "    pm.test(\"currentQuestion has correct properties\", function () {\r",
+                  "        pm.expect(contentJson.currentQuestion).to.have.property(\"id\");\r",
+                  "        pm.expect(contentJson.currentQuestion).to.have.property(\"text\");\r",
+                  "        pm.expect(contentJson.currentQuestion).to.have.property(\"type\");\r",
+                  "        pm.expect(contentJson.currentQuestion).to.have.property(\"options\").that.is.an(\"array\");\r",
+                  "    });\r",
+                  "\r",
+                  "    // Test for options array\r",
+                  "    pm.test(\"options array has correct structure\", function () {\r",
+                  "       contentJson.currentQuestion.options.forEach(function(item){\r",
+                  "            pm.expect(item).to.have.property(\"id\");\r",
+                  "            pm.expect(item).to.have.property(\"text\");\r",
+                  "            pm.expect(item).to.have.property(\"requiresTextInput\");\r",
+                  "            pm.expect(item).to.have.property(\"textInputPrompt\");\r",
+                  "            pm.expect(item).to.have.property(\"textInputPlaceholder\");\r",
+                  "       }) \r",
+                  "    });\r",
+                  "\r",
+                  "    pm.environment.set(\"questionId\", contentJson.currentQuestion.id);\r",
+                  "    pm.environment.set(\"totalQuestionsAnswered\", contentJson.totalQuestionsAnswered);\r",
+                  "    pm.environment.set(\"responseId\", contentJson.responseId);\r",
+                  "\r",
+                  "    // Set random option as selected\r",
+                  "    const randomOptionIndex = Math.floor(Math.random() * contentJson.currentQuestion.options.length);\r",
+                  "    const selectedOption = contentJson.currentQuestion.options[randomOptionIndex];\r",
+                  "    pm.environment.set(\"selectedOptionId\", selectedOption.id);\r",
+                  "}\r",
+                  "    "
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIwd2RHX3lxUW5qOU5fLWw5U296RnZLSHQxenk4R241VTl6a2Yxb1dFNTJBIn0.eyJleHAiOjE3NzA0ODM1MzUsImlhdCI6MTc3MDQ4MzIzNSwianRpIjoiMGE0NDgxMWMtMWQ3ZC00ZjZjLTkwNGQtM2E5YjIwMTYyMTc0IiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo5MDkwL3JlYWxtcy9pZml0LXJlYWxtIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjAwMzcxOTZjLWUzYzgtNGI2Mi05ZjhmLWI2NWY0MjI4Yzc3OCIsInR5cCI6IkJlYXJlciIsImF6cCI6InNwcmluZ2Jvb3QtaWZpdC1jbGllbnQiLCJzZXNzaW9uX3N0YXRlIjoiMjAzNDI0MDEtNThmMy00M2Q4LWE5ZDYtYzA2ODMyMTFkMGRiIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLWlmaXQtcmVhbG0iLCJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIiwidXNlciJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfSwic3ByaW5nYm9vdC1pZml0LWNsaWVudCI6eyJyb2xlcyI6WyJ1c2VyX2NsaWVudF9yb2xlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwic2lkIjoiMjAzNDI0MDEtNThmMy00M2Q4LWE5ZDYtYzA2ODMyMTFkMGRiIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJuZXd1c2VyNzAzIHN1cm5hbWU3MDMiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJuZXd1c2VyNzAzQGV4YW1wbGUuY29tIiwiZ2l2ZW5fbmFtZSI6Im5ld3VzZXI3MDMiLCJmYW1pbHlfbmFtZSI6InN1cm5hbWU3MDMiLCJlbWFpbCI6Im5ld3VzZXI3MDNAZXhhbXBsZS5jb20ifQ.iuWtICFOzDgNz8Gc6BL-wrCuZ7H5J8KjKJxXkeJePG7vMTUdum1zo-YBnefbENxBiH8qX1Zn40rId9X9oYJxJ4a1RixrGq7saQRZS1fNVwlD38iSocaZYZmtbpb4CveG3LaIHeGtfvfB1dU2Hz-TtPZb3ooQJLx82rCu6yFgTPecI6m18oMn8P5IkhO0jBmH8PdjkG_C7RJa3v-5b6kLNh4TmUealNoq8HQXNyAOEhQzGTFbET5ypuaVPxFKVcowD5rnXVNVNwU0EnEYe2esuhv9nmUxZtwfWx8OH03JMoEBizRY2hFtn30tx7-5n5hL6ffq8NfXnKbHfQNWe5Pg1A",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/questionnaires/{{userId}}/start/{{questionnaireId}}",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "questionnaires",
+                "{{userId}}",
+                "start",
+                "{{questionnaireId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/responses/{responseId}/answer",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Create the request body as a JSON object and set it to the request body in Postman.\r",
+                  "pm.request.body = {\r",
+                  "    mode: 'raw',\r",
+                  "    raw: JSON.stringify({\r",
+                  "        \"questionId\": \"{{questionId}}\",\r",
+                  "        \"selectedOptionId\": \"{{selectedOptionId}}\",\r",
+                  "        \"additionalText\" : \"\"\r",
+                  "    })\r",
+                  "}\r",
+                  "\r",
+                  "pm.request.headers.add({\r",
+                  "    key: 'Content-Type',\r",
+                  "    value: 'application/json'\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test Status Code",
+                  "pm.test(\"Status code is 200 or 400 or 404\", function(){",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 404]);",
+                  "});",
+                  "",
+                  "const contentJson = pm.response.json();",
+                  "",
+                  "if(pm.response.code === 200){",
+                  "    // Test Response body content the correct properties",
+                  "    pm.test(\"Response body has correct properties\", function () {",
+                  "        pm.expect(contentJson).to.have.property(\"responseId\");",
+                  "        pm.expect(contentJson).to.have.property(\"currentQuestion\");",
+                  "        pm.expect(contentJson).to.have.property(\"isCompleted\");",
+                  "        pm.expect(contentJson).to.have.property(\"totalQuestionsAnswered\");",
+                  "    });",
+                  "    ",
+                  "    // Test Response body updates correctly",
+                  "    pm.test(\"Response body updates correctly\", function () {",
+                  "        pm.expect(contentJson.totalQuestionsAnswered).to.equal(pm.environment.get(\"totalQuestionsAnswered\") + 1);",
+                  "    });",
+                  "",
+                  "    // Test Resopnse body question id is different",
+                  "    pm.test(\"Response body question id is different\", function () {",
+                  "        pm.expect(contentJson.currentQuestion.id).to.not.equal(pm.environment.get(\"questionId\"));",
+                  "    });",
+                  "",
+                  "    // Set environment variables for next request",
+                  "    pm.environment.set(\"questionId\", contentJson.currentQuestion.id);",
+                  "    pm.environment.set(\"totalQuestionsAnswered\", contentJson.totalQuestionsAnswered);",
+                  "    pm.environment.set(\"responseId\", contentJson.responseId);",
+                  "",
+                  "    // Set random option as selected",
+                  "    const randomOptionIndex = Math.floor(Math.random() * contentJson.currentQuestion.options.length);",
+                  "    const selectedOption = contentJson.currentQuestion.options[randomOptionIndex];",
+                  "    pm.environment.set(\"selectedOptionId\", selectedOption.id);",
+                  "    pm.environment.set(\"requiresTextInput\", selectedOption.requiresTextInput);",
+                  "    ",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIwd2RHX3lxUW5qOU5fLWw5U296RnZLSHQxenk4R241VTl6a2Yxb1dFNTJBIn0.eyJleHAiOjE3NzA0ODM1MzUsImlhdCI6MTc3MDQ4MzIzNSwianRpIjoiMGE0NDgxMWMtMWQ3ZC00ZjZjLTkwNGQtM2E5YjIwMTYyMTc0IiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo5MDkwL3JlYWxtcy9pZml0LXJlYWxtIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjAwMzcxOTZjLWUzYzgtNGI2Mi05ZjhmLWI2NWY0MjI4Yzc3OCIsInR5cCI6IkJlYXJlciIsImF6cCI6InNwcmluZ2Jvb3QtaWZpdC1jbGllbnQiLCJzZXNzaW9uX3N0YXRlIjoiMjAzNDI0MDEtNThmMy00M2Q4LWE5ZDYtYzA2ODMyMTFkMGRiIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLWlmaXQtcmVhbG0iLCJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIiwidXNlciJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfSwic3ByaW5nYm9vdC1pZml0LWNsaWVudCI6eyJyb2xlcyI6WyJ1c2VyX2NsaWVudF9yb2xlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwic2lkIjoiMjAzNDI0MDEtNThmMy00M2Q4LWE5ZDYtYzA2ODMyMTFkMGRiIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJuZXd1c2VyNzAzIHN1cm5hbWU3MDMiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJuZXd1c2VyNzAzQGV4YW1wbGUuY29tIiwiZ2l2ZW5fbmFtZSI6Im5ld3VzZXI3MDMiLCJmYW1pbHlfbmFtZSI6InN1cm5hbWU3MDMiLCJlbWFpbCI6Im5ld3VzZXI3MDNAZXhhbXBsZS5jb20ifQ.iuWtICFOzDgNz8Gc6BL-wrCuZ7H5J8KjKJxXkeJePG7vMTUdum1zo-YBnefbENxBiH8qX1Zn40rId9X9oYJxJ4a1RixrGq7saQRZS1fNVwlD38iSocaZYZmtbpb4CveG3LaIHeGtfvfB1dU2Hz-TtPZb3ooQJLx82rCu6yFgTPecI6m18oMn8P5IkhO0jBmH8PdjkG_C7RJa3v-5b6kLNh4TmUealNoq8HQXNyAOEhQzGTFbET5ypuaVPxFKVcowD5rnXVNVNwU0EnEYe2esuhv9nmUxZtwfWx8OH03JMoEBizRY2hFtn30tx7-5n5hL6ffq8NfXnKbHfQNWe5Pg1A",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/questionnaires/responses/{{responseId}}/answer",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "questionnaires",
+                "responses",
+                "{{responseId}}",
+                "answer"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/responses/{responseId}/summary",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIwd2RHX3lxUW5qOU5fLWw5U296RnZLSHQxenk4R241VTl6a2Yxb1dFNTJBIn0.eyJleHAiOjE3NzA0ODM1MzUsImlhdCI6MTc3MDQ4MzIzNSwianRpIjoiMGE0NDgxMWMtMWQ3ZC00ZjZjLTkwNGQtM2E5YjIwMTYyMTc0IiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo5MDkwL3JlYWxtcy9pZml0LXJlYWxtIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjAwMzcxOTZjLWUzYzgtNGI2Mi05ZjhmLWI2NWY0MjI4Yzc3OCIsInR5cCI6IkJlYXJlciIsImF6cCI6InNwcmluZ2Jvb3QtaWZpdC1jbGllbnQiLCJzZXNzaW9uX3N0YXRlIjoiMjAzNDI0MDEtNThmMy00M2Q4LWE5ZDYtYzA2ODMyMTFkMGRiIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLWlmaXQtcmVhbG0iLCJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIiwidXNlciJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfSwic3ByaW5nYm9vdC1pZml0LWNsaWVudCI6eyJyb2xlcyI6WyJ1c2VyX2NsaWVudF9yb2xlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwic2lkIjoiMjAzNDI0MDEtNThmMy00M2Q4LWE5ZDYtYzA2ODMyMTFkMGRiIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJuZXd1c2VyNzAzIHN1cm5hbWU3MDMiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJuZXd1c2VyNzAzQGV4YW1wbGUuY29tIiwiZ2l2ZW5fbmFtZSI6Im5ld3VzZXI3MDMiLCJmYW1pbHlfbmFtZSI6InN1cm5hbWU3MDMiLCJlbWFpbCI6Im5ld3VzZXI3MDNAZXhhbXBsZS5jb20ifQ.iuWtICFOzDgNz8Gc6BL-wrCuZ7H5J8KjKJxXkeJePG7vMTUdum1zo-YBnefbENxBiH8qX1Zn40rId9X9oYJxJ4a1RixrGq7saQRZS1fNVwlD38iSocaZYZmtbpb4CveG3LaIHeGtfvfB1dU2Hz-TtPZb3ooQJLx82rCu6yFgTPecI6m18oMn8P5IkhO0jBmH8PdjkG_C7RJa3v-5b6kLNh4TmUealNoq8HQXNyAOEhQzGTFbET5ypuaVPxFKVcowD5rnXVNVNwU0EnEYe2esuhv9nmUxZtwfWx8OH03JMoEBizRY2hFtn30tx7-5n5hL6ffq8NfXnKbHfQNWe5Pg1A",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/questionnaires/responses/{{responseId}}/summary",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "questionnaires",
+                "responses",
+                "{{responseId}}",
+                "summary"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "generate-routine",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIwd2RHX3lxUW5qOU5fLWw5U296RnZLSHQxenk4R241VTl6a2Yxb1dFNTJBIn0.eyJleHAiOjE3NzE4NjE5MzEsImlhdCI6MTc3MTg2MTYzMSwianRpIjoiMTdiMTAzYWQtMzgwMi00OGU1LTgyZDQtYzIyN2Y3N2E3MDkzIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo5MDkwL3JlYWxtcy9pZml0LXJlYWxtIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjVhYzFmN2IzLWVlM2YtNDgyZC1iNzA3LWNlYmRlNzUwZmVlNiIsInR5cCI6IkJlYXJlciIsImF6cCI6InNwcmluZ2Jvb3QtaWZpdC1jbGllbnQiLCJzZXNzaW9uX3N0YXRlIjoiZDc4MWQ1NmYtMWVjNS00ZjI5LWFhY2YtMzExMWU0MjE0YmY4IiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLWlmaXQtcmVhbG0iLCJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIiwidXNlciJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfSwic3ByaW5nYm9vdC1pZml0LWNsaWVudCI6eyJyb2xlcyI6WyJ1c2VyX2NsaWVudF9yb2xlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwic2lkIjoiZDc4MWQ1NmYtMWVjNS00ZjI5LWFhY2YtMzExMWU0MjE0YmY4IiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJuZXd1c2VyODI3IHN1cm5hbWU4MjciLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJuZXd1c2VyODI3QGV4YW1wbGUuY29tIiwiZ2l2ZW5fbmFtZSI6Im5ld3VzZXI4MjciLCJmYW1pbHlfbmFtZSI6InN1cm5hbWU4MjciLCJlbWFpbCI6Im5ld3VzZXI4MjdAZXhhbXBsZS5jb20ifQ.XH5K7x2R3i1ZuX53Ml6I9eRhy37nyBP0qSh2lQhE6ceMeWsUDfH2bAvU9X86dRoKUG2Qyt4HSo_8UOuQe7ShsDvH61rYiMbTcJSvqOoS2HP9oPSxhkp2V6Q7RTi3Vy2FJo4gY61XlyeiWgC1ajiTz_XAJWO6KuryRFhio7yHaqJ5CG_gMc8zna77NTEkWBL50fk6VsMGuV34RFzKMV2Bhvi58PzGELOOS-maOH6niei-wYAuJJfCJ4rkdN4UKqiACy8anlJGxQ-LRWbHf2pfOJFMA4s9X7V4cdQAmX6IxnVHWXqTjofJcoxmSa9MkdZ4F9Goej_Q9-gegEuDW9FkwQ",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"userId\" : 1,\r\n    \"responseId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/routines/generate",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "routines",
+                "generate"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "StartFragment\n\n# Pruebas E2E del endpoint `/ifit/api/v1/questionnaires`\n\nEste conjunto de pruebas end-to-end valida el ciclo completo de vida de un cuestionario dentro del sistema, asegurando que los endpoints funcionan correctamente y que el flujo de preguntas y respuestas se gestiona de forma coherente según la lógica del árbol de decisión.\n\n## 1\\. GET `/questionnaires`\n\nObtiene todos los cuestionarios disponibles en el sistema.\n\nDe forma aleatoria, se selecciona un cuestionario y se almacenan sus datos en el environment para ser reutilizados en las pruebas posteriores:\n\n- `questionnaireId` - ID del cuestionario seleccionado\n    \n- `questionnaireCoachName` - Nombre del modelo de entrenador asociado\n    \n- `questionnaireExperienceName` - Nombre del nivel de experiencia asociado\n    \n\n## 2\\. GET `/questionnaires/{questionnaireId}/with-first-question`\n\nRecupera un cuestionario específico por su ID junto con su primera pregunta.\n\nSe valida que:\n\n- El cuestionario existe y contiene los metadatos correctos\n    \n- La primera pregunta del árbol de decisión está incluida en la respuesta\n    \n- Las opciones de respuesta disponibles están presentes\n    \n\n## 3\\. POST `/questionnaires/{questionnaireId}/start`\n\nInicia una nueva sesión de cuestionario para el usuario autenticado.\n\nEl sistema genera una nueva respuesta de usuario (`QuestionnaireResponse`) y devuelve:\n\n- `responseId` - ID de la sesión del cuestionario, que se almacena en el environment\n    \n- `questionnaireId` - ID del cuestionario iniciado\n    \n- `currentQuestion` - Pregunta actual con sus opciones de respuesta disponibles\n    \n\nCada opción de respuesta contiene el `nextQuestionId`, que determina la siguiente pregunta según la lógica del árbol de decisión.\n\n## 4\\. POST `/responses/{responseId}/answer`\n\nResponde a la pregunta actual de la sesión identificada por `responseId`.\n\nEl endpoint procesa la respuesta seleccionada y:\n\n- Persiste la respuesta del usuario en la base de datos\n    \n- Determina la siguiente pregunta según la opción elegida y la lógica del árbol de decisión\n    \n- Devuelve la siguiente pregunta si existe, o marca el cuestionario como completado\n    \n\nSe valida que:\n\n- La respuesta se registra correctamente\n    \n- El campo `currentQuestionId` se actualiza con la siguiente pregunta\n    \n- Si no hay más preguntas, el cuestionario se marca como finalizado\n    \n\nEsta prueba se puede ejecutar de forma iterativa hasta completar todo el cuestionario.\n\n## 5\\. GET `/responses/{responseId}/summary`\n\nObtiene el resumen completo de todas las respuestas proporcionadas durante la sesión del cuestionario.\n\nSe comprueba que:\n\n- El resumen incluye todas las preguntas respondidas\n    \n- Cada respuesta contiene el texto de la pregunta y la opción seleccionada\n    \n- Los datos coinciden con las respuestas enviadas durante el flujo\n    \n- La información de finalización del cuestionario es correcta\n    \n\nEste endpoint permite visualizar el historial completo de respuestas del usuario para análisis o generación de rutinas personalizadas.\n\n---\n\n## Flujo de Ejecución\n\n1. **Listar cuestionarios** → Seleccionar uno aleatoriamente\n    \n2. **Obtener cuestionario con primera pregunta** → Validar estructura\n    \n3. **Iniciar sesión de cuestionario** → Obtener `responseId`\n    \n4. **Responder preguntas** → Iterar hasta completar el cuestionario\n    \n5. **Obtener resumen de respuestas** → Validar integridad de los datos\n    \n\n## Variables de Environment Utilizadas\n\n| Variable | Descripción | Asignada en |\n| --- | --- | --- |\n| `questionnaireId` | ID del cuestionario seleccionado | Prueba 1 |\n| `questionnaireCoachName` | Modelo de entrenador asociado | Prueba 1 |\n| `questionnaireExperienceName` | Nivel de experiencia asociado | Prueba 1 |\n| `responseId` | ID de la sesión activa del cuestionario | Prueba 3 |\n| `currentQuestionId` | ID de la pregunta actual siendo respondida | Pruebas 3, 4 |\n\n## Criterios de Éxito\n\n- ✅ Todos los endpoints devuelven códigos de estado HTTP apropiados\n    \n- ✅ La lógica del árbol de decisión navega correctamente entre preguntas\n    \n- ✅ Las respuestas se persisten correctamente en la base de datos\n    \n- ✅ El resumen final incluye todas las respuestas enviadas\n    \n- ✅ No quedan sesiones incompletas u orphaned responses tras la ejecución\n    \n\nEndFragment"
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "/auth/register",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Create the request body\r",
+                  "// Generate a random name, email, and password for the new user.\r",
+                  "var randomNum = Math.floor(Math.random() * 1000) + 1;  \r",
+                  "var name = \"newuser\" + randomNum;\r",
+                  "var surname = \"surname\" + randomNum;\r",
+                  "var email = \"newuser\" + randomNum + \"@example.com\";\r",
+                  "var password = \"P@ssword\";\r",
+                  "var birthdate = \"1990-01-01\";\r",
+                  "var phone = \"651634807\";\r",
+                  "\r",
+                  "// Set the request body with the new user data\r",
+                  "pm.request.body.update({\r",
+                  "    mode: 'raw',\r",
+                  "    raw: JSON.stringify({\r",
+                  "        \"name\": name,\r",
+                  "        \"surname\": surname,\r",
+                  "        \"email\": email,\r",
+                  "        \"password\": password,\r",
+                  "        \"birthdate\": birthdate,\r",
+                  "        \"phone\": phone\r",
+                  "    })\r",
+                  "});\r",
+                  "\r",
+                  "// Set Content-Type header\r",
+                  "pm.request.headers.add({\r",
+                  "    key: 'Content-Type',\r",
+                  "    value: 'application/json'\r",
+                  "});\r",
+                  "\r",
+                  "// Set environment variables for the new user.\r",
+                  "pm.environment.set(\"newName\", name);\r",
+                  "pm.environment.set(\"newEmail\", email);\r",
+                  "pm.environment.set(\"newPassword\", password);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test the response status code\r",
+                  "pm.test(\"Status code is 201\", function () {\r",
+                  "    pm.response.to.have.status(201);\r",
+                  "});\r",
+                  "\r",
+                  "var contentJson = pm.response.json();\r",
+                  "\r",
+                  "if(pm.response.code === 201){\r",
+                  "    // Comprobar que la respuesta trae los campos correctos\r",
+                  "    pm.test(\"Response contains the correct fields (accessToken, refreshToken, appUser)\", function () {\r",
+                  "        pm.expect(contentJson).to.have.property(\"accessToken\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"refreshToken\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"appUser\");\r",
+                  "    });\r",
+                  "\r",
+                  "    // Los datos asignados al usuario son correctos\r",
+                  "    pm.test(\"User data is correct\", function () {\r",
+                  "        pm.expect(contentJson.appUser.name).to.contain(pm.environment.get(\"newName\"));\r",
+                  "        pm.expect(contentJson.appUser.email).to.eql(pm.environment.get(\"newEmail\"));\r",
+                  "        pm.expect(contentJson.appUser.roleName).to.eql(\"ROLE_USER\");\r",
+                  "    });\r",
+                  "}\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/auth/register",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/auth/login",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Create the request body\r",
+                  "var email = pm.environment.get(\"newEmail\");\r",
+                  "var password = pm.environment.get(\"newPassword\");\r",
+                  "\r",
+                  "// Set the request body with the new user data\r",
+                  "pm.request.body.update({\r",
+                  "    mode: 'raw',\r",
+                  "    raw: JSON.stringify({\r",
+                  "        \"username\": \"juan00520@test.com\",\r",
+                  "        \"password\": \"Test1234!\"\r",
+                  "    })\r",
+                  "});\r",
+                  "\r",
+                  "// Set Content-Type header\r",
+                  "pm.request.headers.add({\r",
+                  "    key: 'Content-Type',\r",
+                  "    value: 'application/json'\r",
+                  "});\r",
+                  "\r",
+                  "// Set environment variables for the new user.\r",
+                  "pm.environment.set(\"newEmail\", email);\r",
+                  "pm.environment.set(\"newPassword\", password);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test the response status code\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "var contentJson = pm.response.json();\r",
+                  "\r",
+                  "if(pm.response.code === 200){\r",
+                  "    // Comprobar que la respuesta trae los campos correctos\r",
+                  "    pm.test(\"Response contains the correct fields (accessToken, refreshToken, appUser)\", function () {\r",
+                  "        pm.expect(contentJson).to.have.property(\"accessToken\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"refreshToken\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"appUser\");\r",
+                  "    });\r",
+                  "\r",
+                  "    // Los datos asignados al usuario son correctos\r",
+                  "    pm.test(\"User data is correct\", function () {\r",
+                  "        pm.expect(contentJson.appUser.name).to.contain(pm.environment.get(\"newName\"));\r",
+                  "        pm.expect(contentJson.appUser.email).to.eql(pm.environment.get(\"newEmail\"));\r",
+                  "        pm.expect(contentJson.appUser.roleName).to.eql(\"ROLE_USER\");\r",
+                  "    });\r",
+                  "}\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/auth/login",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Routine",
+      "item": [
+        {
+          "name": "/routines/generate",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIwd2RHX3lxUW5qOU5fLWw5U296RnZLSHQxenk4R241VTl6a2Yxb1dFNTJBIn0.eyJleHAiOjE3NzA0ODM1MzUsImlhdCI6MTc3MDQ4MzIzNSwianRpIjoiMGE0NDgxMWMtMWQ3ZC00ZjZjLTkwNGQtM2E5YjIwMTYyMTc0IiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo5MDkwL3JlYWxtcy9pZml0LXJlYWxtIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6IjAwMzcxOTZjLWUzYzgtNGI2Mi05ZjhmLWI2NWY0MjI4Yzc3OCIsInR5cCI6IkJlYXJlciIsImF6cCI6InNwcmluZ2Jvb3QtaWZpdC1jbGllbnQiLCJzZXNzaW9uX3N0YXRlIjoiMjAzNDI0MDEtNThmMy00M2Q4LWE5ZDYtYzA2ODMyMTFkMGRiIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLWlmaXQtcmVhbG0iLCJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIiwidXNlciJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfSwic3ByaW5nYm9vdC1pZml0LWNsaWVudCI6eyJyb2xlcyI6WyJ1c2VyX2NsaWVudF9yb2xlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwic2lkIjoiMjAzNDI0MDEtNThmMy00M2Q4LWE5ZDYtYzA2ODMyMTFkMGRiIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJuZXd1c2VyNzAzIHN1cm5hbWU3MDMiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJuZXd1c2VyNzAzQGV4YW1wbGUuY29tIiwiZ2l2ZW5fbmFtZSI6Im5ld3VzZXI3MDMiLCJmYW1pbHlfbmFtZSI6InN1cm5hbWU3MDMiLCJlbWFpbCI6Im5ld3VzZXI3MDNAZXhhbXBsZS5jb20ifQ.iuWtICFOzDgNz8Gc6BL-wrCuZ7H5J8KjKJxXkeJePG7vMTUdum1zo-YBnefbENxBiH8qX1Zn40rId9X9oYJxJ4a1RixrGq7saQRZS1fNVwlD38iSocaZYZmtbpb4CveG3LaIHeGtfvfB1dU2Hz-TtPZb3ooQJLx82rCu6yFgTPecI6m18oMn8P5IkhO0jBmH8PdjkG_C7RJa3v-5b6kLNh4TmUealNoq8HQXNyAOEhQzGTFbET5ypuaVPxFKVcowD5rnXVNVNwU0EnEYe2esuhv9nmUxZtwfWx8OH03JMoEBizRY2hFtn30tx7-5n5hL6ffq8NfXnKbHfQNWe5Pg1A",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"userId\" : 1,\r\n    \"responseId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/routines/generate",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "routines",
+                "generate"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "/v3/api-docs",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/v3/api-docs",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "v3",
+            "api-docs"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "/swagger-ui.html",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/swagger-ui.html",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "swagger-ui.html"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TrainingDay",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIwd2RHX3lxUW5qOU5fLWw5U296RnZLSHQxenk4R241VTl6a2Yxb1dFNTJBIn0.eyJleHAiOjE3NzMxNjE4MDQsImlhdCI6MTc3MzE2MTUwNCwianRpIjoiNDcxNzg1ZjUtMTYwZC00NDQ0LWIwOTMtOGE5MDJiNzIxMDViIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo5MDkwL3JlYWxtcy9pZml0LXJlYWxtIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6ImNiNDg2Mjk5LWM3OTAtNDg5NC1iZTdjLWVhMTg2Yzk3MTI5ZSIsInR5cCI6IkJlYXJlciIsImF6cCI6InNwcmluZ2Jvb3QtaWZpdC1jbGllbnQiLCJzZXNzaW9uX3N0YXRlIjoiYmQ5MjhhZDctZDQ4Ny00NGVjLTgxZmItM2NjMzhjNzgyZTliIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJkZWZhdWx0LXJvbGVzLWlmaXQtcmVhbG0iLCJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIiwidXNlciJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfSwic3ByaW5nYm9vdC1pZml0LWNsaWVudCI6eyJyb2xlcyI6WyJ1c2VyX2NsaWVudF9yb2xlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwic2lkIjoiYmQ5MjhhZDctZDQ4Ny00NGVjLTgxZmItM2NjMzhjNzgyZTliIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJ1c2VydGVzdDYzOTA4Njc3NjU0NDAyOTExMSIsInByZWZlcnJlZF91c2VybmFtZSI6InVzZXJ0ZXN0NjM5MDg2Nzc2NTQ0MDI5MTExQHRlc3QuY29tIiwiZ2l2ZW5fbmFtZSI6InVzZXJ0ZXN0NjM5MDg2Nzc2NTQ0MDI5MTExIiwiZW1haWwiOiJ1c2VydGVzdDYzOTA4Njc3NjU0NDAyOTExMUB0ZXN0LmNvbSJ9.b9UbStahDMCiMBLvOrZME_LRqf_ZXLO4fQBqnEXt-PGhXkrDBFfnjm4e6pEmX1Gc41IIxeKQ3Nj8vBsZgpvt5nLtNxHU76J-3TzdY3mPEUWaPI9RqE-V5QQRxGyRS8ee4neT1KqSniepw3pH4kQ-unZnnCIGKnrctxQZ1EMYeKLbeNDeqT4YULOnog1Q-IKpxnwapZO2_tTPYFoigqqZDojnw8xcnLzHBTtiZPQy9AKY7QFmroPbKyyZzJS06jTIF7cxBDBSFmGzfQpGxUOx_mrBSwQZAqYgma7KLNpZxfnLL7hAohWqTK_pGkf8OFMjQIQ7sERvO_kVk-I71Z8_Yg",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/routines/11/day/1{day}",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "routines",
+            "11",
+            "day",
+            "1{day}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Exercise-catalog",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseURL",
+      "value": ""
+    }
+  ]
+}

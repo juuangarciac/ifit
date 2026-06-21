@@ -10,7 +10,10 @@ import com.uca.juangarcia.adminpanel.client.QuestionnaireApiClient;
 import com.uca.juangarcia.adminpanel.dto.CoachModelTypeResponseDto;
 import com.uca.juangarcia.adminpanel.dto.CreateQuestionnaireRequestDto;
 import com.uca.juangarcia.adminpanel.dto.ExperienceLevelDto;
+import com.uca.juangarcia.adminpanel.dto.OptionDto;
+import com.uca.juangarcia.adminpanel.dto.QuestionDto;
 import com.uca.juangarcia.adminpanel.dto.QuestionnaireDto;
+import com.uca.juangarcia.adminpanel.dto.QuestionnaireWithFirstQuestionDto;
 import com.uca.juangarcia.adminpanel.dto.UpdateQuestionnaireRequestDto;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -19,6 +22,8 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
@@ -111,7 +116,8 @@ public class QuestionnairesView extends VerticalLayout {
         boolean isNew = questionnaire == null;
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle(isNew ? "Nuevo cuestionario" : "Editar cuestionario");
-        dialog.setWidth("480px");
+        dialog.setWidth("800px");
+        dialog.setHeight("90vh");
 
         TextField name = new TextField("Nombre");
         name.setWidthFull();
@@ -162,7 +168,32 @@ public class QuestionnairesView extends VerticalLayout {
         VerticalLayout form = new VerticalLayout(name, description, coachCombo, levelCombo, enabledCheckbox);
         form.setPadding(false);
         form.setSpacing(false);
-        dialog.add(form);
+
+        VerticalLayout dialogContent = new VerticalLayout();
+        dialogContent.setPadding(false);
+        dialogContent.setSpacing(true);
+
+        HorizontalLayout mainContent = new HorizontalLayout();
+        mainContent.setWidthFull();
+        mainContent.setSpacing(true);
+        mainContent.add(form);
+
+        if (!isNew && questionnaire.firstQuestionId() != null) {
+            try {
+                QuestionnaireWithFirstQuestionDto fullData = api.getByIdWithFirstQuestion(questionnaire.id());
+                if (fullData.firstQuestion() != null) {
+                    VerticalLayout questionsSection = buildQuestionsSection(fullData.firstQuestion());
+                    mainContent.add(questionsSection);
+                    mainContent.setFlexGrow(1, questionsSection);
+                }
+            } catch (Exception e) {
+                ViewSupport.handleApiError(auth, "No se pudieron cargar las preguntas", e);
+            }
+        }
+
+        dialogContent.add(mainContent);
+        dialogContent.setFlexGrow(1, mainContent);
+        dialog.add(dialogContent);
 
         Button save = new Button("Guardar", e -> {
             if (name.getValue() == null || name.getValue().trim().isEmpty()) {
@@ -284,5 +315,90 @@ public class QuestionnairesView extends VerticalLayout {
 
     private String safe(String v) {
         return v == null ? "" : v;
+    }
+
+    private VerticalLayout buildQuestionsSection(QuestionDto question) {
+        VerticalLayout questionsSection = new VerticalLayout();
+        questionsSection.setWidthFull();
+        questionsSection.setMinWidth("350px");
+        questionsSection.setPadding(false);
+        questionsSection.setSpacing(true);
+
+        H3 title = new H3("Primera Pregunta");
+        title.setMargin(false);
+        questionsSection.add(title);
+
+        VerticalLayout questionsList = new VerticalLayout();
+        questionsList.setWidthFull();
+        questionsList.setPadding(false);
+        questionsList.setSpacing(false);
+        questionsList.addClassName("questions-list");
+
+        questionsList.add(buildQuestionCard(question));
+
+        questionsList.getStyle().set("border", "1px solid var(--lumo-contrast-20pct)");
+        questionsList.getStyle().set("border-radius", "var(--lumo-border-radius)");
+        questionsList.getStyle().set("padding", "var(--lumo-space-s)");
+
+        questionsSection.add(questionsList);
+        questionsSection.setFlexGrow(1, questionsList);
+
+        Span infoNote = new Span("Nota: El cuestionario contiene un árbol de decisión completo comenzando por esta pregunta.");
+        infoNote.getStyle()
+            .set("color", "var(--lumo-secondary-text-color)")
+            .set("font-size", "0.875rem")
+            .set("margin-top", "var(--lumo-space-m)");
+        questionsSection.add(infoNote);
+
+        return questionsSection;
+    }
+
+    private VerticalLayout buildQuestionCard(QuestionDto question) {
+        VerticalLayout card = new VerticalLayout();
+        card.setWidthFull();
+        card.setPadding(true);
+        card.setSpacing(true);
+        card.getStyle()
+            .set("border-bottom", "1px solid var(--lumo-contrast-10pct)")
+            .set("padding-bottom", "var(--lumo-space-m)")
+            .set("margin-bottom", "var(--lumo-space-m)");
+
+        Span questionText = new Span(question.text());
+        questionText.setWidthFull();
+        questionText.getStyle().set("font-weight", "500");
+
+        Span typeSpan = new Span("Tipo: " + question.type());
+        typeSpan.getStyle().set("color", "var(--lumo-secondary-text-color)");
+        typeSpan.getStyle().set("font-size", "0.875rem");
+
+        card.add(questionText, typeSpan);
+
+        if (question.options() != null && !question.options().isEmpty()) {
+            VerticalLayout optionsList = new VerticalLayout();
+            optionsList.setWidthFull();
+            optionsList.setPadding(false);
+            optionsList.setSpacing(false);
+
+            for (OptionDto option : question.options()) {
+                Span optionSpan = new Span("• " + option.text());
+                optionSpan.getStyle()
+                    .set("margin-left", "var(--lumo-space-m)")
+                    .set("display", "block")
+                    .set("padding", "4px 0");
+
+                if (Boolean.TRUE.equals(option.requiresTextInput())) {
+                    optionSpan.getStyle().set("color", "var(--lumo-primary-color)");
+                    if (option.textInputPrompt() != null) {
+                        optionSpan.setText("• " + option.text() + " (📝 " + option.textInputPrompt() + ")");
+                    }
+                }
+
+                optionsList.add(optionSpan);
+            }
+
+            card.add(optionsList);
+        }
+
+        return card;
     }
 }

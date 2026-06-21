@@ -1,0 +1,493 @@
+{
+  "info": {
+    "_postman_id": "0ffd6ebb-d87a-4f57-8f06-45701d8aa83b",
+    "name": "api-gateway",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "33218545"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "/auth/register",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Create the request body\r",
+                  "// Generate a random name, email, and password for the new user.\r",
+                  "var randomNum = Math.floor(Math.random() * 1000) + 1;  \r",
+                  "var name = \"newuser\" + randomNum;\r",
+                  "var surname = \"surname\" + randomNum;\r",
+                  "var email = \"newuser\" + randomNum + \"@example.com\";\r",
+                  "var password = \"P@ssword\";\r",
+                  "var birthdate = \"1990-01-01\";\r",
+                  "var phone = \"651634807\";\r",
+                  "\r",
+                  "// Set the request body with the new user data\r",
+                  "pm.request.body.update({\r",
+                  "    mode: 'raw',\r",
+                  "    raw: JSON.stringify({\r",
+                  "        \"name\": name,\r",
+                  "        \"surname\": surname,\r",
+                  "        \"email\": email,\r",
+                  "        \"password\": password,\r",
+                  "        \"birthdate\": birthdate,\r",
+                  "        \"phone\": phone\r",
+                  "    })\r",
+                  "});\r",
+                  "\r",
+                  "// Set Content-Type header\r",
+                  "pm.request.headers.add({\r",
+                  "    key: 'Content-Type',\r",
+                  "    value: 'application/json'\r",
+                  "});\r",
+                  "\r",
+                  "// Set environment variables for the new user.\r",
+                  "pm.environment.set(\"newName\", name);\r",
+                  "pm.environment.set(\"newEmail\", email);\r",
+                  "pm.environment.set(\"newPassword\", password);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test the response status code\r",
+                  "pm.test(\"Status code is 201\", function () {\r",
+                  "    pm.response.to.have.status(201);\r",
+                  "});\r",
+                  "\r",
+                  "var contentJson = pm.response.json();\r",
+                  "\r",
+                  "if(pm.response.code === 201){\r",
+                  "    // Comprobar que la respuesta trae los campos correctos\r",
+                  "    pm.test(\"Response contains the correct fields (accessToken, refreshToken, appUser)\", function () {\r",
+                  "        pm.expect(contentJson).to.have.property(\"accessToken\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"refreshToken\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"appUser\");\r",
+                  "    });\r",
+                  "\r",
+                  "    // Los datos asignados al usuario son correctos\r",
+                  "    pm.test(\"User data is correct\", function () {\r",
+                  "        pm.expect(contentJson.appUser.name).to.contain(pm.environment.get(\"newName\"));\r",
+                  "        pm.expect(contentJson.appUser.email).to.eql(pm.environment.get(\"newEmail\"));\r",
+                  "        pm.expect(contentJson.appUser.roleName).to.eql(\"ROLE_USER\");\r",
+                  "    });\r",
+                  "}\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/auth/register",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/auth/login",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Create the request body\r",
+                  "var email = \"usertest639076409346287801@test.com\";\r",
+                  "var password = \"P@ssword\";\r",
+                  "\r",
+                  "\r",
+                  "// Set the request body with the new user data\r",
+                  "pm.request.body.update({\r",
+                  "    mode: 'raw',\r",
+                  "    raw: JSON.stringify({\r",
+                  "        \"username\": email,\r",
+                  "        \"password\": password\r",
+                  "    })\r",
+                  "});\r",
+                  "console.log(\"Request body: \" + pm.request.body.raw);\r",
+                  "\r",
+                  "\r",
+                  "// Set Content-Type header\r",
+                  "pm.request.headers.add({\r",
+                  "    key: 'Content-Type',\r",
+                  "    value: 'application/json'\r",
+                  "});\r",
+                  "\r",
+                  "// Set environment variables for the new user.\r",
+                  "pm.environment.set(\"newEmail\", email);\r",
+                  "pm.environment.set(\"newPassword\", password);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Test the response status code\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "var contentJson = pm.response.json();\r",
+                  "\r",
+                  "if(pm.response.code === 200){\r",
+                  "    // Comprobar que la respuesta trae los campos correctos\r",
+                  "    pm.test(\"Response contains the correct fields (accessToken, refreshToken, appUser)\", function () {\r",
+                  "        pm.expect(contentJson).to.have.property(\"accessToken\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"refreshToken\");\r",
+                  "        pm.expect(contentJson).to.have.property(\"appUser\");\r",
+                  "    });\r",
+                  "\r",
+                  "    // Los datos asignados al usuario son correctos\r",
+                  "    pm.test(\"User data is correct\", function () {\r",
+                  "        pm.expect(contentJson.appUser.name).to.contain(pm.environment.get(\"newName\"));\r",
+                  "        pm.expect(contentJson.appUser.email).to.eql(pm.environment.get(\"newEmail\"));\r",
+                  "        pm.expect(contentJson.appUser.roleName).to.eql(\"ROLE_USER\");\r",
+                  "    });\r",
+                  "\r",
+                  "    // Comprobar que el token de acceso y el token de refresco no están vacíos\r",
+                  "    pm.test(\"Access token and refresh token are not empty\", function () {\r",
+                  "        pm.expect(contentJson.accessToken).to.not.be.empty;\r",
+                  "        pm.expect(contentJson.refreshToken).to.not.be.empty;\r",
+                  "    });\r",
+                  "\r",
+                  "    pm.environment.set(\"accessToken\", contentJson.accessToken);\r",
+                  "    pm.environment.set(\"refreshToken\", contentJson.refreshToken);\r",
+                  "}\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/auth/login",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/auth/refresh",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Status code\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "var contentJson = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Response contains new acces token, refresh token\", function () {\r",
+                  "    pm.expect(contentJson).to.have.property(\"accessToken\");\r",
+                  "    pm.expect(contentJson).to.have.property(\"refreshToken\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "\r",
+                  "const refreshToken = pm.environment.get(\"refreshToken\");\r",
+                  "\r",
+                  "console.log(\"Envrioment refresh token: \" + refreshToken);\r",
+                  "\r",
+                  "pm.request.body = {\r",
+                  "    mode: \"raw\",\r",
+                  "    raw: JSON.stringify({\r",
+                  "        refreshToken: refreshToken\r",
+                  "    }),\r",
+                  "}\r",
+                  "\r",
+                  "pm.request.headers.add({\r",
+                  "    key: \"Content-Type\",\r",
+                  "    value: \"application/json\"\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/auth/refresh",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/auth/logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Status code\r",
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "var contentJson = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Response contains message field\", function () {\r",
+                  "    pm.expect(contentJson).to.have.property(\"message\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Message is 'Session closed successfully'\", function () {\r",
+                  "    pm.expect(contentJson.message).to.equal(\"Session closed successfully\");\r",
+                  "    });"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "\r",
+                  "const refreshToken = pm.environment.get(\"refreshToken\");\r",
+                  "\r",
+                  "console.log(\"Envrioment refresh token: \" + refreshToken);\r",
+                  "\r",
+                  "pm.request.body = {\r",
+                  "    mode: \"raw\",\r",
+                  "    raw: JSON.stringify({\r",
+                  "        refreshToken: refreshToken\r",
+                  "    }),\r",
+                  "}\r",
+                  "\r",
+                  "pm.request.headers.add({\r",
+                  "    key: \"Content-Type\",\r",
+                  "    value: \"application/json\"\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/auth/logout",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/auth/refresh (After logout)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Status code\r",
+                  "pm.test(\"Status code is 500\", function () {\r",
+                  "    pm.response.to.have.status(500);\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "\r",
+                  "const refreshToken = pm.environment.get(\"refreshToken\");\r",
+                  "\r",
+                  "console.log(\"Envrioment refresh token: \" + refreshToken);\r",
+                  "\r",
+                  "pm.request.body = {\r",
+                  "    mode: \"raw\",\r",
+                  "    raw: JSON.stringify({\r",
+                  "        refreshToken: refreshToken\r",
+                  "    }),\r",
+                  "}\r",
+                  "\r",
+                  "pm.request.headers.add({\r",
+                  "    key: \"Content-Type\",\r",
+                  "    value: \"application/json\"\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/auth/refresh",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "/auth/verify",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\" : \"newuser703@example.com\",\r\n    \"verificationCode\" : \"442042\",\r\n    \"password\" : \"P@ssword\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/auth/verify",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "auth",
+                "verify"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "auth": {
+        "type": "noauth"
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
