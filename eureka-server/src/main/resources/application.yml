@@ -1,8 +1,16 @@
+# ============================================================================
+# EUREKA SERVER · application.yml
+# ============================================================================
+
 spring:
   application:
     name: eureka-server
+
+# ── Servidor ────────────────────────────────────────────────────────────────
 server:
   port: 8761
+
+# ── Eureka (servidor: no se registra a sí mismo ni descarga el registro) ────
 eureka:
   client:
     register-with-eureka: false

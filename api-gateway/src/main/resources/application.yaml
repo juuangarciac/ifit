@@ -1,10 +1,15 @@
+# ============================================================================
+# API GATEWAY · application.yaml
+# ============================================================================
+
 spring:
   application:
     name: ApiGatewayService
-  
+
   main:
     web-application-type: reactive
 
+  # ── Seguridad · OAuth2 Resource Server (Keycloak) ──────────────────────────
   security:
     oauth2:
       resourceserver:
@@ -12,11 +17,11 @@ spring:
           issuer-uri: http://localhost:9090/realms/ifit-realm
           jwk-set-uri: http://localhost:9090/realms/ifit-realm/protocol/openid-connect/certs
 
+  # ── Rutas del Gateway (descubrimiento vía Eureka: lb://) ───────────────────
   cloud:
     gateway:
-      default-filters:
       routes:
-        # Ruta pública para autenticación (sin TokenRelay)
+        # Ruta pública de autenticación (sin TokenRelay)
         - id: IFIT-PUBLIC
           uri: lb://IFIT
           predicates:
@@ -24,56 +29,52 @@ spring:
           filters:
             - StripPrefix=3
 
-         # Ruta para servicios de AI (Ronnie y otros coaches)
+        # Servicios de IA (Ronnie y coaches)
         - id: RONNIE
           uri: lb://RONNIE
           predicates:
             - Path=/ifit/api/v1/ronnie/**, /ifit/api/v1/serena/**, /ifit/api/v1/kael/**, /ifit/api/v1/eliud/**, /ifit/api/v1/messages/**
           filters:
-            - StripPrefix=3  
+            - StripPrefix=3
             - TokenRelay
 
-        # Ruta privada para endpoints protegidos
+        # Endpoints privados (protegidos)
         - id: IFIT-PRIVATE
           uri: lb://IFIT
           predicates:
             - Path=/ifit/api/v1/**
           filters:
-            - StripPrefix=3  
-            - TokenRelay     
-         
+            - StripPrefix=3
+            - TokenRelay
+
+# ── Servidor ────────────────────────────────────────────────────────────────
 server:
   port: 8080
 
+# ── Service Discovery (Eureka) ──────────────────────────────────────────────
 eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
     register-with-eureka: true
     fetch-registry: true
-  
   instance:
     prefer-ip-address: true
     hostname: localhost
     instance-id: ${spring.application.name}:${server.port}
 
+# ── Logging ─────────────────────────────────────────────────────────────────
 logging:
   level:
-    # Spring Security
     org:
       springframework:
-        security: 
+        security:
           web: TRACE
           oauth2: TRACE
-        # Spring Cloud Gateway
         cloud:
           gateway: TRACE
-    
-    # Reactor Netty (WebFlux)
     reactor:
       netty: TRACE
-    
-    # Eureka / Netflix Discovery
     com:
       netflix:
         eureka: DEBUG
