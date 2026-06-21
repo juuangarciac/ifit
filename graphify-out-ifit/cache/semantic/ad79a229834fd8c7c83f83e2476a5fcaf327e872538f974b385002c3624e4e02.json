@@ -1,1 +1,0 @@
-{"nodes": [{"id": "converters_StringNotNullOrEmptyConverter", "label": "StringNotNullOrEmptyConverter (string \u2192 bool)", "file_type": "code", "source_file": "Converters/StringNotNullOrEmptyConverter.cs", "source_location": "StringNotNullOrEmptyConverter", "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}
