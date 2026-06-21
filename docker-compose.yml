@@ -1,13 +1,15 @@
 # ============================================================================
-# DOCKER COMPOSE - IFIT SISTEMA COMPLETO (DESARROLLO Y PRODUCCIÓN)
+# DOCKER COMPOSE - IFIT (SOLO SERVICIOS INFRAESTRUCTURA)
 # ============================================================================
 #
 # USO:
-#   Desarrollo (localhost):
-#     docker-compose up -d
+#   docker-compose up -d
 #
-#   Producción (env vars):
-#     SPRING_PROFILES_ACTIVE=production docker-compose up -d
+# Servicios:
+#   - MySQL: Base de datos
+#   - Keycloak: Servidor OAuth2
+#
+# Nota: API Gateway, iFit, Ronnie y Admin-Panel se ejecutan localmente
 #
 # ============================================================================
 
@@ -64,143 +66,6 @@ services:
       timeout: 10s
       retries: 5
       start_period: 90s
-
-  # ==========================================================================
-  # API GATEWAY - PUNTO DE ENTRADA ÚNICO
-  # ==========================================================================
-  gateway:
-    build:
-      context: ./api-gateway
-      dockerfile: Dockerfile
-    container_name: ifit-gateway
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-    environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
-      - SERVER_PORT=8080
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:9090/realms/ifit-realm
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:9090/realms/ifit-realm/protocol/openid-connect/certs
-    depends_on:
-      keycloak:
-        condition: service_healthy
-    networks:
-      - ifit-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
-
-  # ==========================================================================
-  # IFIT - MICROSERVICIO PRINCIPAL
-  # ==========================================================================
-  ifit:
-    build:
-      context: ./ifit
-      dockerfile: Dockerfile
-    container_name: ifit-service
-    restart: unless-stopped
-    ports:
-      - "8081:8081"
-    environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
-      - SERVER_PORT=8081
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/${DB_NAME:-ifit}
-      - SPRING_DATASOURCE_USERNAME=${DB_ROOT_PASSWORD:-root}
-      - SPRING_DATASOURCE_PASSWORD=${DB_ROOT_PASSWORD:-root}
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:9090/realms/ifit-realm
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:9090/realms/ifit-realm/protocol/openid-connect/certs
-      - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID:-springboot-ifit-client}
-      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET:-}
-      - KEYCLOAK_TOKEN_URL=http://keycloak:9090/realms/ifit-realm/protocol/openid-connect/token
-      - KEYCLOAK_AUTH_SERVER_URL=http://keycloak:9090
-      - RONNIE_SERVICE_URL=http://ronnie:8082
-      - SPRING_MAIL_HOST=${MAIL_HOST:-smtp.gmail.com}
-      - SPRING_MAIL_PORT=${MAIL_PORT:-587}
-      - SPRING_MAIL_USERNAME=${MAIL_USERNAME:-}
-      - SPRING_MAIL_PASSWORD=${MAIL_PASSWORD:-}
-    depends_on:
-      mysql:
-        condition: service_healthy
-      keycloak:
-        condition: service_healthy
-      gateway:
-        condition: service_healthy
-    networks:
-      - ifit-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 90s
-
-  # ==========================================================================
-  # RONNIE - MICROSERVICIO IA (LANGCHAIN4J + GROQ)
-  # ==========================================================================
-  ronnie:
-    build:
-      context: ./ronnie
-      dockerfile: Dockerfile
-    container_name: ifit-ronnie
-    restart: unless-stopped
-    ports:
-      - "8082:8082"
-    environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
-      - SERVER_PORT=8082
-      - SERVER_SERVLET_CONTEXT_PATH=/ifit/aimodels/api/v1
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/${DB_NAME:-ifit}
-      - SPRING_DATASOURCE_USERNAME=${DB_ROOT_PASSWORD:-root}
-      - SPRING_DATASOURCE_PASSWORD=${DB_ROOT_PASSWORD:-root}
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:9090/realms/ifit-realm
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:9090/realms/ifit-realm/protocol/openid-connect/certs
-      - GROQ_API_KEY=${GROQ_API_KEY:-}
-      - LLM_MODEL=${LLM_MODEL:-llama-3.3-70b-versatile}
-    depends_on:
-      mysql:
-        condition: service_healthy
-      keycloak:
-        condition: service_healthy
-      gateway:
-        condition: service_healthy
-    networks:
-      - ifit-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/ifit/aimodels/api/v1/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 120s
-
-  # ==========================================================================
-  # ADMIN-PANEL - INTERFAZ DE ADMINISTRACIÓN (VAADIN)
-  # ==========================================================================
-  admin-panel:
-    build:
-      context: ./admin-panel
-      dockerfile: Dockerfile
-    container_name: ifit-admin-panel
-    restart: unless-stopped
-    ports:
-      - "8084:8084"
-    environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
-      - SERVER_PORT=8084
-      - IFIT_GATEWAY_BASE_URL=http://gateway:8080
-    depends_on:
-      gateway:
-        condition: service_healthy
-    networks:
-      - ifit-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
 
 # ============================================================================
 # NETWORKS
