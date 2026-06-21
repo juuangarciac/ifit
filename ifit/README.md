@@ -1224,109 +1224,875 @@ public class QuestionnaireService {
 
 ---
 
-### Training — Rutinas y Generación IA
+### Training — Rutinas y Generación IA con Ronnie
 
-Este módulo es el punto de conexión entre el cuestionario completado y el motor de IA. Gestiona el ciclo de vida completo de las rutinas de entrenamiento y orquesta la llamada al microservicio Ronnie.
+Este módulo orquesta la generación de rutinas personalizadas mediante el motor de IA (Ronnie) y gestiona el ciclo de vida completo de las rutinas de entrenamiento. Es el corazón del sistema: transforma respuestas del cuestionario en planes de entrenamiento tangibles.
 
-#### Modelo de Datos
-
-Una rutina (`Routine`) tiene la siguiente jerarquía:
+#### 1. Arquitectura y Flujo General
 
 ```
-Routine
- ├── userId (referencia al usuario)
- ├── name, description, trainingDays
- ├── isActive, isCompleted
- └── List<RoutineDay>
-      ├── dayNumber (1–7), dayName, description, isCompleted
-      └── List<RoutineExercise>
-           ├── exerciseName, sets, reps, restSeconds
-           ├── notes, orderIndex
-           └── (relación con Exercise del catálogo)
+Usuario completa cuestionario
+    ↓
+POST /routines/generate { userId, responseId, coachType, note }
+    ↓
+RoutineService obtiene resumen del cuestionario
+    ↓
+Construye prompt personalizado (perfil + respuestas + contexto coach)
+    ↓
+IFitAIClient llama POST /ronnie/generate-routine a Ronnie
+    ↓
+Ronnie (LangChain4j + Groq) genera rutina JSON
+    ↓
+Service reconcilia nombres de ejercicios con catálogo local
+    ↓
+Retorna RoutineResponseDto (transitorio, SIN persistencia en BD)
+    ↓
+Cliente puede guardar con POST /routines { days: [...] }
+    ↓
+Service persiste Routine + RoutineDay + RoutineExercise en MySQL
 ```
 
-#### CoachType — Los 5 Coaches de IA
+**Nota crítica:** `POST /routines/generate` NO guarda en BD; solo devuelve un preview. El cliente debe confirmar y guardar.
 
-El enum `CoachType` define los coaches de IA disponibles. Cada uno aporta su especialidad mediante un `systemContext` que se inyecta en el prompt enviado a Ronnie:
+---
 
-| Coach | Especialidad | Endpoint en Ronnie |
-|---|---|---|
-| `MASTER` (DEPRECATED) | Planificador generalista (en desuso, fuera de servicio) | `/master/generate-routine` |
-| `RONNIE` | Hipertrofia y fuerza muscular (inspirado en Ronnie Coleman) | `/ronnie/generate-routine` |
-| `ELIUD` | Running, cardio y rendimiento aeróbico | `/eliud/generate-routine` |
-| `SERENA` | Fitness femenino, tonificación y bienestar | `/serena/generate-routine` |
-| `KAEL` | Calistenia y street workout | `/kael/generate-routine` |
+#### 2. Modelos/Entidades
 
-> [!WARNING]
-> **Deprecación de MASTER**: El coach `MASTER` y su endpoint correspondiente están obsoletos y no deben utilizarse. Para la generación activa de rutinas del usuario, se debe seleccionar obligatoriamente un coach de especialidad real (Ronnie, Eliud, Serena o Kael).
-
-Para los coaches activos, `systemContext` se incluye en el prompt bajo la sección `ROL DEL ENTRENADOR` para perfilar al LLM.
-
-#### IFitAIClient — Cliente HTTP hacia Ronnie
-
-`IFitAIClient` es el componente `@Component` encargado de toda la comunicación con el microservicio Ronnie. Usa `RestTemplate` y maneja errores 4xx/5xx lanzando `RuntimeException` con el mensaje original de Ronnie.
-
-Expone dos operaciones:
+##### Routine (Entidad Principal)
 
 ```java
-// Genera una rutina llamando al coach correspondiente
-RoutineResponseDto generateRoutine(int memoryId, String prompt,
-                                   String keycloakUserId, CoachType coachType)
-
-// Obtiene el mayor memoryId en uso (para asignar uno nuevo a cada conversación)
-IFitAIMaxMemoryIdResponseDto getMaxMemoryId()
+public class Routine {
+    Long id;                              // PK
+    AppUser user;                         // FK - propietario
+    String description;                   // Descripción de la rutina (nullable)
+    Integer trainingDays;                 // Número total de días (1-7)
+    Boolean isActive;                     // true = rutina actual del usuario (default: true)
+    Boolean deleted;                      // Soft-delete flag (default: false)
+    Integer currentDay;                   // Día actual en ejecución (default: 1)
+    LocalDateTime createdAt;              // Timestamp de creación
+    LocalDateTime updatedAt;              // Timestamp de última actualización
+    List<RoutineDay> days;                // OneToMany con cascade=ALL, orphanRemoval=true
+}
 ```
 
-El `memoryId` permite a LangChain4j mantener historial de conversación en Ronnie. Cada generación de rutina recibe un `memoryId` único derivado del máximo actual + 1, evitando colisiones.
+**Campos críticos:**
+- `isActive`: Solo una rutina activa por usuario; al crear nueva se desactivan anteriores
+- `deleted`: Soft-delete para cancelar sin eliminar historial
+- `currentDay`: Seguimiento de progreso (1 → N → 1 cíclico)
+- `days`: Relación cascada; al eliminar Routine se eliminan todos sus días y ejercicios
 
-#### Flujo Completo de Generación de Rutina
+**Métodos:**
+- `addDay(RoutineDay)` / `removeDay(RoutineDay)`: Gestionar relación bidireccional
+- Constructor con user, description, trainingDays
 
-```
-Cliente  →  POST /routines/generate
-            { userId, responseId, coachType, note }
+---
 
-RoutineService.generateRoutine():
-  1. Valida que el usuario existe (AppUserRepository)
-  2. Obtiene el keycloakUserId del usuario
-  3. Llama a questionnaireService.getResponseSummary(responseId)
-     → devuelve lista de { pregunta, opción elegida, texto adicional }
-  4. Construye el prompt en buildRoutinePrompt():
-     - Encabezado con nombre del usuario y coach
-     - Si coachType != MASTER: sección "ROL DEL ENTRENADOR" con systemContext
-     - Por cada pregunta respondida:
-         "- <texto pregunta>\n  Respuesta: <opción elegida o [No respondida]>\n"
-       + si tiene texto adicional: "  Detalle: <additionalText>\n"
-     - Si request.note != null: sección "NOTA ESPECIAL DEL USUARIO"
-  5. Obtiene el siguiente memoryId: aiClient.getMaxMemoryId() + 1
-  6. Llama a aiClient.generateRoutine(memoryId, prompt, keycloakUserId, coachType)
-     → HTTP POST a Ronnie: /{coachType}/generate-routine
-        Body: { memoryId, message: <prompt>, keycloakUserId }
-  7. Ronnie devuelve IFitAIRoutineResponseDto con estructura de rutina
-  8. RoutineService transforma y persiste la rutina en MySQL
-  9. Devuelve RoutineResponseDto al cliente
+##### RoutineDay (Días de la Rutina)
+
+```java
+public class RoutineDay {
+    Long id;                              // PK
+    Routine routine;                      // FK - rutina padre (lazy)
+    Integer dayNumber;                    // 1 a trainingDays
+    String dayName;                       // Nombre descriptivo (ej: "Tren Push")
+    String description;                   // Descripción del día
+    List<RoutineExercise> exercises;      // OneToMany con cascade=ALL, orphanRemoval=true
+}
 ```
 
-#### Otros Endpoints de Training
+**Relación con Routine:**
+- OneToMany con FK routine_id
+- Cascada completa: al eliminar día se eliminan ejercicios
 
-Además de la generación, el controlador expone gestión completa de rutinas:
+---
+
+##### RoutineExercise (Ejercicios)
+
+```java
+public class RoutineExercise {
+    Long id;                              // PK
+    RoutineDay routineDay;                // FK - día padre
+    String exerciseName;                  // Nombre (reconciliado con catálogo)
+    Long exerciseId;                      // FK opcional a exercise_catalog
+    Integer sets;                         // Series (nullable)
+    String reps;                          // Repeticiones: "8-12", "AMRAP", etc. (nullable)
+    Integer restSeconds;                  // Descanso entre series (nullable)
+    String notes;                         // Notas/recomendaciones (nullable)
+    Integer orderIndex;                   // Orden dentro del día (nullable)
+}
+```
+
+**Campos críticos:**
+- `exerciseId`: Puede ser NULL si ejercicio no se encuentra en catálogo local
+- `exerciseName`: Nombre canónico tras reconciliación (si se encuentra); original si no
+- Todos los campos excepto `exerciseName` son nullable
+
+---
+
+##### CoachType (Enum de Coaches de IA)
+
+```java
+enum CoachType {
+    MASTER {
+        displayName = "Master"
+        systemContext = null              // ⚠️ DEPRECATED - no usar
+    },
+    
+    RONNIE {
+        displayName = "Ronnie"
+        systemContext = """
+        Eres Ronnie, especializado en hipertrofia y fuerza muscular.
+        Diseña rutinas con ejercicios de musculación clásica:
+        press de banca, sentadilla, peso muerto, remo, dominadas...
+        Alto volumen adaptado al nivel del usuario.
+        El catálogo disponible es la única fuente válida de ejercicios.
+        """
+    },
+    
+    ELIUD {
+        displayName = "Eliud"
+        systemContext = """
+        Eres Eliud, especializado en running, cardio y resistencia.
+        Diseña rutinas con ejercicios funcionales para corredores:
+        sentadillas, zancadas, puente de glúteos, core, trabajo aeróbico...
+        Progresión gradual sin sobrecargar articulaciones.
+        El catálogo disponible es la única fuente válida.
+        """
+    },
+    
+    SERENA {
+        displayName = "Serena"
+        systemContext = """
+        Eres Serena, especializada en fitness femenino y bienestar.
+        Diseña rutinas full body accesibles con énfasis en glúteos y core:
+        sentadillas, puente de glúteos, plancha, bird-dog, estiramientos...
+        Sesiones de 30-45 minutos, empáticas y positivas.
+        El catálogo disponible es la única fuente válida.
+        """
+    },
+    
+    KAEL {
+        displayName = "Kael"
+        systemContext = """
+        Eres Kael, especialista en calistenia y fuerza sin equipamiento.
+        Diseña rutinas con ejercicios de peso corporal:
+        flexiones, fondos, dominadas, sentadillas, plancha, HIIT...
+        Entrenamientos realizables en casa o parque.
+        El catálogo disponible es la única fuente válida.
+        """
+    }
+}
+```
+
+**Métodos:**
+- `getDisplayName()`: Nombre para logs
+- `getSystemContext()`: Inyectado en prompt (null para MASTER)
+- `getEndpointPath()`: Retorna `"/" + displayName.toLowerCase() + "/generate-routine"`
+
+**Endpoints HTTP:**
+- RONNIE → `/ronnie/generate-routine`
+- ELIUD → `/eliud/generate-routine`
+- SERENA → `/serena/generate-routine`
+- KAEL → `/kael/generate-routine`
+- MASTER → `/master/generate-routine` (deprecated)
+
+---
+
+#### 3. DTOs (Data Transfer Objects)
+
+##### Request DTOs
+
+**GenerateRoutineRequestDto** (POST /routines/generate)
+```java
+@NotNull Long userId
+@NotNull Long responseId                 // ID de sesión de cuestionario completada
+CoachType coachType                      // default: MASTER
+String note                              // Nota especial del usuario (nullable)
+```
+
+**CreateRoutineRequestDto** (POST /routines - creación manual)
+```java
+@NotNull Long userId
+@Size(max=1000) String description       // Descripción libre
+@NotNull @Min(1) Integer trainingDays    // Número de días
+@NotEmpty @Valid List<RoutineDayDto> days // Estructura completa
+```
+
+**UpdateRoutineRequestDto** (PUT /routines/{id})
+```java
+@Size(max=1000) String description       // nullable - solo si se proporciona
+@Min(1) Integer trainingDays             // nullable
+Boolean isActive                         // nullable
+@Valid List<RoutineDayDto> days          // nullable - reemplaza si proporcionado
+```
+
+**RonnieMessageDto** (Payload HTTP a Ronnie)
+```java
+int memoryId                             // ID de conversación en LangChain4j
+String message                           // El prompt construido
+String userId                            // keycloakUserId del usuario
+```
+
+---
+
+##### Response DTOs
+
+**RoutineResponseDto** (retornado por todos los endpoints)
+```java
+Long id                                  // nullable si es transitorio (de /generate)
+Long userId
+String message                           // Hardcoded: "Bienvenido a tu nueva rutina..."
+String description
+Integer trainingDays
+Boolean isActive
+Boolean deleted
+Integer currentDay                       // Día actual en ejecución
+LocalDateTime createdAt
+LocalDateTime updatedAt
+List<RoutineDayDto> days
+```
+
+**Nota:** El `message` es **siempre** el mismo texto motivacional inyectado por `RoutineMapper`, NO viene de la IA.
+
+**RoutineDayDto**
+```java
+Long id
+Integer dayNumber                        // 1 a trainingDays
+String dayName                           // "Día 1 - Push", etc.
+String description
+List<RoutineExerciseDto> exercises
+```
+
+**RoutineExerciseDto**
+```java
+Long id
+String exerciseName                      // Nombre final (canónico si reconciliado)
+Long exerciseId                          // nullable - link al catálogo
+Integer sets
+String reps                              // "8-12", "AMRAP", etc.
+Integer restSeconds
+String notes
+Integer orderIndex
+```
+
+---
+
+##### DTOs de Ronnie (Client)
+
+**IFitAIRoutineResponseDto** (respuesta de `/ronnie/generate-routine`)
+```java
+String message                           // Texto motivacional de la IA
+String description                       // Resumen de la rutina generada
+Integer trainingDays
+List<IFitAIRoutineDayDto> days
+```
+
+**IFitAIRoutineDayDto**
+```java
+Integer dayNumber
+String dayName
+String description
+List<IFitAIRoutineExerciseDto> exercises
+```
+
+**IFitAIRoutineExerciseDto** (nombres BRUTOS de IA)
+```java
+String exerciseName                      // Ej: "Flexiones de pecho"
+Integer sets
+String reps
+Integer restSeconds
+String notes
+Integer orderIndex
+// Nota: sin exerciseId; se asigna después en normalizeExerciseNames()
+```
+
+**IFitAIMaxMemoryIdResponseDto**
+```java
+Integer maxMemoryId
+```
+
+---
+
+#### 4. Flujo Detallado: Generación de Rutina con IA
+
+##### A. Request HTTP
+
+```
+POST /routines/generate
+Content-Type: application/json
+
+{
+  "userId": 123,
+  "responseId": 456,
+  "coachType": "RONNIE",
+  "note": "Quiero enfatizar en brazos"
+}
+```
+
+##### B. RoutineController → RoutineService
+
+```java
+@PostMapping("/generate")
+@Transactional
+RoutineResponseDto generateRoutine(@RequestBody GenerateRoutineRequestDto requestDto) {
+    return routineService.generateRoutine(
+        requestDto.userId(),
+        requestDto.responseId(),
+        requestDto.coachType(),
+        requestDto.note()
+    );
+}
+```
+
+##### C. RoutineService.generateRoutine() - Fase 1: Validación y Obtención de Datos
+
+```java
+@Transactional
+public RoutineResponseDto generateRoutine(
+    Long userId, Long responseId, CoachType coachType, String note) {
+    
+    // 1. Validación
+    if (userId == null) throw new IllegalArgumentException("userId is required");
+    if (responseId == null) throw new IllegalArgumentException("responseId is required");
+    
+    // 2. Obtener usuario
+    AppUser user = appUserRepository.findById(userId)
+        .orElseThrow(() -> new UserIdNotFoundException("User not found"));
+    
+    // 3. Normalizar coach (si null → MASTER)
+    CoachType resolvedCoach = coachType != null ? coachType : CoachType.MASTER;
+    
+    // 4. Obtener resumen del cuestionario
+    QuestionnaireResponseSummaryDto summary = 
+        questionnaireService.getResponseSummary(responseId);
+    // Retorna: {
+    //   responseId, userId, userName, questionnaireId, questionnaireName,
+    //   answers: [ {questionText, selectedOption, additionalText, ...}, ... ],
+    //   isCompleted, startedAt, completedAt
+    // }
+```
+
+##### D. RoutineService.generateRoutine() - Fase 2: Construcción del Prompt
+
+```java
+    // 5. Construir prompt
+    String prompt = buildRoutinePrompt(user, summary, note);
+    
+    // ESTRUCTURA DEL PROMPT GENERADO:
+    /*
+    PERFIL DEL USUARIO:
+    Nombre: Juan Garcia
+    Nivel de experiencia: Principiante
+    Catálogo a usar: BEGINNER
+    
+    Cuestionario: Ronnie - Fuerza para Principiantes
+    Descripción: Rutina de fuerza para usuarios nuevos...
+    
+    RESPUESTAS AL CUESTIONARIO:
+    - ¿Cuál es tu objetivo principal?
+      Respuesta: Ganar músculo
+    
+    - ¿Tienes lesiones o limitaciones?
+      Respuesta: [No respondida]
+    
+    - ¿Frecuencia de entrenamiento?
+      Respuesta: 3-4 veces por semana
+      Detalle: Prefiero lunes, miércoles, viernes
+    
+    NOTA ESPECIAL DEL USUARIO:
+    Quiero enfatizar en brazos
+    */
+```
+
+**Mapeo de niveles:**
+- "Principiante" → "BEGINNER"
+- "Intermedio" → "INTERMEDIATE"
+- "Avanzado" → "ADVANCED"
+
+**Manejo de "Prefiero no responder":**
+- Si `selectedOption.text == "Prefiero no responder"` → reemplaza por `"[No respondida]"`
+
+##### E. RoutineService.generateRoutine() - Fase 3: Llamada a Ronnie
+
+```java
+    // 6. Obtener memoryId
+    int memoryId = aiClient.getMaxMemoryId().getMaxMemoryId();
+    // maxMemoryId = 10, entonces: memoryId = 11
+    
+    // 7. Llamar a Ronnie
+    RoutineResponseDto routineResponseDto = aiClient.generateRoutine(
+        memoryId,                    // 11
+        prompt,                      // string construido
+        user.getKeycloakUserId(),   // "uuid-user-id"
+        resolvedCoach                // CoachType.RONNIE
+    );
+    // HTTP: POST http://localhost:8082/ronnie/generate-routine
+    // Body: { memoryId: 11, message: prompt, userId: "uuid-..." }
+    // Response: IFitAIRoutineResponseDto
+```
+
+**HTTP Request a Ronnie:**
+```
+POST http://localhost:8082/ronnie/generate-routine
+Content-Type: application/json
+Authorization: Bearer {jwt-token}
+
+{
+  "memoryId": 11,
+  "message": "[prompt completo de 500-2000 chars]",
+  "userId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+}
+```
+
+**HTTP Response de Ronnie:**
+```json
+{
+  "message": "¡Vamos a hacer que tú también seas un campeón!...",
+  "description": "Rutina Push-Pull-Legs especializada...",
+  "trainingDays": 3,
+  "days": [
+    {
+      "dayNumber": 1,
+      "dayName": "Día 1 - Push",
+      "description": "Enfocado en pecho, hombros, tríceps...",
+      "exercises": [
+        {
+          "exerciseName": "Flexiones de pecho",
+          "sets": 3,
+          "reps": "8-12",
+          "restSeconds": 90,
+          "notes": "Mantén espalda recta",
+          "orderIndex": 0
+        },
+        ...
+      ]
+    },
+    ...
+  ]
+}
+```
+
+##### F. RoutineService.generateRoutine() - Fase 4: Normalización de Ejercicios
+
+```java
+    // 8. Reconciliación de nombres de ejercicios
+    normalizeExerciseNames(routineResponseDto);
+    
+    // PSEUDOCÓDIGO:
+    for (RoutineDayDto day : routineResponseDto.getDays()) {
+        for (RoutineExerciseDto exercise : day.getExercises()) {
+            String rawName = exercise.getExerciseName();  // "Flexiones de pecho"
+            
+            Optional<ExerciseResolution> match = 
+                exerciseNameResolver.resolve(rawName);
+            
+            if (match.isPresent()) {
+                String canonical = match.get().getCanonicalName();  // "Push-up de pecho"
+                Long catalogId = match.get().getId();               // 42
+                
+                exercise.setExerciseName(canonical);
+                exercise.setExerciseId(catalogId);
+                
+                logger.info("Normalized: '{}' → '{}' (id: {})", 
+                    rawName, canonical, catalogId);
+            } else {
+                logger.warn("Not found in catalog: '{}'", rawName);
+                // exercise.setExerciseName() mantiene original
+                // exercise.setExerciseId() queda null
+            }
+        }
+    }
+    
+    // LOG FINAL:
+    logger.info("Catalog reconciliation: 12/13 exercises linked to catalog");
+```
+
+##### G. RoutineService.generateRoutine() - Fase 5: Retorno (SIN Persistencia)
+
+```java
+    // 9. Retornar (NO se guarda en BD aquí)
+    routineResponseDto.setUserId(userId);
+    return routineResponseDto;
+    
+    // RESPUESTA AL CLIENTE:
+    // {
+    //   "userId": 123,
+    //   "message": "Bienvenido a tu nueva rutina...",  ← Hardcoded en mapper
+    //   "description": "Rutina Push-Pull-Legs...",
+    //   "trainingDays": 3,
+    //   "isActive": false,
+    //   "deleted": false,
+    //   "currentDay": null,
+    //   "createdAt": null,
+    //   "updatedAt": null,
+    //   "days": [ { "dayNumber": 1, "dayName": "Día 1 - Push", ... }, ... ]
+    // }
+}
+```
+
+**Nota crítica:** `id`, `createdAt` son `null` porque aún no se ha persistido en BD.
+
+---
+
+#### 5. Persistencia Manual (Cliente Debe Guardar)
+
+Si el cliente acepta la rutina generada, debe hacer:
+
+```
+POST /routines
+Content-Type: application/json
+
+{
+  "userId": 123,
+  "description": "Rutina Push-Pull-Legs personalizada",
+  "trainingDays": 3,
+  "days": [
+    {
+      "dayNumber": 1,
+      "dayName": "Día 1 - Push",
+      "description": "...",
+      "exercises": [
+        {
+          "exerciseName": "Push-up de pecho",
+          "exerciseId": 42,
+          "sets": 3,
+          "reps": "8-12",
+          "restSeconds": 90,
+          "notes": "...",
+          "orderIndex": 0
+        },
+        ...
+      ]
+    },
+    ...
+  ]
+}
+```
+
+**RoutineService.createRoutine():**
+```java
+@Transactional
+public RoutineResponseDto createRoutine(CreateRoutineRequestDto requestDto) {
+    // 1. Validar usuario existe
+    AppUser user = appUserRepository.findById(requestDto.userId())
+        .orElseThrow(() -> new UserIdNotFoundException("User not found"));
+    
+    // 2. Desactivar rutinas anteriores del usuario
+    List<Routine> activeRoutines = routineRepository
+        .findByUserIdAndIsActiveAndDeletedFalse(user.getId(), true);
+    activeRoutines.forEach(r -> r.setIsActive(false));
+    routineRepository.saveAll(activeRoutines);
+    
+    // 3. Crear Routine
+    Routine routine = new Routine();
+    routine.setUser(user);
+    routine.setDescription(requestDto.description());
+    routine.setTrainingDays(requestDto.trainingDays());
+    routine.setIsActive(true);
+    routine.setDeleted(false);
+    routine.setCurrentDay(1);
+    routine.setCreatedAt(LocalDateTime.now());
+    
+    // 4. Crear RoutineDay + RoutineExercise (cascada)
+    for (RoutineDayDto dayDto : requestDto.days()) {
+        RoutineDay day = new RoutineDay();
+        day.setRoutine(routine);
+        day.setDayNumber(dayDto.dayNumber());
+        day.setDayName(dayDto.dayName());
+        day.setDescription(dayDto.description());
+        
+        for (RoutineExerciseDto exDto : dayDto.exercises()) {
+            RoutineExercise exercise = new RoutineExercise();
+            exercise.setRoutineDay(day);
+            exercise.setExerciseName(exDto.exerciseName());
+            exercise.setExerciseId(exDto.exerciseId());  // puede ser null
+            exercise.setSets(exDto.sets());
+            exercise.setReps(exDto.reps());
+            exercise.setRestSeconds(exDto.restSeconds());
+            exercise.setNotes(exDto.notes());
+            exercise.setOrderIndex(exDto.orderIndex());
+            
+            day.addExercise(exercise);
+        }
+        
+        routine.addDay(day);
+    }
+    
+    // 5. Persistir (cascada guardará todo)
+    Routine saved = routineRepository.save(routine);
+    
+    // 6. Mapear y retornar
+    return routineMapper.toResponseDto(saved);  // Ahora sí tiene ID, createdAt, etc.
+}
+```
+
+**Respuesta (201 Created):**
+```json
+{
+  "id": 999,
+  "userId": 123,
+  "message": "Bienvenido a tu nueva rutina...",
+  "description": "Rutina Push-Pull-Legs personalizada",
+  "trainingDays": 3,
+  "isActive": true,
+  "deleted": false,
+  "currentDay": 1,
+  "createdAt": "2025-06-21T10:30:00",
+  "updatedAt": null,
+  "days": [...]
+}
+```
+
+Ahora `id` y `createdAt` están poblados.
+
+---
+
+#### 6. Endpoints Completos (18 Total)
+
+##### A. Creación
+
+| Método | Endpoint | Request | Response | Auth | Descripción |
+|---|---|---|---|---|---|
+| **POST** | `/routines/generate` | GenerateRoutineRequestDto | RoutineResponseDto (transitorio) | None | Genera rutina con IA (NO persiste) |
+| **POST** | `/routines` | CreateRoutineRequestDto | RoutineResponseDto (persistido) | None | Crea rutina manual o confirma generada |
+
+##### B. Lectura
+
+| Método | Endpoint | Parámetros | Response | Auth | Descripción |
+|---|---|---|---|---|---|
+| **GET** | `/routines` | None | List<RoutineResponseDto> | **admin_client_role** | Todas las rutinas (admin) |
+| **GET** | `/routines/paginated` | page, size, sortBy, sortDir (query) | Page<RoutineResponseDto> | None | Con paginación |
+| **GET** | `/routines/{id}` | id (path) | RoutineResponseDto | None | Por ID con fetchJoin (evita N+1) |
+| **GET** | `/routines/user/{userId}` | userId (path) | List<RoutineResponseDto> | None | Todas del usuario (no deletadas) |
+| **GET** | `/routines/user/{userId}/paginated` | userId, page, size, sortBy, sortDir | Page<RoutineResponseDto> | None | Paginadas del usuario |
+| **GET** | `/routines/user/{userId}/active` | userId (path) | List<RoutineResponseDto> | None | Solo activas (isActive=true, deleted=false) |
+| **GET** | `/routines/user/{userId}/count-active` | userId (path) | Long | None | Contador de activas |
+| **GET** | `/routines/{routineId}/day/{day}` | routineId, day (path) | RoutineDayDto | None | Detalle de un día (para UI de progreso) |
+
+##### C. Actualización
+
+| Método | Endpoint | Request | Response | Auth | Descripción |
+|---|---|---|---|---|---|
+| **PUT** | `/routines/{id}` | UpdateRoutineRequestDto | RoutineResponseDto | **admin_client_role** | Actualiza (campos no null) |
+| **PATCH** | `/routines/{id}/toggle-active` | isActive (query) | RoutineResponseDto | None | Activa/desactiva; desactiva otras del usuario si activa=true |
+| **PATCH** | `/routines/{id}/cancel` | None | RoutineResponseDto | None | Soft-delete; lanza RoutineIsActiveException si isActive=true |
+
+##### D. Progreso/Seguimiento
+
+| Método | Endpoint | Request | Response | Auth | Descripción |
+|---|---|---|---|---|---|
+| **POST** | `/routines/{routineId}/day/{day}/complete` | routineId, day (path) | RoutineResponseDto | None | Marca día completado; avanza currentDay cíclicamente |
+| **POST** | `/routines/{routineId}/complete` | routineId (path) | RoutineResponseDto | None | Marca rutina completada; desactiva (setActive=false) |
+
+**Lógica de `day/complete`:**
+```java
+// Si day == maxDay: currentDay = 1 (reinicia ciclo)
+// Si day < maxDay: currentDay = day + 1 (avanza)
+```
+
+##### E. Eliminación
+
+| Método | Endpoint | Request | Response | Auth | Descripción |
+|---|---|---|---|---|---|
+| **DELETE** | `/routines/{id}` | id (path) | 204 No Content | None | Hard-delete (irreversible) |
+
+---
+
+#### 7. Mappers (Conversión Entity ↔ DTO)
+
+Los mappers convierten entidades JPA a DTOs para serialización HTTP. Notar que el `message` es inyectado en mapper, no viene de IA:
+
+```java
+@Component
+public class RoutineMapper {
+    
+    public RoutineResponseDto toResponseDto(Routine routine) {
+        return new RoutineResponseDto(
+            routine.getId(),
+            routine.getUser().getId(),
+            "Bienvenido a tu nueva rutina personalizada. Esta rutina ha sido diseñada "
+            + "específicamente para ti, teniendo en cuenta tus objetivos, nivel de "
+            + "experiencia y preferencias. Asegúrate de seguirla de manera consistente "
+            + "para obtener los mejores resultados. ¡Vamos a por ello!",  // ← HARDCODED
+            routine.getDescription(),
+            routine.getTrainingDays(),
+            routine.getIsActive(),
+            routine.getDeleted(),
+            routine.getCurrentDay(),
+            routine.getCreatedAt(),
+            routine.getUpdatedAt(),
+            routine.getDays().stream()
+                .map(routineDayMapper::toDto)
+                .collect(Collectors.toList())
+        );
+    }
+    
+    public Page<RoutineResponseDto> toResponseDtoPage(Page<Routine> page) {
+        return page.map(this::toResponseDto);
+    }
+}
+```
+
+---
+
+#### 8. Validaciones y Excepciones
+
+| Operación | Validación | Excepción |
+|---|---|---|
+| `generateRoutine()` | userId != null | IllegalArgumentException |
+| `generateRoutine()` | responseId != null | IllegalArgumentException |
+| `createRoutine()` | userId existe | UserIdNotFoundException |
+| `findRoutineById()` | id existe | RoutineNotFoundException |
+| `updateRoutine()` | id existe | RoutineNotFoundException |
+| `toggleRoutineActive()` | id existe | RoutineNotFoundException |
+| `softDeleteRoutine()` | id existe | RoutineNotFoundException |
+| `softDeleteRoutine()` | isActive = false | **RoutineIsActiveException** (no puede cancelar activa) |
+| `deleteRoutine()` | id existe | RoutineNotFoundException |
+
+**RoutineIsActiveException:**
+```
+Mensaje: "La rutina con ID {id} es la rutina activa del usuario {userId} y no puede ser eliminada. 
+Desactívala primero con PATCH /routines/{id}/toggle-active?isActive=false"
+```
+
+**Errores en IFitAIClient (HTTP a Ronnie):**
+```
+HttpClientErrorException (4xx) → RuntimeException("Error calling Ronnie service: ...")
+HttpServerErrorException (5xx) → RuntimeException("Ronnie service error: ...")
+Exception (any)                → RuntimeException("Failed to generate routine: ...")
+```
+
+---
+
+#### 9. Consultas de Repositorio Optimizadas
+
+**RoutineRepository:**
+```java
+// Con fetchJoin para evitar N+1 en serialización
+@Query("SELECT DISTINCT r FROM Routine r "
+       + "LEFT JOIN FETCH r.days d "
+       + "LEFT JOIN FETCH d.exercises "
+       + "WHERE r.id = :routineId AND r.deleted = false")
+Optional<Routine> findByIdWithDaysAndExercises(Long routineId)
+
+// Filtra por usuario y estado
+List<Routine> findByUserIdAndDeletedFalse(Long userId)
+List<Routine> findByUserIdAndIsActiveAndDeletedFalse(Long userId, boolean isActive)
+long countByUserIdAndIsActiveAndDeletedFalse(Long userId, boolean isActive)
+```
+
+---
+
+#### 10. Integración con Otros Módulos
+
+**Questionnaire:**
+```java
+QuestionnaireService.getResponseSummary(responseId)
+// → QuestionnaireResponseSummaryDto { answers, userId, startedAt, ... }
+```
+
+**User:**
+```java
+AppUserRepository.findById(userId)
+// → AppUser { keycloakUserId, name, experienceLevel, ... }
+```
+
+**Exercises:**
+```java
+ExerciseNameResolver.resolve(exerciseName)
+// → Optional<ExerciseResolution> { id, canonicalName }
+// Usado en normalizeExerciseNames() para linkear catálogo
+```
+
+**Coach:**
+```java
+CoachType.getSystemContext()  // inyectado en prompt
+CoachType.getEndpointPath()   // construye URL a Ronnie
+```
+
+---
+
+#### 11. Ejemplos de Uso
+
+##### Generar rutina con IA:
+
+```bash
+curl -X POST http://localhost:8081/routines/generate \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {jwt-token}" \
+  -d '{
+    "userId": 123,
+    "responseId": 456,
+    "coachType": "RONNIE",
+    "note": "Enfatizar brazos"
+  }'
+
+# Response: RoutineResponseDto (transitorio, sin id)
+```
+
+##### Guardar rutina generada:
+
+```bash
+curl -X POST http://localhost:8081/routines \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {jwt-token}" \
+  -d '{
+    "userId": 123,
+    "description": "Rutina Ronnie Push-Pull-Legs",
+    "trainingDays": 3,
+    "days": [...]
+  }'
+
+# Response: RoutineResponseDto (persistido, con id)
+```
+
+##### Marcar día completado:
+
+```bash
+curl -X POST http://localhost:8081/routines/999/day/1/complete \
+  -H "Authorization: Bearer {jwt-token}"
+
+# currentDay avanza: 1 → 2
+```
+
+---
+
+#### 12. Comparación: Diagrama Antes vs Después (en README)
+
+| Aspecto | Documentación Anterior | Implementación Real |
+|---|---|---|
+| Persistencia de `/generate` | Sugiere que guarda | NO guarda; solo preview |
+| DTOs | No menciona diferencias | GenerateRoutineRequestDto vs CreateRoutineRequestDto |
+| Coach MASTER | "Deprecated, no usar" | Aún en enum, sin systemContext |
+| Message de respuesta | No menciona origen | Hardcoded en mapper |
+| Reconciliación ejercicios | "En construcción" | Totalmente implementada |
+| Campos Routine | Menciona solo básicos | Incluye currentDay, deleted, description, timestamps |
+| Endpoints | 14 documentados | 18 implementados |
+| Soft-delete | No menciona | PATCH `/cancel` + campo `deleted` |
+| Progreso | No documenta | `currentDay` cíclico; `/day/complete`; `/complete` |
+
+---
+
+#### Endpoints del módulo Training
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| POST | `/routines/generate` | Genera rutina personalizada con IA. |
-| POST | `/routines` | Crea rutina manualmente. |
-| GET | `/routines` | Lista todas las rutinas. |
+| POST | `/routines/generate` | Genera rutina personalizada con IA (sin persistencia). |
+| POST | `/routines` | Crea rutina manualmente o confirma generada. |
+| GET | `/routines` | Lista todas las rutinas (admin). |
 | GET | `/routines/paginated` | Lista paginada con ordenamiento. |
 | GET | `/routines/{id}` | Obtiene rutina por ID. |
 | GET | `/routines/user/{userId}` | Rutinas de un usuario. |
 | GET | `/routines/user/{userId}/paginated` | Rutinas paginadas de un usuario. |
-| GET | `/routines/user/{userId}/active` | Solo rutinas activas de un usuario. |
+| GET | `/routines/user/{userId}/active` | Solo rutinas activas. |
 | GET | `/routines/user/{userId}/count-active` | Número de rutinas activas. |
 | GET | `/routines/{routineId}/day/{day}` | Detalle de un día específico. |
-| PUT | `/routines/{id}` | Actualiza rutina completa. |
+| PUT | `/routines/{id}` | Actualiza rutina (admin). |
 | PATCH | `/routines/{id}/toggle-active` | Activa o desactiva rutina. |
-| POST | `/routines/{routineId}/day/{day}/complete` | Marca día como completado. |
-| POST | `/routines/{routineId}/complete` | Marca rutina completa. |
-| DELETE | `/routines/{id}` | Elimina rutina (irreversible). |
+| PATCH | `/routines/{id}/cancel` | Soft-delete (marca como eliminada). |
+| POST | `/routines/{routineId}/day/{day}/complete` | Marca día completado (avanza progreso). |
+| POST | `/routines/{routineId}/complete` | Marca rutina completada (desactiva). |
+| DELETE | `/routines/{id}` | Elimina rutina permanentemente. |
 
 ---
 
