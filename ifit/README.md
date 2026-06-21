@@ -1,10 +1,14 @@
 # IFit — Microservicio Principal
 
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.4-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.7-green.svg)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-21-blue.svg)](https://www.oracle.com/java/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0+-orange.svg)](https://www.mysql.com/)
 
 > Motor principal del sistema iFit. Gestiona usuarios, cuestionarios de evaluación, generación de rutinas de entrenamiento con IA y seguridad basada en Keycloak.
+
+> [!NOTE]
+> **Capa de Documentación: Módulo de Dominio y Negocio Principal (Nivel Intermedio)**  
+> Este documento detalla la lógica de negocio central de iFit: ciclos de vida transaccionales con Keycloak, flujos del cuestionario adaptativo y persistencia del catálogo y rutinas. Para la vista general y orquestación del sistema completo, consulta el [README.md del proyecto general](../../README.md).
 
 ---
 
@@ -32,7 +36,7 @@
 
 ## Descripción General
 
-IFit es una API RESTful desarrollada con **Spring Boot 3.4.4** y **Java 21** que actúa como núcleo de la plataforma de fitness personalizado del mismo nombre. Sus responsabilidades principales son:
+IFit es una API RESTful desarrollada con **Spring Boot 3.5.7** y **Java 21** que actúa como núcleo de la plataforma de fitness personalizado del mismo nombre. Sus responsabilidades principales son:
 
 - Gestionar el ciclo de vida completo del usuario: registro, verificación de email, autenticación vía Keycloak y perfil.
 - Dirigir al usuario a través de un **cuestionario de evaluación física** implementado como árbol de decisión.
@@ -61,7 +65,7 @@ IFit es uno de tres microservicios que componen el sistema:
                                       │ StripPrefix=3
                          ┌────────────▼───────────────────┐
                          │            IFIT                 │
-                         │  Spring Boot 3.4.4 / Java 21    │
+                         │  Spring Boot 3.5.7 / Java 21    │
                          │  Puerto: 8081                   │
                          └───────┬──────────┬─────────────┘
                                  │          │
@@ -88,11 +92,11 @@ Todas las peticiones del frontend pasan por el gateway, que añade el prefijo `/
 | Capa | Tecnología |
 |---|---|
 | Lenguaje | Java 21 |
-| Framework | Spring Boot 3.4.4 |
+| Framework | Spring Boot 3.5.7 |
 | Seguridad | Spring Security + OAuth2 Resource Server |
 | Persistencia | Spring Data JPA / Hibernate |
 | Base de datos | MySQL 8.0+ |
-| Identidades | Keycloak 24+ |
+| Identidades | Keycloak 23.0 |
 | Email | Spring Mail (SMTP Gmail) |
 | Documentación | SpringDoc OpenAPI 3 (Swagger UI) |
 | Build | Maven 3.9+ |
@@ -233,148 +237,990 @@ El refresh_token queda revocado; el access_token caduca por tiempo.
 
 #### Endpoints del módulo Auth
 
-| Método | Ruta | Acceso | Descripción |
-|---|---|---|---|
-| POST | `/auth/login` | Público | Login con email/contraseña. Devuelve tokens JWT. |
-| POST | `/auth/register` | Público | Registro nuevo usuario. Envía email de verificación. |
-| POST | `/auth/refresh` | Público | Renueva tokens con refresh_token. |
-| POST | `/auth/logout` | Público | Invalida sesión en Keycloak. |
-| POST | `/auth/verify` | Público | Verifica email con código de 6 dígitos. |
-| POST | `/auth/resend-verification` | Público | Reenvía código de verificación. |
-| GET | `/auth/user` | ADMIN | Lista usuarios de Keycloak. |
-| GET | `/auth/user/{id}` | ADMIN | Obtiene usuario de Keycloak por ID. |
-| PUT | `/auth/user/{id}` | ADMIN | Actualiza usuario en Keycloak. |
-| DELETE | `/auth/user/{id}` | ADMIN | Elimina usuario de Keycloak. |
+**Autenticación (públicos):**
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| POST | `/auth/login` | Login con email/contraseña. Devuelve tokens JWT (o NULL si email no verificado). |
+| POST | `/auth/register` | Registro nuevo usuario. Envía email de verificación (6 dígitos, 15 min expira). |
+| POST | `/auth/verify` | Verifica email con código. Marca como verificado y realiza login automático. |
+| POST | `/auth/resend-verification` | Reenvía código de verificación por email. |
+| POST | `/auth/refresh` | Renueva tokens con refresh_token (sin consulta a BD). |
+| POST | `/auth/logout` | Invalida sesión en Keycloak. El refresh_token queda revocado. |
+
+**Gestión de Usuarios Keycloak (ADMIN):**
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/auth/user/search` | Lista todos los usuarios en Keycloak. |
+| GET | `/auth/user/search/{username}` | Busca usuario por username (email). |
+| POST | `/auth/user/create` | Crea usuario en Keycloak. |
+| PUT | `/auth/user/update/{userId}` | Actualiza usuario en Keycloak. |
+| DELETE | `/auth/user/delete/{userId}` | Elimina usuario en Keycloak. |
 
 ---
 
 ### Questionnaire — Cuestionario de Evaluación
 
-El módulo de cuestionarios es el punto de entrada a la experiencia personalizada de iFit. Antes de generar una rutina, el usuario debe completar un cuestionario que recopila su perfil físico y sus objetivos.
+El módulo de cuestionarios es el punto de entrada a la experiencia personalizada de iFit. Implementa un **cuestionario adaptativo basado en árbol de decisión** que guía al usuario desde la selección inicial de coach y nivel de experiencia, hasta una evaluación física personalizada. Los datos recopilados alimentan al motor de IA (Ronnie) para generar rutinas de entrenamiento.
 
-#### Diseño como Árbol de Decisión
+#### 1. Arquitectura: Selección Coach + Nivel → Cuestionario
 
-El cuestionario no es un formulario lineal fijo. Está implementado como un **grafo dirigido acíclico** donde cada opción de respuesta apunta a la siguiente pregunta mediante el campo `next_question_id`. Cuando ese campo es `NULL`, la sesión concluye.
-
-```
-Entidades del árbol:
-
-  Questionnaire ──(first_question_id)──► Question
-                                             │
-                                        QuestionOption[]
-                                             │
-                                      next_question_id ──► Question (o NULL = FIN)
-```
-
-Este mecanismo permite ramificaciones: la opción 34 de la pregunta Q9 ("Actualmente entreno de forma regular") lleva a Q11 (pregunta sobre experiencia en fuerza), mientras que las otras opciones de Q9 saltan directamente a Q12.
-
-#### Árbol de Preguntas
-
-Existen **65 preguntas** distribuidas en 5 subtrees:
-
-| Árbol | Preguntas | Opciones | Coach |
-|---|---|---|---|
-| General (común) | Q1 – Q13 | IDs 1–47 | Todos |
-| Ronnie | Q14 – Q26 | IDs 48–89 | Musculación |
-| Serena | Q27 – Q39 | IDs 90–131 | Bienestar / Fitness |
-| Kael | Q40 – Q52 | IDs 132–174 | Calistenia |
-| Eliud | Q53 – Q65 | IDs 175–215 | Running / Resistencia |
-
-El árbol **General** cubre datos transversales válidos para cualquier coach:
+El flujo comienza **fuera** del módulo Questionnaire:
 
 ```
-Q1  ¿Objetivo principal?            → Q2
-Q2  ¿Adaptaciones de ejercicio?     → Q3  (con texto libre si requiere cuidado)
-Q3  ¿Frecuencia semanal?            → Q4
-Q4  ¿Lugar de entrenamiento?        → Q5
-Q5  ¿Rango de edad?                 → Q6
-Q6  ¿Peso (kg)?                     → Q7  (input numérico)
-Q7  ¿Altura (cm)?                   → Q8  (input numérico)
-Q8  ¿Nivel de actividad diaria?     → Q9
-Q9  ¿Experiencia previa?            → Q10 (o Q11 si entrena regularmente)
-Q10 ¿Comodidad con rutinas?         → Q12
-Q11 ¿Experiencia con fuerza?        → Q12  (solo si vino de Q9 opción 5)
-Q12 ¿Duración preferida?            → Q13
-Q13 ¿Preferencias alimentarias?     → NULL (FIN)
+Usuario en MAUI
+  ↓
+1. GET /coach-models           (lista coaches: Ronnie, Serena, Kael, Eliud)
+2. GET /experience-levels      (lista niveles: Principiante, Intermedio, Avanzado)
+  ↓
+Usuario selecciona: Ronnie + Principiante
+  ↓
+GET /questionnaires/coach/{ronnie_id}/experience-level/{principiante_id}
+  ├─ QuestionnaireRepository.findByCoachModelTypeAndExperienceLevel()
+  └─ Retorna: QuestionnaireDto { id: 1, name: "Ronnie - Fuerza para Principiantes", ... }
+  ↓
+POST /questionnaires/{userId}/start/{questionnaire_id}
+  ├─ Crea QuestionnaireResponse (sesión)
+  ├─ Obtiene firstQuestion de Questionnaire
+  └─ Retorna: QuestionnaireResponseDto { responseId: 456, currentQuestion: {...}, ... }
+  ↓
+Ciclo: responde pregunta → siguiente pregunta → ... → completada
 ```
 
-Cada árbol específico de coach repite una estructura similar adaptada a su especialidad. Por ejemplo, Ronnie añade preguntas sobre equipamiento y grupos musculares a priorizar; Kael pregunta cuántas dominadas y fondos puede hacer el usuario; Eliud pregunta sobre el ritmo de carrera y objetivo de carrera.
+#### 2. Modelos/Entidades
 
-#### Tipos de Pregunta
+##### Questionnaire (Template del Cuestionario)
 
-| Tipo | Comportamiento |
-|---|---|
-| `MULTIPLE_CHOICE` | El usuario selecciona una opción predefinida. |
-| `NUMERIC` | La opción tiene `requires_text_input = TRUE`; el usuario introduce un número. |
-| `TEXT_INPUT` | Respuesta de texto libre (usado en pregunta de alimentación y adaptaciones). |
-
-Para preguntas numéricas o de texto, la opción actúa como "envoltorio" que activa el campo adicional `additionalText` en el DTO de respuesta.
-
-#### Cuestionarios Predefinidos
-
-La tabla `questionnaire` combina `(coach_model_type_id, experience_level_id)` para ofrecer cuestionarios especializados:
-
-| ID | Nombre | Coach | Nivel |
-|---|---|---|---|
-| 1 | Ronnie - Fuerza para Principiantes | Ronnie | Principiante |
-| 2 | Serena - Bienestar para Principiantes | Serena | Principiante |
-| 3 | Eliud - Resistencia Intermedia | Eliud | Intermedio |
-| 4 | Kael - Calistenia Avanzada | Kael | Avanzado |
-| 5 | Evaluación General de Fitness | — | — |
-| 6 | Eliud - Resistencia para Principiantes | Eliud | Principiante |
-| 7 | Eliud - Resistencia Avanzada | Eliud | Avanzado |
-| 8 | Kael - Calistenia para Principiantes | Kael | Principiante |
-| 9 | Kael - Calistenia Intermedia | Kael | Intermedio |
-
-El cuestionario 5 (genérico) no está asociado a ningún coach ni nivel concreto. Los cuestionarios con coach pero sin nivel específico permiten mayor flexibilidad en la selección.
-
-#### Sesión de Cuestionario
-
-Una **sesión** (`QuestionnaireResponse`) es una instancia de usuario respondiendo un cuestionario. El flujo típico es:
-
-```
-1. POST /{userId}/start/{questionnaireId}
-   → Crea QuestionnaireResponse con status=ACTIVE
-   → Devuelve la primera pregunta con sus opciones
-
-2. POST /responses/{responseId}/answer
-   Body: { questionId, selectedOptionId, additionalText }
-   → Persiste UserAnswer
-   → Lee next_question_id de la opción elegida
-   → Si next_question_id = NULL → marca sesión como COMPLETED
-   → Devuelve la siguiente pregunta (o señal de finalización)
-
-3. POST /responses/{responseId}/previous    (retroceso)
-   → Elimina la última UserAnswer
-   → Devuelve la pregunta anterior para corregir
-
-4. GET /responses/{responseId}/summary
-   → Devuelve lista de { pregunta, opción elegida, texto adicional }
-   → Usado por RoutineService para construir el prompt de IA
+```java
+public class Questionnaire {
+    Long id;                              // PK
+    String name;                          // Nombre único (ej: "Ronnie - Fuerza para Principiantes")
+    String description;                   // Descripción detallada
+    CoachModelType coachModelType;        // FK a Coach (nullable - puede ser genérico)
+    ExperienceLevel experienceLevel;      // FK a Nivel (nullable)
+    Question firstQuestion;               // FK a Question - punto de entrada al árbol
+    Boolean isEnabled;                    // Soft delete (default: true)
+    LocalDateTime createdAt;              // Auto
+    LocalDateTime updatedAt;              // Auto
+}
 ```
 
-#### Opción "Prefiero no responder"
+**Combinación única**: `(coachModelType.id, experienceLevel.id)` → permite múltiples cuestionarios por coach/nivel
 
-Cada una de las 65 preguntas tiene una opción adicional "Prefiero no responder" (IDs 216–280). Estas opciones tienen `requires_text_input = FALSE` y `next_question_id` igual al de las opciones hermanas (avance normal). En `RoutineService.buildRoutinePrompt`, las respuestas con ese texto se convierten a `[No respondida]` antes de enviar el prompt a Ronnie, y los coaches tienen instrucción explícita de ignorar ese parámetro y usar un valor por defecto razonable.
+##### Question (Nodo del Árbol)
 
-#### Endpoints del módulo Questionnaire
+```java
+public class Question {
+    Long id;                              // PK
+    String text;                          // Texto de la pregunta
+    QuestionType type;                    // Enum: BINARY, MULTIPLE_CHOICE, TEXT_INPUT, NUMERIC, SCALE
+    List<QuestionOption> options;         // 1:N relación
+    Boolean isEnabled;                    // (default: true)
+    LocalDateTime createdAt;              // Auto
+}
+```
 
-| Método | Ruta | Descripción |
+**QuestionType enum:**
+- `BINARY` → Sí/No
+- `MULTIPLE_CHOICE` → Opciones predefinidas (lista)
+- `TEXT_INPUT` → Texto libre
+- `NUMERIC` → Número (con validación de rango)
+- `SCALE` → Escala (1-10, etc.)
+
+##### QuestionOption (Opción → Navegación)
+
+```java
+public class QuestionOption {
+    Long id;                              // PK
+    Question question;                    // FK - pregunta padre
+    String text;                          // Texto de la opción (ej: "Ganar músculo")
+    Question nextQuestion;                // FK nullable - LLAVE DEL ÁRBOL DE DECISIÓN
+    Integer displayOrder;                 // Orden de visualización
+    Boolean requiresTextInput;            // ¿Requiere entrada adicional?
+    String textInputPrompt;               // Indicación para usuario (ej: "Especifique peso:")
+    String textInputPlaceholder;          // Placeholder del input (ej: "ej: 75 kg")
+}
+```
+
+**Navegación adaptativa:** El campo `nextQuestion` define dinámicamente el flujo:
+- Si `nextQuestion != NULL` → siguiente pregunta
+- Si `nextQuestion == NULL` → **fin del cuestionario**
+
+Ejemplo:
+```
+Q9 "¿Experiencia previa?"
+  ├─ Opción 30: "Entrenamiento regular" → nextQuestion = Q11 (pregunta específica para experimentados)
+  └─ Opción 31: "Principiante"          → nextQuestion = Q12 (salta Q11)
+```
+
+##### QuestionnaireResponse (Sesión de Usuario)
+
+```java
+public class QuestionnaireResponse {
+    Long id;                              // PK - ID de sesión
+    AppUser user;                         // FK - usuario respondiendo
+    Questionnaire questionnaire;          // FK - cuestionario en curso
+    List<UserAnswer> answers;             // 1:N - respuestas registradas
+    LocalDateTime startedAt;              // Auto: timestamp inicio
+    LocalDateTime completedAt;            // Null si activa, timestamp si completada
+    Boolean isCompleted;                  // (default: false)
+    Boolean isActive;                     // (default: true) - para soft delete
+}
+```
+
+**Métodos helper:**
+```java
+public void addAnswer(UserAnswer answer) { ... }
+public void removeAnswer(UserAnswer answer) { ... }
+public void markAsCompleted() { 
+    isCompleted = true; 
+    completedAt = LocalDateTime.now();
+}
+```
+
+##### UserAnswer (Respuesta Individual)
+
+```java
+public class UserAnswer {
+    Long id;                              // PK
+    QuestionnaireResponse response;       // FK - sesión padre
+    Question question;                    // FK - pregunta respondida
+    QuestionOption selectedOption;        // FK - opción elegida
+    String additionalText;                // Null si no se requería, o texto proporcionado
+    String aiGeneratedDescription;        // Reservado para futura IA (actualmente null)
+    LocalDateTime answeredAt;             // Auto
+}
+```
+
+#### 3. DTOs (Data Transfer Objects)
+
+##### DTOs de Cuestionario
+
+```java
+// Cuestionario completo
+record QuestionnaireDto(
+    Long id,
+    String name,
+    String description,
+    String coachModelTypeName,            // Nombre coach o null
+    String coachModelTypeEmoji,           // Emoji coach o null
+    String experienceLevelName,           // Nivel o null
+    Long firstQuestionId,
+    Boolean isEnabled,
+    LocalDateTime createdAt,
+    LocalDateTime updatedAt
+)
+
+// Cuestionario resumido (lista)
+record QuestionnaireSummaryDto(
+    Long id,
+    String name,
+    String description,
+    String coachModelTypeName,
+    String coachModelTypeEmoji,
+    String experienceLevelName,
+    Boolean isEnabled
+)
+
+// Cuestionario con primera pregunta incluida
+record QuestionnaireWithFirstQuestionDto(
+    Long id,
+    String name,
+    String description,
+    String coachModelTypeName,
+    String coachModelTypeEmoji,
+    String experienceLevelName,
+    Boolean isEnabled,
+    LocalDateTime createdAt,
+    LocalDateTime updatedAt,
+    QuestionDto firstQuestion              // Pregunta + opciones
+)
+```
+
+##### DTOs de Preguntas y Opciones
+
+```java
+// Pregunta con opciones
+record QuestionDto(
+    Long id,
+    String text,
+    QuestionType type,
+    List<OptionDto> options               // Ordenadas por displayOrder
+)
+
+// Opción seleccionable
+record OptionDto(
+    Long id,
+    String text,
+    Boolean requiresTextInput,
+    String textInputPrompt,               // null si no requiere
+    String textInputPlaceholder           // null si no requiere
+)
+```
+
+##### DTOs de Sesión
+
+```java
+// Estado actual de sesión (respuesta a petición)
+class QuestionnaireResponseDto {
+    Long responseId;                      // ID sesión
+    QuestionDto currentQuestion;          // Pregunta actual (null = completada)
+    Boolean isCompleted;                  // true si fin
+    Integer totalQuestionsAnswered;       // Contador
+    // Builder pattern para construcción flexible
+}
+
+// Resumen completo de sesión (para IA)
+class QuestionnaireResponseSummaryDto {
+    Long responseId;
+    Long userId;
+    String userName;
+    Long questionnaireId;
+    String questionnaireName;
+    String questionnaireDescription;
+    List<AnswerDto> answers;              // TODAS las respuestas en orden
+    LocalDateTime startedAt;
+    LocalDateTime completedAt;            // null si no completada
+    Boolean isCompleted;
+}
+
+// Una respuesta individual dentro del resumen
+record AnswerDto(
+    Long answerId,
+    String questionText,                  // Texto completo de pregunta
+    String selectedOption,                // Texto de opción elegida
+    String additionalText,                // Texto libre si se proporcionó
+    String aiDescription,                 // Null actualmente
+    LocalDateTime answeredAt
+)
+```
+
+##### DTOs de Request
+
+```java
+// Responder una pregunta
+class AnswerRequestDto {
+    @NotNull Long questionId;             // Pregunta actual
+    @NotNull Long selectedOptionId;       // Opción elegida
+    String additionalText;                // Null si no se requiere
+}
+
+// Crear cuestionario (admin)
+record CreateQuestionnaireRequestDto(
+    @NotBlank @Size(3-100) String name,
+    @NotBlank @Size(10-1000) String description,
+    Long coachModelTypeId,                // opcional
+    Long experienceLevelId,               // opcional
+    Long firstQuestionId                  // optional pero recomendado
+)
+```
+
+#### 4. Flujo Completo: Paso a Paso
+
+**FASE 1: Usuario selecciona Coach + Nivel**
+
+```
+Cliente: GET /questionnaires/coach/{coachId}/experience-level/{levelId}
+
+Servidor (QuestionnaireController.getQuestionnaireByCoachAndLevel):
+  ├─ QuestionnaireService.getQuestionnaireByCoachIdAndExperienceLevelId(coachId, levelId)
+  │   ├─ QuestionnaireRepository.findByCoachModelTypeAndExperienceLevel(coachId, levelId)
+  │   └─ Retorna: Questionnaire entity
+  ├─ QuestionnaireMapper.toDto(questionnaire)
+  └─ Response: QuestionnaireDto ✓
+```
+
+**FASE 2: Iniciar sesión de cuestionario**
+
+```
+Cliente: POST /questionnaires/{userId}/start/{questionnaireId}
+
+Servidor (QuestionnaireController.startQuestionnaire):
+  ├─ AppUserRepository.findById(userId) → OK
+  ├─ QuestionnaireService.startQuestionnaire(userId, questionnaireId)
+  │   ├─ QuestionnaireRepository.findById(questionnaireId)
+  │   ├─ Crear QuestionnaireResponse:
+  │   │   • user = AppUser
+  │   │   • questionnaire = Questionnaire
+  │   │   • startedAt = now()
+  │   │   • isCompleted = false
+  │   │   • isActive = true
+  │   ├─ QuestionnaireResponseRepository.save() → responseId = 456
+  │   ├─ Obtener firstQuestion = questionnaire.getFirstQuestion()
+  │   ├─ Convertir Question a QuestionDto con OptionDtos
+  │   └─ Retorna: QuestionnaireResponseDto {
+  │        responseId: 456,
+  │        currentQuestion: { id: 1, text: "¿Objetivo?", type: MULTIPLE_CHOICE, 
+  │                          options: [{id: 1, text: "Ganar músculo"}, ...] },
+  │        isCompleted: false,
+  │        totalQuestionsAnswered: 0
+  │       }
+```
+
+**FASE 3: Responder preguntas (CICLO)**
+
+```
+Cliente: POST /questionnaires/responses/{responseId}/answer
+Body: { questionId: 1, selectedOptionId: 1, additionalText: null }
+
+Servidor (QuestionnaireController.answerQuestion):
+  ├─ Obtener QuestionnaireResponse(456)
+  ├─ VALIDAR: response.isCompleted = false ✓
+  ├─ Obtener Question(1)
+  ├─ Obtener QuestionOption(1)
+  ├─ VALIDAR: option.question.id == 1 ✓
+  ├─ VALIDAR: if option.requiresTextInput then additionalText != null
+  │   (Si requiere y no hay → IllegalArgumentException)
+  ├─ Crear UserAnswer:
+  │   • response = QuestionnaireResponse(456)
+  │   • question = Question(1)
+  │   • selectedOption = QuestionOption(1)
+  │   • additionalText = null
+  │   • answeredAt = now()
+  ├─ UserAnswerRepository.save() ✓
+  ├─ nextQuestion = option.getNextQuestion()
+  │
+  ├─ IF nextQuestion == null:  ← ¡¡¡ FIN DEL CUESTIONARIO !!!
+  │   • response.markAsCompleted()
+  │   • response.completedAt = now()
+  │   • QuestionnaireResponseRepository.save()
+  │   └─ Response: QuestionnaireResponseDto {
+  │        responseId: 456,
+  │        currentQuestion: null,        ← SEÑAL DE FIN
+  │        isCompleted: true,            ← COMPLETADO
+  │        totalQuestionsAnswered: 13
+  │       }
+  │
+  └─ IF nextQuestion != null:  ← CONTINUAR
+      • Convertir nextQuestion a QuestionDto
+      └─ Response: QuestionnaireResponseDto {
+           responseId: 456,
+           currentQuestion: { id: 2, text: "¿Adaptaciones?", ... },
+           isCompleted: false,
+           totalQuestionsAnswered: 1
+          }
+
+  [REPITE: cliente hace POST /answer con nextQuestion.id hasta currentQuestion = null]
+```
+
+**FASE 4: Retroceder (Opcional)**
+
+```
+Cliente: POST /questionnaires/responses/{responseId}/previous
+
+Servidor:
+  ├─ UserAnswerRepository.findByResponseIdOrderByIdDesc(responseId)
+  │   → Obtiene última respuesta
+  ├─ Eliminar esa respuesta
+  ├─ Si estaba completada: response.isCompleted = false, completedAt = null
+  ├─ Guardar response
+  └─ Retorna: QuestionnaireResponseDto con pregunta anterior
+
+[Nota: Permite correcciones antes de completar]
+```
+
+**FASE 5: Obtener resumen (para Ronnie)**
+
+```
+Cliente: GET /questionnaires/responses/{responseId}/summary
+
+Servidor:
+  ├─ QuestionnaireResponseRepository.findById(responseId)
+  ├─ UserAnswerRepository.findByResponseId(responseId)
+  │   → Ordenado por answeredAt ASC (orden de respuesta)
+  ├─ Mapear cada UserAnswer a AnswerDto
+  └─ Response: QuestionnaireResponseSummaryDto {
+       responseId: 456,
+       userId: 123,
+       userName: "juangarcia@example.com",
+       questionnaireId: 1,
+       questionnaireName: "Ronnie - Fuerza para Principiantes",
+       answers: [
+         AnswerDto { questionText: "¿Objetivo?", selectedOption: "Ganar músculo", ... },
+         AnswerDto { questionText: "¿Adaptaciones?", selectedOption: "Ninguna", additionalText: null, ... },
+         AnswerDto { questionText: "¿Peso (kg)?", selectedOption: null, additionalText: "82", ... },
+         ...
+       ],
+       startedAt: 2025-06-21T10:30:00,
+       completedAt: 2025-06-21T10:35:00,
+       isCompleted: true
+      }
+
+[Este DTO se usa directamente en RoutineService.buildRoutinePrompt()]
+```
+
+#### 5. Validaciones Explícitas
+
+| Operación | Validación | Si falla |
 |---|---|---|
-| GET | `/questionnaires` | Lista todos los cuestionarios habilitados. |
-| GET | `/questionnaires/{id}` | Obtiene cuestionario completo por ID. |
-| GET | `/questionnaires/{id}/with-first-question` | Cuestionario + primera pregunta en una sola llamada. |
-| GET | `/questionnaires/coach/{coachId}/experience-level/{levelId}` | Busca cuestionario por coach y nivel. |
-| POST | `/questionnaires` | Crea nuevo cuestionario (admin). |
-| PUT | `/questionnaires/{id}` | Actualiza cuestionario (admin). |
-| DELETE | `/questionnaires/{id}` | Elimina cuestionario (admin). |
-| POST | `/questionnaires/{userId}/start/{questionnaireId}` | Inicia sesión de cuestionario. |
-| POST | `/questionnaires/responses/{responseId}/answer` | Registra respuesta y avanza. |
-| POST | `/questionnaires/responses/{responseId}/previous` | Retrocede a la pregunta anterior. |
-| GET | `/questionnaires/responses/{responseId}/summary` | Resumen completo de una sesión. |
-| GET | `/questionnaires/responses/my-responses` | Todas las sesiones del usuario autenticado. |
-| GET | `/questionnaires/responses/my-completed-responses` | Solo sesiones completadas. |
-| GET | `/questionnaires/responses/my-active-responses` | Solo sesiones en curso. |
+| `startQuestionnaire(userId, qId)` | userId existe | `UserIdNotFoundException` |
+| `startQuestionnaire(userId, qId)` | questionnaireId existe | `QuestionnaireNotFoundException` |
+| `startQuestionnaire(userId, qId)` | questionnaire.firstQuestion != null | `IllegalStateException` |
+| `answerQuestion(...)` | responseId existe | `RuntimeException` |
+| `answerQuestion(...)` | response.isCompleted = false | `IllegalStateException` |
+| `answerQuestion(...)` | questionId existe | `RuntimeException` |
+| `answerQuestion(...)` | selectedOptionId existe | `RuntimeException` |
+| `answerQuestion(...)` | option.question.id == questionId | `IllegalArgumentException` |
+| `answerQuestion(...)` | option.requiresTextInput ⇒ additionalText != blank | `IllegalArgumentException` |
+| `getByCoachAndLevel(cId, lId)` | resultado existe | `QuestionnaireNotFoundException` |
+
+#### 6. Patrón de Árbol de Decisión
+
+La clave del sistema adaptativo es el **self-referential FK** en `QuestionOption`:
+
+```
+Questionnaire(id=1)
+  ├─ firstQuestion = Question(id=1)
+       ├─ QuestionOption(id=1, nextQuestion=Question(2))
+       ├─ QuestionOption(id=2, nextQuestion=Question(3))
+       ├─ QuestionOption(id=216, nextQuestion=null)  ← "Prefiero no responder"
+       │
+       └─ Question(id=2)  ← Siguiente pregunta si elige opción 1
+            ├─ QuestionOption(id=10, nextQuestion=Question(4))
+            ├─ QuestionOption(id=11, nextQuestion=Question(5))  ← rama diferente
+            │
+            └─ Question(id=5)  ← Solo accesible desde opción 11 de Q2
+
+[Resultado: árbol adaptativo donde cada ruta es única según respuestas]
+```
+
+**Ejemplo real:**
+```
+Usuario elige "Entrenamiento regular" en Q9 → va a Q11 (exp. fuerza)
+Usuario elige "Principiante" en Q9 → salta Q11, va a Q12
+
+Sin este patrón, no habría personalización.
+```
+
+#### 7. Cuestionarios Predefinidos
+
+| ID | Nombre | Coach | Nivel | firstQuestion |
+|---|---|---|---|---|
+| 1 | Ronnie - Fuerza para Principiantes | Ronnie | Principiante | Q1 (General) |
+| 2 | Serena - Bienestar para Principiantes | Serena | Principiante | Q1 (General) |
+| 3 | Eliud - Resistencia Intermedia | Eliud | Intermedio | Q1 (General) |
+| 4 | Kael - Calistenia Avanzada | Kael | Avanzado | Q1 (General) |
+| 5 | Evaluación General de Fitness | — | — | Q1 (General) |
+| 6 | Eliud - Resistencia para Principiantes | Eliud | Principiante | Q1 (General) |
+| 7 | Eliud - Resistencia Avanzada | Eliud | Avanzado | Q1 (General) |
+| 8 | Kael - Calistenia para Principiantes | Kael | Principiante | Q1 (General) |
+| 9 | Kael - Calistenia Intermedia | Kael | Intermedio | Q1 (General) |
+
+Todos comienzan en **Q1** (árbol general compartido), luego divergen según coach.
+
+#### 8. Opción "Prefiero no responder"
+
+Cada pregunta tiene una opción especial:
+
+```
+Pregunta: "¿Cuál es tu objetivo?"
+  Opción 1: "Ganar músculo" → nextQuestion = Q2
+  Opción 2: "Perder peso" → nextQuestion = Q2
+  Opción 3: "Mejorar salud" → nextQuestion = Q2
+  Opción 216: "Prefiero no responder" → nextQuestion = Q2  ← mismo destino
+
+En RoutineService.buildRoutinePrompt():
+  • Detecta selectedOption.text = "Prefiero no responder"
+  • Reemplaza a "[No respondida]" en el prompt
+  • Los coaches tienen instrucción de usar defaults inteligentes
+```
+
+#### 9. Endpoints del Módulo Questionnaire
+
+**Gestión de cuestionarios (admin):**
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| GET | `/questionnaires` | admin_client_role | Lista cuestionarios habilitados (resumen). |
+| GET | `/questionnaires/{id}` | público | Obtiene cuestionario completo por ID. |
+| GET | `/questionnaires/{id}/with-first-question` | público | Cuestionario + primera pregunta (una sola call). |
+| GET | `/questionnaires/coach/{coachId}/experience-level/{levelId}` | público | Busca cuestionario por coach+nivel (KEY ENDPOINT). |
+| POST | `/questionnaires` | admin_client_role | Crea nuevo cuestionario. |
+| PUT | `/questionnaires/{id}` | admin_client_role | Actualiza cuestionario. |
+| DELETE | `/questionnaires/{id}` | admin_client_role | Elimina cuestionario. |
+
+**Sesiones de usuario:**
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| POST | `/questionnaires/{userId}/start/{questionnaireId}` | público | Inicia nueva sesión. Retorna primera pregunta. |
+| POST | `/questionnaires/responses/{responseId}/answer` | público | Responde pregunta actual. Retorna siguiente pregunta (o fin). |
+| POST | `/questionnaires/responses/{responseId}/previous` | público | Retrocede a pregunta anterior. |
+| GET | `/questionnaires/responses/{responseId}/summary` | público | Obtiene resumen completo. REQUERIDO para pasar a IA. |
+| GET | `/questionnaires/responses/my-responses` | autenticado | Todas las sesiones del usuario. |
+| GET | `/questionnaires/responses/my-completed-responses` | autenticado | Solo sesiones finalizadas. |
+| GET | `/questionnaires/responses/my-active-responses` | autenticado | Solo sesiones en curso. |
+
+#### 10. Mappers (Conversión Entity → DTO)
+
+El componente `QuestionnaireMapper` convierte entidades JPA a DTOs para serialización:
+
+```java
+@Component
+public class QuestionnaireMapper {
+    
+    // Questionnaire → QuestionnaireDto (completo)
+    public QuestionnaireDto toDto(Questionnaire q) {
+        return new QuestionnaireDto(
+            q.getId(),
+            q.getName(),
+            q.getDescription(),
+            q.getCoachModelType() != null ? q.getCoachModelType().getName() : null,
+            q.getCoachModelType() != null ? q.getCoachModelType().getEmojiCharacter() : null,
+            q.getExperienceLevel() != null ? q.getExperienceLevel().getName() : null,
+            q.getFirstQuestion() != null ? q.getFirstQuestion().getId() : null,
+            q.getIsEnabled(),
+            q.getCreatedAt(),
+            q.getUpdatedAt()
+        );
+    }
+    
+    // Questionnaire → QuestionnaireSummaryDto (resumido)
+    public QuestionnaireSummaryDto toSummaryDto(Questionnaire q) {
+        return new QuestionnaireSummaryDto(
+            q.getId(),
+            q.getName(),
+            q.getDescription(),
+            q.getCoachModelType() != null ? q.getCoachModelType().getName() : null,
+            q.getCoachModelType() != null ? q.getCoachModelType().getEmojiCharacter() : null,
+            q.getExperienceLevel() != null ? q.getExperienceLevel().getName() : null,
+            q.getIsEnabled()
+        );
+    }
+    
+    // Questionnaire + firstQuestion → QuestionnaireWithFirstQuestionDto
+    public QuestionnaireWithFirstQuestionDto toWithFirstQuestionDto(Questionnaire q) {
+        QuestionDto questionDto = toQuestionDto(q.getFirstQuestion());
+        return new QuestionnaireWithFirstQuestionDto(
+            q.getId(),
+            q.getName(),
+            q.getDescription(),
+            q.getCoachModelType() != null ? q.getCoachModelType().getName() : null,
+            q.getCoachModelType() != null ? q.getCoachModelType().getEmojiCharacter() : null,
+            q.getExperienceLevel() != null ? q.getExperienceLevel().getName() : null,
+            q.getIsEnabled(),
+            q.getCreatedAt(),
+            q.getUpdatedAt(),
+            questionDto
+        );
+    }
+    
+    // Questionnaire entity ← CreateQuestionnaireRequestDto (creación)
+    public Questionnaire toEntity(CreateQuestionnaireRequestDto dto) {
+        Questionnaire q = new Questionnaire();
+        q.setName(dto.name());
+        q.setDescription(dto.description());
+        q.setIsEnabled(true);
+        // coachModelType, experienceLevel, firstQuestion se asignan en Service
+        return q;
+    }
+    
+    // Actualizar Questionnaire entity desde UpdateQuestionnaireRequestDto
+    public void updateEntityFromDto(UpdateQuestionnaireRequestDto dto, Questionnaire q) {
+        if (dto.name() != null) q.setName(dto.name());
+        if (dto.description() != null) q.setDescription(dto.description());
+        if (dto.isEnabled() != null) q.setIsEnabled(dto.isEnabled());
+        // coach, level, firstQuestion se actualizan en Service
+    }
+}
+
+// Dentro de Service: conversiones de Question y QuestionOption
+private QuestionDto toQuestionDto(Question q) {
+    List<OptionDto> options = q.getOptions().stream()
+        .sorted(Comparator.comparing(QuestionOption::getDisplayOrder))
+        .map(opt -> new OptionDto(
+            opt.getId(),
+            opt.getText(),
+            opt.getRequiresTextInput(),
+            opt.getTextInputPrompt(),
+            opt.getTextInputPlaceholder()
+        ))
+        .collect(Collectors.toList());
+    
+    return new QuestionDto(q.getId(), q.getText(), q.getType(), options);
+}
+
+private AnswerDto toAnswerDto(UserAnswer ua) {
+    return new AnswerDto(
+        ua.getId(),
+        ua.getQuestion().getText(),
+        ua.getSelectedOption().getText(),
+        ua.getAdditionalText(),
+        ua.getAiGeneratedDescription(),
+        ua.getAnsweredAt()
+    );
+}
+```
+
+#### 11. Repositorios (Data Access Layer)
+
+**QuestionnaireRepository:**
+
+```java
+public interface QuestionnaireRepository extends JpaRepository<Questionnaire, Long> {
+    // Busca por nombre exacto
+    Optional<Questionnaire> findByName(String name);
+    
+    // Lista todos los habilitados
+    List<Questionnaire> findByIsEnabledTrue();
+    
+    // QUERY CLAVE: busca por coach + nivel (ambos obligatorios)
+    @Query("SELECT q FROM Questionnaire q WHERE q.coachModelType.id = :coachModelTypeId " +
+           "AND q.experienceLevel.id = :experienceLevelId AND q.isEnabled = true")
+    Optional<Questionnaire> findByCoachModelTypeAndExperienceLevel(
+        @Param("coachModelTypeId") Long coachModelTypeId,
+        @Param("experienceLevelId") Long experienceLevelId);
+    
+    // Busca por coach solamente
+    @Query("SELECT q FROM Questionnaire q WHERE q.coachModelType.id = :coachModelTypeId " +
+           "AND q.isEnabled = true")
+    List<Questionnaire> findByCoachModelType(@Param("coachModelTypeId") Long coachModelTypeId);
+    
+    // Busca por nivel solamente
+    @Query("SELECT q FROM Questionnaire q WHERE q.experienceLevel.id = :experienceLevelId " +
+           "AND q.isEnabled = true")
+    List<Questionnaire> findByExperienceLevel(@Param("experienceLevelId") Long experienceLevelId);
+}
+```
+
+**QuestionnaireResponseRepository:**
+
+```java
+public interface QuestionnaireResponseRepository extends JpaRepository<QuestionnaireResponse, Long> {
+    // Todas las sesiones del usuario (orden descendente)
+    @Query("SELECT qr FROM QuestionnaireResponse qr WHERE qr.user.id = :userId " +
+           "ORDER BY qr.startedAt DESC")
+    List<QuestionnaireResponse> findByUserId(@Param("userId") Long userId);
+    
+    // Solo sesiones completadas
+    @Query("SELECT qr FROM QuestionnaireResponse qr WHERE qr.user.id = :userId " +
+           "AND qr.isCompleted = true ORDER BY qr.completedAt DESC")
+    List<QuestionnaireResponse> findCompletedByUserId(@Param("userId") Long userId);
+    
+    // Solo sesiones activas (en curso)
+    @Query("SELECT qr FROM QuestionnaireResponse qr WHERE qr.user.id = :userId " +
+           "AND qr.isCompleted = false AND qr.isActive = true ORDER BY qr.startedAt DESC")
+    List<QuestionnaireResponse> findActiveByUserId(@Param("userId") Long userId);
+    
+    // Sesiones de usuario para cuestionario específico
+    @Query("SELECT qr FROM QuestionnaireResponse qr WHERE qr.user.id = :userId " +
+           "AND qr.questionnaire.id = :questionnaireId ORDER BY qr.startedAt DESC")
+    List<QuestionnaireResponse> findByUserIdAndQuestionnaireId(
+        @Param("userId") Long userId,
+        @Param("questionnaireId") Long questionnaireId);
+    
+    // Última sesión completada (para reutilización de datos)
+    @Query("SELECT qr FROM QuestionnaireResponse qr WHERE qr.user.id = :userId " +
+           "AND qr.questionnaire.id = :questionnaireId AND qr.isCompleted = true " +
+           "ORDER BY qr.completedAt DESC LIMIT 1")
+    Optional<QuestionnaireResponse> findLatestCompletedByUserAndQuestionnaire(
+        @Param("userId") Long userId,
+        @Param("questionnaireId") Long questionnaireId);
+}
+```
+
+**UserAnswerRepository:**
+
+```java
+public interface UserAnswerRepository extends JpaRepository<UserAnswer, Long> {
+    // Obtiene respuestas de sesión, ordenadas por respuesta
+    @Query("SELECT ua FROM UserAnswer ua WHERE ua.response.id = :responseId " +
+           "ORDER BY ua.answeredAt ASC")
+    List<UserAnswer> findByResponseId(@Param("responseId") Long responseId);
+    
+    // Obtiene respuestas ordenadas inverso (para retroceso)
+    @Query("SELECT ua FROM UserAnswer ua WHERE ua.response.id = :responseId " +
+           "ORDER BY ua.id DESC")
+    List<UserAnswer> findByResponseIdOrderByIdDesc(@Param("responseId") Long responseId);
+    
+    // Obtiene respuesta específica para pregunta en sesión
+    @Query("SELECT ua FROM UserAnswer ua WHERE ua.response.id = :responseId " +
+           "AND ua.question.id = :questionId")
+    Optional<UserAnswer> findByResponseIdAndQuestionId(
+        @Param("responseId") Long responseId,
+        @Param("questionId") Long questionId);
+    
+    // Obtiene todas con descripción IA (para auditoría)
+    @Query("SELECT ua FROM UserAnswer ua WHERE ua.aiGeneratedDescription IS NOT NULL")
+    List<UserAnswer> findAllWithAiDescriptions();
+    
+    // Cuenta respuestas en sesión
+    @Query("SELECT COUNT(ua) FROM UserAnswer ua WHERE ua.response.id = :responseId")
+    Long countByResponseId(@Param("responseId") Long responseId);
+}
+```
+
+#### 12. Lógica de Servicio Detallada
+
+```java
+@Service
+@Transactional
+public class QuestionnaireService {
+    
+    // Inicia sesión de cuestionario
+    public QuestionnaireResponseDto startQuestionnaire(Long userId, Long questionnaireId) {
+        // 1. Validar usuario existe
+        AppUser user = appUserRepository.findById(userId)
+            .orElseThrow(() -> new UserIdNotFoundException("User not found"));
+        
+        // 2. Validar cuestionario existe
+        Questionnaire questionnaire = questionnaireRepository.findById(questionnaireId)
+            .orElseThrow(() -> new QuestionnaireNotFoundException("Questionnaire not found"));
+        
+        // 3. Validar que tiene primera pregunta
+        if (questionnaire.getFirstQuestion() == null) {
+            throw new IllegalStateException("Questionnaire has no first question");
+        }
+        
+        // 4. Crear sesión
+        QuestionnaireResponse response = new QuestionnaireResponse();
+        response.setUser(user);
+        response.setQuestionnaire(questionnaire);
+        response.setStartedAt(LocalDateTime.now());
+        response.setIsCompleted(false);
+        response.setIsActive(true);
+        
+        // 5. Persistir
+        QuestionnaireResponse saved = questionnaireResponseRepository.save(response);
+        
+        // 6. Convertir primera pregunta a DTO
+        QuestionDto firstQuestion = toQuestionDto(questionnaire.getFirstQuestion());
+        
+        // 7. Retornar estado inicial
+        return QuestionnaireResponseDto.builder()
+            .responseId(saved.getId())
+            .currentQuestion(firstQuestion)
+            .isCompleted(false)
+            .totalQuestionsAnswered(0)
+            .build();
+    }
+    
+    // Responde pregunta y avanza
+    public QuestionnaireResponseDto answerQuestion(
+        Long responseId, Long questionId, Long selectedOptionId, String additionalText) {
+        
+        // 1. Obtener sesión
+        QuestionnaireResponse response = questionnaireResponseRepository.findById(responseId)
+            .orElseThrow(() -> new RuntimeException("Response not found"));
+        
+        // 2. Validar que no está completada
+        if (response.getIsCompleted()) {
+            throw new IllegalStateException("Response is already completed");
+        }
+        
+        // 3. Obtener pregunta actual
+        Question question = questionRepository.findById(questionId)
+            .orElseThrow(() -> new RuntimeException("Question not found"));
+        
+        // 4. Obtener opción seleccionada
+        QuestionOption selectedOption = questionOptionRepository.findById(selectedOptionId)
+            .orElseThrow(() -> new RuntimeException("Option not found"));
+        
+        // 5. Validar que opción pertenece a pregunta
+        if (!selectedOption.getQuestion().getId().equals(questionId)) {
+            throw new IllegalArgumentException("Option does not belong to question");
+        }
+        
+        // 6. Validar texto adicional si se requiere
+        if (selectedOption.getRequiresTextInput() && 
+            (additionalText == null || additionalText.isBlank())) {
+            throw new IllegalArgumentException("Additional text is required for this option");
+        }
+        
+        // 7. Crear y persistir respuesta
+        UserAnswer answer = new UserAnswer();
+        answer.setResponse(response);
+        answer.setQuestion(question);
+        answer.setSelectedOption(selectedOption);
+        answer.setAdditionalText(additionalText);
+        answer.setAnsweredAt(LocalDateTime.now());
+        
+        userAnswerRepository.save(answer);
+        
+        // 8. Obtener siguiente pregunta
+        Question nextQuestion = selectedOption.getNextQuestion();
+        
+        // 9. Si es NULL → FINALIZAR SESIÓN
+        if (nextQuestion == null) {
+            response.markAsCompleted();
+            response.setCompletedAt(LocalDateTime.now());
+            questionnaireResponseRepository.save(response);
+            
+            return QuestionnaireResponseDto.builder()
+                .responseId(responseId)
+                .currentQuestion(null)  // ← SEÑAL DE FIN
+                .isCompleted(true)
+                .totalQuestionsAnswered(countAnswers(responseId))
+                .build();
+        }
+        
+        // 10. Si no es NULL → retornar siguiente pregunta
+        QuestionDto nextQuestionDto = toQuestionDto(nextQuestion);
+        
+        return QuestionnaireResponseDto.builder()
+            .responseId(responseId)
+            .currentQuestion(nextQuestionDto)
+            .isCompleted(false)
+            .totalQuestionsAnswered(countAnswers(responseId))
+            .build();
+    }
+    
+    // Retrocede a pregunta anterior
+    public QuestionnaireResponseDto goToPreviousQuestion(Long responseId) {
+        QuestionnaireResponse response = questionnaireResponseRepository.findById(responseId)
+            .orElseThrow(() -> new RuntimeException("Response not found"));
+        
+        // Obtener última respuesta
+        List<UserAnswer> answers = userAnswerRepository.findByResponseIdOrderByIdDesc(responseId);
+        if (answers.isEmpty()) {
+            throw new IllegalStateException("No answers to go back from");
+        }
+        
+        UserAnswer lastAnswer = answers.get(0);
+        
+        // Si hay una pregunta anterior en la lista
+        Question previousQuestion = null;
+        if (answers.size() > 1) {
+            previousQuestion = answers.get(1).getQuestion();
+        } else {
+            // Si era la primera pregunta, retornar primera del cuestionario
+            previousQuestion = response.getQuestionnaire().getFirstQuestion();
+        }
+        
+        // Eliminar última respuesta
+        userAnswerRepository.delete(lastAnswer);
+        
+        // Si estaba completada, marcar como no completada
+        if (response.getIsCompleted()) {
+            response.setIsCompleted(false);
+            response.setCompletedAt(null);
+            questionnaireResponseRepository.save(response);
+        }
+        
+        // Retornar pregunta anterior
+        QuestionDto previousQuestionDto = toQuestionDto(previousQuestion);
+        
+        return QuestionnaireResponseDto.builder()
+            .responseId(responseId)
+            .currentQuestion(previousQuestionDto)
+            .isCompleted(false)
+            .totalQuestionsAnswered(countAnswers(responseId))
+            .build();
+    }
+    
+    // Obtiene resumen completo (para pasar a IA)
+    public QuestionnaireResponseSummaryDto getResponseSummary(Long responseId) {
+        QuestionnaireResponse response = questionnaireResponseRepository.findById(responseId)
+            .orElseThrow(() -> new RuntimeException("Response not found"));
+        
+        // Obtener todas las respuestas en orden
+        List<UserAnswer> answers = userAnswerRepository.findByResponseId(responseId);
+        
+        // Convertir a AnswerDto
+        List<AnswerDto> answerDtos = answers.stream()
+            .map(this::toAnswerDto)
+            .collect(Collectors.toList());
+        
+        // Construir resumen
+        return QuestionnaireResponseSummaryDto.builder()
+            .responseId(responseId)
+            .userId(response.getUser().getId())
+            .userName(response.getUser().getEmail())
+            .questionnaireId(response.getQuestionnaire().getId())
+            .questionnaireName(response.getQuestionnaire().getName())
+            .questionnaireDescription(response.getQuestionnaire().getDescription())
+            .answers(answerDtos)
+            .startedAt(response.getStartedAt())
+            .completedAt(response.getCompletedAt())
+            .isCompleted(response.getIsCompleted())
+            .build();
+    }
+}
+```
+
+#### 13. Diagrama de Relaciones
+
+```
+              ┌─────────────────────┐
+              │   Questionnaire     │
+              ├─────────────────────┤
+              │ id (PK)             │
+              │ name (UNIQUE)       │
+              │ description         │
+              │ coach_model_type_id │
+              │ experience_level_id │
+              │ first_question_id ──┬────────┐
+              │ is_enabled          │        │
+              │ created_at, updated_at       │
+              └─────────────┬────────┘        │
+                            │                 │
+         ┌──────────────────┼────────────────┘
+         │                  │ 1:N
+         │                  ▼
+         │          ┌──────────────────────────────┐
+         │          │      Question                │
+         │          ├──────────────────────────────┤
+         │          │ id (PK)                      │
+         │          │ text                         │
+         │          │ type (ENUM)                  │
+         │          │ is_enabled                   │
+         │          │ created_at                   │
+         │          └──────────┬───────────────────┘
+         │                     │ 1:N
+         │                     ▼
+         │       ┌──────────────────────────────────┐
+         │       │   QuestionOption                 │
+         │       ├──────────────────────────────────┤
+         │       │ id (PK)                          │
+         │       │ question_id (FK)                 │
+         │       │ text                             │
+         │       │ next_question_id (FK, nullable)──┼──→ self-referential
+         │       │ display_order                    │    (apunta a Question)
+         │       │ requires_text_input              │
+         │       │ text_input_prompt                │
+         │       │ text_input_placeholder           │
+         │       └──────────────────────────────────┘
+         │
+         │
+         └──→ CoachModelType
+         │    ├─ id (PK)
+         │    ├─ name (UNIQUE)
+         │    ├─ description
+         │    ├─ emoji_character
+         │    └─ enabled
+         │
+         └──→ ExperienceLevel
+              ├─ id (PK)
+              ├─ name (UNIQUE)
+              └─ description
+
+
+┌──────────────────────────┐
+│ QuestionnaireResponse    │
+├──────────────────────────┤
+│ id (PK)                  │
+│ user_id (FK)─────────────┬──→ AppUser
+│ questionnaire_id (FK)────┬──→ Questionnaire
+│ started_at               │
+│ completed_at             │
+│ is_completed             │
+│ is_active                │
+└──────────────┬───────────┘
+               │ 1:N
+               ▼
+        ┌──────────────────────┐
+        │   UserAnswer         │
+        ├──────────────────────┤
+        │ id (PK)              │
+        │ response_id (FK)     │
+        │ question_id (FK)─────→ Question
+        │ selected_option_id───→ QuestionOption
+        │ additional_text      │
+        │ ai_generated_desc.   │
+        │ answered_at          │
+        └──────────────────────┘
+```
 
 ---
 
@@ -401,17 +1247,20 @@ Routine
 
 #### CoachType — Los 5 Coaches de IA
 
-El enum `CoachType` define los cinco coaches disponibles. Cada uno aporta su especialidad mediante un `systemContext` que se inyecta en el prompt enviado a Ronnie:
+El enum `CoachType` define los coaches de IA disponibles. Cada uno aporta su especialidad mediante un `systemContext` que se inyecta en el prompt enviado a Ronnie:
 
 | Coach | Especialidad | Endpoint en Ronnie |
 |---|---|---|
-| `MASTER` | Planificador generalista (usa su propio `@SystemMessage`) | `/master/generate-routine` |
+| `MASTER` (DEPRECATED) | Planificador generalista (en desuso, fuera de servicio) | `/master/generate-routine` |
 | `RONNIE` | Hipertrofia y fuerza muscular (inspirado en Ronnie Coleman) | `/ronnie/generate-routine` |
 | `ELIUD` | Running, cardio y rendimiento aeróbico | `/eliud/generate-routine` |
 | `SERENA` | Fitness femenino, tonificación y bienestar | `/serena/generate-routine` |
 | `KAEL` | Calistenia y street workout | `/kael/generate-routine` |
 
-Para `MASTER`, `systemContext` es `null`; su comportamiento viene definido en el `@SystemMessage` de la interfaz `Master` en el microservicio Ronnie. Para los demás coaches, `systemContext` se incluye en el prompt bajo la sección `ROL DEL ENTRENADOR`.
+> [!WARNING]
+> **Deprecación de MASTER**: El coach `MASTER` y su endpoint correspondiente están obsoletos y no deben utilizarse. Para la generación activa de rutinas del usuario, se debe seleccionar obligatoriamente un coach de especialidad real (Ronnie, Eliud, Serena o Kael).
+
+Para los coaches activos, `systemContext` se incluye en el prompt bajo la sección `ROL DEL ENTRENADOR` para perfilar al LLM.
 
 #### IFitAIClient — Cliente HTTP hacia Ronnie
 
@@ -594,35 +1443,121 @@ El controlador `AppEmailController` existe como stub en `/appemail` pero actualm
 
 ### Configuración de Spring Security
 
-`SpringSecurityConfig` define una `SecurityFilterChain` stateless (sin sesiones HTTP) con las siguientes reglas:
+`SpringSecurityConfig` define una `SecurityFilterChain` **stateless** (sin sesiones HTTP) con las siguientes reglas:
 
-**Endpoints públicos** (no requieren token):
-- `/v3/api-docs/**` — OpenAPI spec
-- `/swagger-ui/**`, `/swagger-ui.html` — Documentación interactiva
-- `/auth/**` — Todos los endpoints de autenticación
-- `/exercise-images/**` — Imágenes de ejercicios
+**Endpoints públicos** (no requieren token JWT):
+```
+/v3/api-docs/**                  — OpenAPI spec
+/swagger-ui/**                   — UI interactiva
+/swagger-ui.html
+/auth/**                         — Todos: login, register, verify, refresh, logout
+/exercise-images/**              — Imágenes de ejercicios de Ronnie
+```
 
-**Resto de endpoints**: requieren token JWT válido (`anyRequest().authenticated()`).
+**Resto de endpoints**: requieren token JWT válido en cabecera `Authorization: Bearer <token>`.
 
-### Validación de JWT
+### OAuth2 Resource Server — Arquitectura
 
-IFit actúa como **OAuth2 Resource Server**. Spring Security valida cada token entrante:
-1. Descarga la clave pública de Keycloak desde `/.well-known/openid-connect/certs`.
-2. Verifica la firma del JWT.
-3. Comprueba `iss` (issuer = `http://localhost:9090/realms/ifit-realm`) y `exp` (expiración).
-4. Construye el `Authentication` con los roles extraídos mediante `JwtAuthenticationConverter`.
+IFit **NO es un servidor de autorización** (no emite tokens). Es un **OAuth2 Resource Server**: valida tokens JWT emitidos por Keycloak.
 
-### Extracción de Roles
+**Flujo de validación de cada petición HTTP:**
 
-Los roles de Keycloak se extraen del claim `realm_access.roles` del JWT. El rol `admin_client_role` otorga acceso a operaciones administrativas protegidas con `@PreAuthorize("hasRole('admin_client_role')")`.
+```
+Cliente envía:
+GET /routines
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI...
 
-### Extracción del UserId
+↓
 
-`JwtUtils.extractUserId(request, objectMapper)` lee el campo `sub` del payload del JWT para obtener el `keycloakUserId`. Este ID es el vínculo entre el usuario en Keycloak y su rutina en Ronnie.
+Spring Security intercepta + JwtDecoder:
+  1. Descarga clave pública de Keycloak:
+     GET http://localhost:9090/realms/ifit-realm/protocol/openid-connect/certs
+  
+  2. Verifica firma del token (RSA-256)
+  
+  3. Comprueba claims críticos:
+     - iss (issuer) = "http://localhost:9090/realms/ifit-realm" ✓
+     - exp (expiración) > ahora ✓
+  
+  4. JwtAuthenticationConverter extrae:
+     - subject (sub) → principal username
+     - realm_access.roles → ROLE_user, ROLE_admin, etc.
+     - client_id
+     - preferred_username
+  
+  5. Construye Authentication object
+
+↓
+
+@PreAuthorize("hasRole('ADMIN')")  → verifica presencia del rol
+
+↓
+
+Endpoint ejecuta si validación exitosa
+```
+
+#### Extracción de Roles
+
+Los roles se extraen del claim `realm_access.roles` del JWT:
+
+```json
+{
+  "sub": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "preferred_username": "juangarcia@example.com",
+  "realm_access": {
+    "roles": ["default-roles-ifit-realm", "admin_client_role", "user"]
+  },
+  "iss": "http://localhost:9090/realms/ifit-realm",
+  "exp": 1687954800,
+  ...
+}
+```
+
+En el código, se usan:
+- `@PreAuthorize("hasRole('admin_client_role')")` para endpoints administrativos
+- `@PreAuthorize("hasRole('ROLE_USER')")` o `isAuthenticated()` para endpoints de usuario
+
+#### Extracción del UserId
+
+`JwtUtils.extractUserId(request, objectMapper)` lee el claim `sub` (subject) del token:
+
+```java
+String keycloakUserId = jwtUtils.extractUserId(httpRequest);
+// keycloakUserId = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+```
+
+Este ID es **crítico** porque vincula:
+- Usuario en Keycloak (identidad)
+- Usuario en BD local (perfil, coach, experiencia)
+- Rutinas en BD (entrenamientos)
+- Sesión en Ronnie (historial de conversación con LLM)
 
 ### CSRF
 
-CSRF está deshabilitado. Es la práctica estándar para APIs REST stateless donde el cliente gestiona el token explícitamente en la cabecera `Authorization`.
+CSRF **está deshabilitado**. Es la práctica estándar para APIs REST stateless donde:
+- El cliente (MAUI, SPA, etc.) gestiona explícitamente el token JWT
+- Cada petición incluye el token en cabecera `Authorization`
+- No hay sesiones HTTP server-side
+- El servidor no inyecta tokens en formularios
+
+### Ciclo de Vida del Token
+
+```
+1. Login: Keycloak emite access_token (5 min) + refresh_token (24h)
+
+2. Petición autenticada: Cliente envía access_token en Authorization header
+   - Si access_token válido → permitir
+   - Si access_token expirado → rechazar (401)
+
+3. Refresh: Cliente envía refresh_token a POST /auth/refresh
+   - Si refresh_token válido → emitir nuevo access_token
+   - Si refresh_token expirado → usuario debe login de nuevo
+
+4. Logout: Cliente envía refresh_token a POST /auth/logout
+   - Keycloak revoca refresh_token
+   - Cliente elimina tokens locales
+   - access_token caduca por tiempo (no se revoca instantáneamente)
+```
 
 ---
 
@@ -656,42 +1591,87 @@ El fichero `data.sql` combina DDL (DROP/CREATE TABLE) y DML (INSERT) en un únic
 
 ## Configuración
 
+### application.properties
+
 Archivo: `src/main/resources/application.properties`
 
 ```properties
-# Aplicación
+# === APLICACIÓN ===
 spring.application.name=ifit
 server.port=8081
 
-# Base de datos
+# === BASE DE DATOS ===
 spring.datasource.url=jdbc:mysql://localhost:3306/ifit
-spring.datasource.username=root
-spring.datasource.password=root
+spring.datasource.username=${DB_USERNAME:root}
+spring.datasource.password=${DB_PASSWORD:root}
 spring.sql.init.mode=always
-spring.jpa.hibernate.ddl-auto=update
+spring.sql.init.data-locations=classpath:data.sql,classpath:excercise_catalog_esp.sql
+spring.jpa.hibernate.ddl-auto=create-drop
 
-# Email (SMTP Gmail)
+# === EMAIL (SMTP Gmail) ===
 spring.mail.host=smtp.gmail.com
 spring.mail.port=587
-spring.mail.username=adminifit96@gmail.com
-spring.mail.password=<app-password>
+spring.mail.username=${MAIL_USERNAME:adminifit96@gmail.com}
+spring.mail.password=${MAIL_PASSWORD}
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
 
-# OAuth2 Resource Server — Keycloak
+# === OAuth2 Resource Server — Keycloak ===
 spring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost:9090/realms/ifit-realm
 spring.security.oauth2.resourceserver.jwt.jwk-set-uri=http://localhost:9090/realms/ifit-realm/protocol/openid-connect/certs
+jwt.auth.converter.resource-id=springboot-ifit-client
+jwt.auth.converter.principle-attribute=preferred_username
 
-# Keycloak admin (para register/delete users)
+# === Keycloak Admin — Autenticación de servicios ===
 keycloak.client-id=springboot-ifit-client
-keycloak.client-secret=<secret>
+keycloak.client-secret=${KEYCLOAK_CLIENT_SECRET}
 keycloak.token-url=http://localhost:9090/realms/ifit-realm/protocol/openid-connect/token
 keycloak.auth-server-url=http://localhost:9090
 keycloak.realm=ifit-realm
 
-# Ronnie (microservicio IA)
+# === Ronnie — Microservicio IA (LangChain4j) ===
 ronnie.service.url=http://localhost:8082
 
-# Eureka (service discovery)
+# === Eureka — Service Discovery ===
+eureka.client.service-url.defaultZone=http://localhost:8761/eureka/
+eureka.client.register-with-eureka=true
+eureka.client.fetch-registry=true
 eureka.instance.instance-id=${spring.application.name}:${server.port}
+
+# === OpenAPI / Swagger ===
+springdoc.api-docs.path=/v3/api-docs
+springdoc.swagger-ui.path=/swagger-ui.html
+```
+
+### Variables de Entorno Requeridas
+
+Las siguientes variables de entorno **deben estar definidas** en el entorno de ejecución:
+
+| Variable | Descripción | Obligatoria | Default |
+|---|---|---|---|
+| `DB_USERNAME` | Usuario MySQL | No | `root` |
+| `DB_PASSWORD` | Contraseña MySQL | No | `root` |
+| `MAIL_USERNAME` | Email SMTP remitente | No | `adminifit96@gmail.com` |
+| `MAIL_PASSWORD` | Contraseña de aplicación Gmail (no es la contraseña de cuenta) | **SÍ** | — |
+| `KEYCLOAK_CLIENT_SECRET` | Secret del cliente OAuth2 en Keycloak | **SÍ** | — |
+
+**Ejemplo de inicialización:**
+
+```bash
+export DB_USERNAME=ifit_user
+export DB_PASSWORD=secure_password
+export MAIL_PASSWORD=ggsj hyxw qwer tyui
+export KEYCLOAK_CLIENT_SECRET=abc123def456ghi789jkl
+mvn spring-boot:run
+```
+
+O en `application-local.properties` (gitignored):
+
+```properties
+spring.datasource.username=ifit_user
+spring.datasource.password=secure_password
+spring.mail.password=ggsj hyxw qwer tyui
+keycloak.client-secret=abc123def456ghi789jkl
 ```
 
 ---
@@ -703,7 +1683,7 @@ eureka.instance.instance-id=${spring.application.name}:${server.port}
 - Java 21+
 - Maven 3.9+
 - MySQL 8.0+ con base de datos `ifit` creada
-- Keycloak 24+ arrancado en `localhost:9090` con realm `ifit-realm` configurado
+- Keycloak 23.0 arrancado en `localhost:9090` con realm `ifit-realm` configurado
 - Microservicio Ronnie arrancado en `localhost:8082` (para endpoints de generación IA)
 
 ### Crear la base de datos
@@ -833,3 +1813,515 @@ Base URL directa: `http://localhost:8081`
 **Juan García Candón**  
 Universidad de Cádiz — Escuela Superior de Ingeniería  
 Trabajo Final de Grado (TFG), 2024–2025
+
+---
+
+---
+
+# ANEXO: OAuth2, Resource Server y Flujo Keycloak
+
+Este anexo explica los conceptos de seguridad subyacentes en IFit: qué es OAuth2, por qué se usa Keycloak como servidor de identidades, y cómo fluyen las peticiones a través del ecosistema de microservicios.
+
+## 1. ¿Qué es OAuth2?
+
+**OAuth2** es un estándar de **autorización abierta** que permite que un usuario autorize a una aplicación a acceder a sus recursos en otro servidor, **sin compartir su contraseña**.
+
+### Conceptos Clave
+
+| Concepto | Descripción |
+|---|---|
+| **Resource Owner** | El usuario (tú, como usuario de IFit) |
+| **Client** | La aplicación que quiere acceder a recursos (p.ej. MAUI frontend) |
+| **Authorization Server** | El servidor que autentica al usuario y emite tokens (Keycloak) |
+| **Resource Server** | El servidor que aloja los recursos protegidos (IFit) |
+| **Access Token** | Token JWT que prueba autorización (válido ~5 min) |
+| **Refresh Token** | Token de larga duración para renovar access_token (válido ~24h) |
+
+### Analogía del mundo real
+
+```
+Tu email (Gmail, Outlook, etc.) es el "Resource Owner" que contiene tus datos.
+Una aplicación de terceros quiere leerlo (p.ej. "Conectar con Gmail").
+
+En lugar de darte la app tu contraseña de Gmail:
+  1. Google (Authorization Server) te pregunta: "¿Permitir acceso?"
+  2. Tú das permiso
+  3. Google te da un "token" (no la contraseña)
+  4. La app usa el token para leer tu email
+  5. El token caduca en 1 hora (seguridad)
+  6. La app puede renovar con un "refresh token"
+
+Así: la app NUNCA ve tu contraseña de Gmail.
+```
+
+## 2. Flujos de OAuth2
+
+OAuth2 define varios "flujos" (flows) según el tipo de cliente. IFit usa **Authorization Code Flow with PKCE**:
+
+### Authorization Code Flow (Simplificado)
+
+```
+┌─────────────┐             ┌──────────────────────┐             ┌───────────────┐
+│   MAUI      │             │      Keycloak        │             │     IFit      │
+│  (Cliente)  │             │ (Auth Server)        │             │ (Resource)    │
+└──────┬──────┘             └──────────┬───────────┘             └───────┬───────┘
+       │                               │                                 │
+       │ 1. Usuario toca "Login"       │                                 │
+       ├──────────────────────────────►│                                 │
+       │  Redirige a pantalla Keycloak │                                 │
+       │                               │                                 │
+       │ 2. Usuario ingresa email/pass │                                 │
+       │◄──── (en formulario Keycloak──┤                                 │
+       │                               │                                 │
+       │ 3. Keycloak valida credenciales
+       │  y redirige con "code"        │                                 │
+       │◄──────────────────────────────┤                                 │
+       │  ?code=xyz&state=abc          │                                 │
+       │                               │                                 │
+       │ 4. MAUI (backend) intercambia │                                 │
+       │    code → access_token        │                                 │
+       ├──────────────────────────────►│                                 │
+       │  POST /token                  │                                 │
+       │  grant_type=authorization_code│                                 │
+       │  code=xyz                     │                                 │
+       │◄──────────────────────────────┤                                 │
+       │  {access_token, refresh_token}│                                 │
+       │                               │                                 │
+       │ 5. MAUI almacena tokens       │                                 │
+       │  (seguramente)                │                                 │
+       │                               │                                 │
+       │ 6. MAUI toca "Ver Rutinas"    │                                 │
+       ├───────────────────────────────────────────────────────────────► │
+       │      GET /routines            │                                 │
+       │  Authorization: Bearer <token>│                                 │
+       │                               │                                 │
+       │                               │ IFit valida token              │
+       │                               │ (sin consultar a Keycloak)     │
+       │◄───────────────────────────────────────────────────────────────┤
+       │      [{id: 1, name: "Pecho"...}]                               │
+       │                               │                                 │
+```
+
+### En IFit: Validación Sin Requerir a Keycloak
+
+Lo especial de **Resource Server** es que IFit **NO consulta a Keycloak en cada petición**. En cambio:
+
+1. **Primera vez (boot)**: Descarga clave pública de Keycloak
+   ```
+   GET http://localhost:9090/realms/ifit-realm/protocol/openid-connect/certs
+   ```
+   
+2. **Cada petición subsecuente**: Valida token **localmente** usando clave pública
+   - Verifica firma criptográfica ✓
+   - Comprueba expiración ✓
+   - Extrae roles y user ID ✓
+   - **Sin hacer HTTP a Keycloak**
+
+Esto hace el sistema **muy rápido y escalable**.
+
+## 3. ¿Qué es un Resource Server?
+
+Un **Resource Server** es un servidor que:
+
+1. **Almacena recursos** (rutinas, cuestionarios, usuarios)
+2. **Acepta tokens JWT** de un Authorization Server externo
+3. **Valida tokens** de forma independiente (sin consultar el auth server)
+4. **Concede o deniega acceso** basado en validación local
+
+### Recursos en IFit
+
+| Recurso | Localización | Requisito para acceder |
+|---|---|---|
+| Rutinas | Base de datos MySQL | Token JWT válido + ser propietario |
+| Cuestionarios | Base de datos MySQL | Token JWT válido |
+| Ejercicios | Base de datos MySQL | Token JWT válido |
+| Perfil de usuario | Base de datos MySQL | Token JWT válido + ser el mismo usuario |
+
+### Validación de Acceso en IFit
+
+```java
+@GetMapping("/routines/user/{userId}")
+@PreAuthorize("isAuthenticated()")
+public List<RoutineResponseDto> getUserRoutines(
+    @PathVariable Long userId,
+    HttpServletRequest request
+) {
+    String keycloakUserId = jwtUtils.extractUserId(request);
+    
+    // El usuario autenticado solo ve SUS propias rutinas
+    if (!userService.userIdBelongsToKeycloakId(userId, keycloakUserId)) {
+        throw new ForbiddenException("No tienes acceso a estas rutinas");
+    }
+    
+    return routineService.getRoutinesByUserId(userId);
+}
+```
+
+**Sin Resource Server**: cada petición requeriría llamar a Keycloak para validar. **Con Resource Server**: IFit valida localmente usando criptografía.
+
+## 4. ¿Qué es Keycloak?
+
+**Keycloak** es un servidor de **Identidad y Acceso (IAM - Identity and Access Management)** de código abierto.
+
+### Roles de Keycloak en IFit
+
+| Responsabilidad | Descripción |
+|---|---|
+| **Almacenar credenciales** | Contraseña hasheada (bcrypt, PBKDF2, scrypt) |
+| **Autenticar usuarios** | Verifica email + contraseña |
+| **Emitir tokens JWT** | Crea access_token + refresh_token |
+| **Administrar roles** | Define quién es ADMIN, quién es USER |
+| **Renovar tokens** | Emite nuevos access_token si refresh_token es válido |
+| **Revocar sesiones** | Invalida refresh_token al hacer logout |
+| **Publicar claves públicas** | Para que IFit valide tokens sin consultar |
+
+### Estructura de Keycloak
+
+```
+Keycloak
+├── Realm: ifit-realm
+│   ├── Client: springboot-ifit-client
+│   │   └── Secret: abc123xyz789...
+│   ├── Users (tabla local)
+│   │   ├── juangarcia@example.com (contraseña hasheada)
+│   │   ├── maria@example.com
+│   │   └── ...
+│   └── Roles
+│       ├── user
+│       ├── admin_client_role
+│       └── ...
+└── [Otros realms...]
+```
+
+### Endpoints Importantes de Keycloak
+
+| Endpoint | Propósito | Quién lo usa |
+|---|---|---|
+| `POST /token` | Autentica usuario (email/pass) → emite tokens | MAUI, IFit (al registrar) |
+| `GET /certs` | Publica clave RSA pública | IFit (al validar) |
+| `POST /logout` | Revoca refresh_token | MAUI, IFit |
+| `POST /admin/users` | Crea usuario (solo admin) | IFit (en register) |
+| `DELETE /admin/users/{id}` | Elimina usuario (rollback) | IFit (si falla insert en BD) |
+| `PUT /admin/users/{id}` | Actualiza usuario | IFit (admin) |
+
+## 5. Flujo Completo: Frontend → API Gateway → IFit → Keycloak
+
+Este es el flujo **real** en un día normal de un usuario iFit:
+
+### Escena 1: Registro de Nuevo Usuario
+
+```
+┌──────────┐           ┌──────────┐           ┌──────────┐           ┌─────────┐
+│   MAUI   │           │ Gateway  │           │  IFit    │           │Keycloak │
+│ (cliente)│           │ (puerto  │           │ (puerto  │           │(puerto  │
+│          │           │   8080)  │           │  8081)   │           │ 9090)   │
+└────┬─────┘           └────┬─────┘           └────┬─────┘           └────┬────┘
+     │                      │                      │                      │
+     │ 1. POST /auth/register                      │                      │
+     │    {email, password, name}                  │                      │
+     ├─────────────────────────────────────────────┤                      │
+     │     (StripPrefix: /ifit/api/v1 → /)         │                      │
+     │                                             │                      │
+     │                                             │ 2. Valida email      │
+     │                                             │    no duplicado      │
+     │                                             │    en BD local ✓     │
+     │                                             │                      │
+     │                                             │ 3. POST /admin/users │
+     │                                             ├─────────────────────►│
+     │                                             │  {email, password}   │
+     │                                             │                      │
+     │                                             │                      │ Keycloak:
+     │                                             │                      │ • Hashea contraseña
+     │                                             │                      │ • Crea usuario
+     │                                             │                      │ • Genera UUID
+     │                                             │                      │
+     │                                             │◄─────────────────────┤
+     │                                             │ 201 Created          │
+     │                                             │ {userId: abc123...}  │
+     │                                             │                      │
+     │                                             │ 4. INSERT user BD    │
+     │                                             │  keycloak_user_id=   │
+     │                                             │  abc123...           │
+     │                                             │  is_verified=false   │
+     │                                             │                      │
+     │                                             │ 5. Genera código 6   │
+     │                                             │    dígitos, almacena │
+     │                                             │    con 15min expira  │
+     │                                             │                      │
+     │                                             │ 6. Envía email con   │
+     │                                             │    código (SMTP)     │
+     │                                             │                      │
+     │◄─────────────────────────────────────────────┤                      │
+     │ 201 Created                                 │                      │
+     │ {userId: 42, email, requiresVerification}   │                      │
+     │                                             │                      │
+     │ Usuario recibe email con código "123456"    │                      │
+     │                                             │                      │
+```
+
+### Escena 2: Verificación de Email y Login
+
+```
+┌──────────┐           ┌──────────┐           ┌──────────┐           ┌─────────┐
+│   MAUI   │           │ Gateway  │           │  IFit    │           │Keycloak │
+│          │           │          │           │          │           │         │
+└────┬─────┘           └────┬─────┘           └────┬─────┘           └────┬────┘
+     │                      │                      │                      │
+     │ 1. POST /auth/verify                        │                      │
+     │    {email, verificationCode: "123456"}      │                      │
+     ├─────────────────────────────────────────────┤                      │
+     │                                             │ 2. Busca código en BD│
+     │                                             │    Valida expiración │
+     │                                             │    ✓                 │
+     │                                             │                      │
+     │                                             │ 3. UPDATE user      │
+     │                                             │    is_verified=true  │
+     │                                             │                      │
+     │                                             │ 4. PUT /admin/users  │
+     │                                             │    {emailVerified:   │
+     │                                             │     true}            │
+     │                                             ├─────────────────────►│
+     │                                             │                      │
+     │                                             │                      │ Keycloak:
+     │                                             │                      │ Marca verificado
+     │                                             │◄─────────────────────┤
+     │                                             │ 200 OK               │
+     │                                             │                      │
+     │                                             │ 5. POST /token       │
+     │                                             │    (password flow)   │
+     │                                             ├─────────────────────►│
+     │                                             │ grant_type=password  │
+     │                                             │ username=email       │
+     │                                             │ password=...         │
+     │                                             │ client_id=...        │
+     │                                             │ client_secret=...    │
+     │                                             │                      │
+     │                                             │                      │ Keycloak:
+     │                                             │                      │ • Verifica email/pass
+     │                                             │                      │ • Genera JWT
+     │                                             │                      │ (iss=keycloak, sub=uuid)
+     │                                             │◄─────────────────────┤
+     │                                             │ {access_token,       │
+     │                                             │  refresh_token}      │
+     │                                             │                      │
+     │◄─────────────────────────────────────────────┤                      │
+     │ 200 OK                                      │                      │
+     │ {accessToken, refreshToken,                 │                      │
+     │  keycloakUserId, userProfile}               │                      │
+     │                                             │                      │
+     │ MAUI almacena tokens en KeyChain/SecureStore│                      │
+     │                                             │                      │
+```
+
+### Escena 3: Usando el Sistema (Petición Protegida)
+
+```
+┌──────────┐           ┌──────────┐           ┌──────────┐           ┌─────────┐
+│   MAUI   │           │ Gateway  │           │  IFit    │           │Keycloak │
+│          │           │          │           │          │           │         │
+└────┬─────┘           └────┬─────┘           └────┬─────┘           └────┬────┘
+     │                      │                      │                      │
+     │ Usuario toca "Ver mis rutinas"              │                      │
+     │                                             │                      │
+     │ GET /routines/user/42                       │                      │
+     │ Authorization: Bearer <access_token>        │                      │
+     ├─────────────────────────────────────────────┤                      │
+     │     (StripPrefix: /ifit/api/v1 → /)         │                      │
+     │                                             │                      │
+     │                                             │ Spring Security:     │
+     │                                             │ • Extrae token del   │
+     │                                             │   header             │
+     │                                             │                      │
+     │                                             │ JwtDecoder:          │
+     │                                             │ • Valida firma       │
+     │                                             │   (clave pública)    │
+     │                                             │ • Verifica exp, iss  │
+     │                                             │ • Extrae claims      │
+     │                                             │ (sin llamar Keycloak)│
+     │                                             │                      │
+     │                                             │ JwtAuthenticationConverter:
+     │                                             │ • Extrae sub (uuid)  │
+     │                                             │ • Extrae roles       │
+     │                                             │ • Construye           │
+     │                                             │   Authentication     │
+     │                                             │                      │
+     │                                             │ RoutineController:   │
+     │                                             │ • Valida autorización│
+     │                                             │ • Verifica propiedad │
+     │                                             │ • Consulta BD        │
+     │                                             │                      │
+     │◄─────────────────────────────────────────────┤                      │
+     │ 200 OK                                      │                      │
+     │ [{id: 1, name: "Pecho",                     │                      │
+     │   exercises: [...]}]                        │                      │
+     │                                             │                      │
+     │ MAUI muestra rutinas en pantalla            │                      │
+     │                                             │                      │
+```
+
+### Escena 4: Token Expirado → Refresh
+
+```
+┌──────────┐           ┌──────────┐           ┌──────────┐           ┌─────────┐
+│   MAUI   │           │ Gateway  │           │  IFit    │           │Keycloak │
+│          │           │          │           │          │           │         │
+└────┬─────┘           └────┬─────┘           └────┬─────┘           └────┬────┘
+     │                      │                      │                      │
+     │ GET /routines                               │                      │
+     │ Authorization: Bearer <access_token>        │                      │
+     │ (token expirado hace 2 minutos)             │                      │
+     ├─────────────────────────────────────────────┤                      │
+     │                                             │ Spring Security:     │
+     │                                             │ "Token exp: 1234     │
+     │                                             │  es < ahora (5678)"  │
+     │◄─────────────────────────────────────────────┤                      │
+     │ 401 Unauthorized                            │                      │
+     │                                             │                      │
+     │ MAUI detecta 401 → Ejecuta refresh          │                      │
+     │                                             │                      │
+     │ POST /auth/refresh                          │                      │
+     │ {refreshToken: <refresh_token>}             │                      │
+     ├─────────────────────────────────────────────┤                      │
+     │                                             │ POST /token          │
+     │                                             │ grant_type=          │
+     │                                             │ refresh_token        │
+     │                                             │ refresh_token=<...>  │
+     │                                             ├─────────────────────►│
+     │                                             │                      │
+     │                                             │                      │ Keycloak:
+     │                                             │                      │ • Valida refresh_token
+     │                                             │                      │ • Emite nuevo JWT
+     │                                             │                      │
+     │                                             │◄─────────────────────┤
+     │                                             │ {access_token,       │
+     │                                             │  refresh_token}      │
+     │                                             │                      │
+     │◄─────────────────────────────────────────────┤                      │
+     │ 200 OK                                      │                      │
+     │ {accessToken, refreshToken}                 │                      │
+     │                                             │                      │
+     │ MAUI guarda nuevos tokens                   │                      │
+     │                                             │                      │
+     │ GET /routines (REINTENTADO)                 │                      │
+     │ Authorization: Bearer <nuevo_access_token> │                      │
+     ├─────────────────────────────────────────────┤                      │
+     │                                             │ ✓ Token válido       │
+     │◄─────────────────────────────────────────────┤                      │
+     │ 200 OK [...]                                │                      │
+     │                                             │                      │
+```
+
+## 6. Diagrama de Arquitectura Ampliado
+
+```
+                    ┌──────────────────────┐
+                    │   MAUI Cliente       │
+                    │  (.NET MAUI App)     │
+                    │                      │
+                    │  Almacena tokens:    │
+                    │  • accessToken (5m)  │
+                    │  • refreshToken (24h)│
+                    └──────────┬───────────┘
+                               │
+                               │ GET /ifit/api/v1/routines
+                               │ Authorization: Bearer <token>
+                               │
+                    ┌──────────▼───────────┐
+                    │   API Gateway        │
+                    │  Spring Cloud Gateway│
+                    │  Puerto: 8080        │
+                    │                      │
+                    │ • StripPrefix /ifit/api/v1
+                    │ • Retransmite JWT    │
+                    │ • Rate limiting      │
+                    └──────────┬───────────┘
+                               │
+                               │ GET /routines
+                               │ Authorization: Bearer <token>
+                               │
+                    ┌──────────▼───────────────────┐
+                    │   IFit (Resource Server)     │
+                    │   Spring Boot 3.5.7          │
+                    │   Puerto: 8081               │
+                    │                              │
+                    │  ┌────────────────────────┐  │
+                    │  │ Spring Security        │  │
+                    │  │ • Extrae token         │  │
+                    │  │ • JwtDecoder valida    │  │
+                    │  │   (sin Keycloak)       │  │
+                    │  │ • Construye            │  │
+                    │  │   Authentication       │  │
+                    │  └────────────┬───────────┘  │
+                    │               │              │
+                    │  ┌────────────▼────────────┐ │
+                    │  │ Controller (@RestController)
+                    │  │ RoutineController       │ │
+                    │  │ • Valida acceso         │ │
+                    │  │ • Extrae userId        │ │
+                    │  └────────────┬────────────┘ │
+                    │               │              │
+                    │  ┌────────────▼────────────┐ │
+                    │  │ Business Logic          │ │
+                    │  │ RoutineService          │ │
+                    │  │ • Consulta BD           │ │
+                    │  │ • Aplica reglas         │ │
+                    │  └────────────┬────────────┘ │
+                    │               │              │
+                    │  ┌────────────▼────────────┐ │
+                    │  │ Database               │ │
+                    │  │ (MySQL)                │ │
+                    │  │ • routine              │ │
+                    │  │ • routine_day          │ │
+                    │  │ • routine_exercise     │ │
+                    │  └────────────────────────┘ │
+                    │                              │
+                    │  ┌────────────────────────┐  │
+                    │  │ Claves públicas        │  │
+                    │  │ de Keycloak            │  │
+                    │  │ (cached en JwtDecoder) │  │
+                    │  └────────────────────────┘  │
+                    └──────────────┬───────────────┘
+                                   │
+                    ┌──────────────┴───────────────┐
+                    │                              │
+      ┌─────────────▼──────────────┐  ┌──────────▼──────────┐
+      │  Keycloak                  │  │  (solo en register  │
+      │  (OAuth2 + OpenID Connect) │  │   y logout)         │
+      │  Puerto: 9090              │  │                     │
+      │                            │  │  POST /token        │
+      │  • Realm: ifit-realm       │  │  DELETE /logout     │
+      │  • Client:                 │  │  POST /admin/users  │
+      │    springboot-ifit-client  │  │                     │
+      │  • Users (credenciales)    │  └─────────────────────┘
+      │  • Roles                   │
+      │  • Keys (/certs endpoint)  │
+      └────────────────────────────┘
+```
+
+## 7. Resumen de Ventajas: Resource Server vs Monolito
+
+| Aspecto | Resource Server (IFit actual) | Servidor Monolito |
+|---|---|---|
+| **Validación de token** | Local, sin HTTP a Keycloak | Cada petición: HTTP a auth server |
+| **Velocidad** | Sub-milisegundo (criptografía) | +50-100ms (red) |
+| **Escalabilidad** | IFit crece sin afectar Keycloak | Cuello botella en auth server |
+| **Separación de responsabilidades** | Identidad ↔ Lógica de negocio | Todo mezclado |
+| **Estándar** | OAuth2 (compatible con muchos clients) | Propietario |
+| **Revocación instantánea** | Tokens no se revocan al logout (caduca por tiempo) | Posible revocación inmediata |
+
+## 8. Preguntas Frecuentes
+
+### P: ¿Por qué Keycloak no almacena rutinas?
+**R:** Keycloak es especializado en **identidad**. IFit es especializado en **lógica de negocio**. Separar ambas es más mantenible: puedes cambiar Keycloak sin afectar IFit, y viceversa.
+
+### P: ¿Qué pasa si el access_token expira pero el refresh_token aún es válido?
+**R:** El cliente (MAUI) recibe 401 Unauthorized. Su middleware intercepta, hace POST /auth/refresh, obtiene nuevo access_token, y reintenta la petición original. Todo automático.
+
+### P: ¿Y si ambos tokens expiran?
+**R:** El usuario debe login de nuevo. Esto es normal; después de ~24h sin actividad, el usuario re-autentica para seguridad.
+
+### P: ¿Puede IFit emitir tokens propios?
+**R:** **No debe**. IFit es Resource Server, no Authorization Server. Si emitiese tokens propios, sería inseguro (el cliente tendría dos tokens con distintas claves públicas). Keycloak es la fuente única de verdad.
+
+### P: ¿Por qué no usar sesiones HTTP tradicionales?
+**R:** Las sesiones HTTP (server-side) requieren estado compartido entre servidores. Con múltiples instancias de IFit, necesitarías una base de datos de sesiones. Tokens JWT son stateless: cualquier servidor puede validarlos sin coordinar.
