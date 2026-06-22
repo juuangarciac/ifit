@@ -124,8 +124,8 @@ foreach ($service in $DockerServices) {
 }
 
 if (-not $allDockerRunning) {
-    Print-Info "Ejecutando docker-compose up -d..."
-    & docker-compose up -d
+    Print-Info "Ejecutando docker compose up -d..."
+    & docker compose up -d
     Print-Success "Servicios Docker levantados"
     Print-Info "Esperando a que estén listos (30s)..."
     Start-Sleep -Seconds 30
@@ -272,7 +272,7 @@ Write-Host "  Get-Content `$env:TEMP\admin-panel.log -Tail 20 -Wait"
 Write-Host ""
 
 Print-Info "Detener servicios:"
-Write-Host "  docker-compose down"
+Write-Host "  docker compose down"
 Write-Host "  Get-Process java | Stop-Process -Force"
 Write-Host ""
 

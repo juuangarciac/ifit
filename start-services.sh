@@ -106,8 +106,8 @@ for service in "${DOCKER_SERVICES[@]}"; do
 done
 
 if [ "$all_docker_running" = false ]; then
-    print_info "Ejecutando docker-compose up -d..."
-    docker-compose up -d
+    print_info "Ejecutando docker compose up -d..."
+    docker compose up -d
     print_success "Servicios Docker levantados"
     print_info "Esperando a que estén listos (30s)..."
     sleep 30
@@ -239,7 +239,7 @@ echo "  tail -f /tmp/admin-panel.log"
 echo ""
 
 print_info "Detener servicios:"
-echo "  docker-compose down"
+echo "  docker compose down"
 echo "  pkill -f 'spring-boot:run'"
 echo ""
 
