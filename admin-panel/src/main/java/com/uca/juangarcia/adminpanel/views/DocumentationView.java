@@ -108,9 +108,16 @@ public class DocumentationView extends VerticalLayout {
         String jsonUrl = baseUrl() + ":" + port + "/v3/api-docs";
 
         VerticalLayout card = baseCard(name, description, icon);
-        card.add(new Span(baseUrl().replaceFirst("^https?://", "") + ":" + port));
 
-        HorizontalLayout actions = new HorizontalLayout();
+        Span hostLabel = new Span(baseUrl().replaceFirst("^https?://", "") + ":" + port);
+        hostLabel.setWidthFull();
+        hostLabel.getStyle()
+            .set("font-size", "var(--lumo-font-size-s)")
+            .set("color", "var(--lumo-secondary-text-color)")
+            .set("word-break", "break-all");
+        card.add(hostLabel);
+
+        VerticalLayout actions = actionsColumn();
         actions.add(openButtonAnchor("Abrir Swagger UI", swaggerUrl, true));
         if (hasJson) {
             actions.add(openButtonAnchor("OpenAPI JSON", jsonUrl, false));
@@ -122,8 +129,20 @@ public class DocumentationView extends VerticalLayout {
     /** Tarjeta para una consola genérica (un único enlace). */
     private VerticalLayout consoleCard(String name, String description, VaadinIcon icon, String url) {
         VerticalLayout card = baseCard(name, description, icon);
-        card.add(openButtonAnchor("Abrir", url, true));
+        VerticalLayout actions = actionsColumn();
+        actions.add(openButtonAnchor("Abrir", url, true));
+        card.add(actions);
         return card;
+    }
+
+    /** Columna de acciones a ancho completo (los botones se apilan dentro de la tarjeta). */
+    private VerticalLayout actionsColumn() {
+        VerticalLayout actions = new VerticalLayout();
+        actions.setPadding(false);
+        actions.setSpacing(false);
+        actions.setWidthFull();
+        actions.getStyle().set("gap", "var(--lumo-space-s)").set("margin-top", "var(--lumo-space-s)");
+        return actions;
     }
 
     private VerticalLayout baseCard(String name, String description, VaadinIcon icon) {
@@ -134,7 +153,8 @@ public class DocumentationView extends VerticalLayout {
         card.getStyle()
             .set("border", "1px solid var(--lumo-contrast-20pct)")
             .set("border-radius", "var(--lumo-border-radius-l)")
-            .set("box-shadow", "var(--lumo-box-shadow-xs)");
+            .set("box-shadow", "var(--lumo-box-shadow-xs)")
+            .set("box-sizing", "border-box");
 
         HorizontalLayout head = new HorizontalLayout();
         head.setAlignItems(FlexComponent.Alignment.CENTER);
@@ -155,11 +175,13 @@ public class DocumentationView extends VerticalLayout {
         return card;
     }
 
-    /** Botón que abre una URL en pestaña nueva (Anchor para no depender del backend). */
+    /** Botón a ancho completo que abre una URL en pestaña nueva (Anchor para no depender del backend). */
     private Anchor openButtonAnchor(String text, String url, boolean primary) {
         Button button = new Button(text, VaadinIcon.EXTERNAL_LINK.create());
         button.addThemeVariants(primary ? ButtonVariant.LUMO_PRIMARY : ButtonVariant.LUMO_TERTIARY);
+        button.setWidthFull();
         Anchor anchor = new Anchor(url, button);
+        anchor.setWidthFull();
         anchor.setTarget("_blank");
         anchor.getElement().setAttribute("rel", "noopener noreferrer");
         return anchor;
