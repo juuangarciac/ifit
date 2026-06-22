@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="iFit">
+  <defs>
+    <linearGradient id="ifitGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22d3ee"/>
+      <stop offset="1" stop-color="#2563eb"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="64" height="64" rx="14" fill="url(#ifitGrad)"/>
+  <g fill="#ffffff">
+    <!-- Barra -->
+    <rect x="22" y="30" width="20" height="4" rx="2"/>
+    <!-- Discos izquierda -->
+    <rect x="16" y="26" width="5" height="12" rx="2"/>
+    <rect x="10" y="23" width="5" height="18" rx="2.5"/>
+    <!-- Discos derecha -->
+    <rect x="43" y="26" width="5" height="12" rx="2"/>
+    <rect x="49" y="23" width="5" height="18" rx="2.5"/>
+  </g>
+</svg>

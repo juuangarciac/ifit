@@ -8,6 +8,7 @@ import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -38,8 +39,16 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
     private void buildNavbar() {
         DrawerToggle toggle = new DrawerToggle();
 
+        Image logo = new Image("icons/ifit-logo.svg", "iFit");
+        logo.setHeight("32px");
+        logo.setWidth("32px");
+
         H1 title = new H1("iFit · Admin");
         title.getStyle().set("font-size", "var(--lumo-font-size-l)").set("margin", "0");
+
+        HorizontalLayout brand = new HorizontalLayout(logo, title);
+        brand.setAlignItems(FlexComponent.Alignment.CENTER);
+        brand.setSpacing(true);
 
         AppUserResponseDto current = auth.getCurrentUser();
         Span user = new Span(current != null && current.email() != null ? current.email() : "");
@@ -51,10 +60,10 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
         });
         logout.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
-        HorizontalLayout header = new HorizontalLayout(toggle, title, user, logout);
+        HorizontalLayout header = new HorizontalLayout(toggle, brand, user, logout);
         header.setWidthFull();
         header.setAlignItems(FlexComponent.Alignment.CENTER);
-        header.expand(title);
+        header.expand(brand);
         header.getStyle().set("padding-inline", "var(--lumo-space-m)");
         addToNavbar(header);
     }

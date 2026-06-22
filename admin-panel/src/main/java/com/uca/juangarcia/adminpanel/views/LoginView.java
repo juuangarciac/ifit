@@ -5,6 +5,7 @@ import java.util.Optional;
 import com.uca.juangarcia.adminpanel.client.AuthService;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.login.LoginI18n;
@@ -38,6 +39,10 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
         setAlignItems(FlexComponent.Alignment.CENTER);
         setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
 
+        Image logo = new Image("icons/ifit-logo.svg", "iFit");
+        logo.setHeight("72px");
+        logo.setWidth("72px");
+
         H1 title = new H1("iFit · Panel de administración");
         Paragraph subtitle = new Paragraph("Acceso restringido a administradores");
         subtitle.getStyle().set("color", "var(--lumo-secondary-text-color)").set("margin-top", "0");
@@ -63,7 +68,7 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
             }
         });
 
-        add(title, subtitle, loginForm);
+        add(logo, title, subtitle, loginForm);
     }
 
     @Override
