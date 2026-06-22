@@ -808,6 +808,34 @@ Cubre:
 
 ---
 
+## 📖 Documentación de las APIs (OpenAPI / Swagger)
+
+Los microservicios **iFit** y **Ronnie** exponen su documentación interactiva con
+Swagger UI (springdoc-openapi). Desde ahí puedes ver y probar todos los endpoints.
+
+> Sustituye `localhost` por la IP o dominio del servidor si accedes en remoto
+> (p. ej. `http://TU_IP:8081/swagger-ui.html`). En el Admin Panel tienes un
+> módulo **Documentación** que genera estos enlaces automáticamente con el host
+> correcto.
+
+| Servicio | Swagger UI | OpenAPI JSON |
+|----------|------------|--------------|
+| **iFit** (lógica de negocio) | http://localhost:8081/swagger-ui.html | http://localhost:8081/v3/api-docs |
+| **Ronnie** (motor de IA) | http://localhost:8082/swagger-ui.html | http://localhost:8082/v3/api-docs |
+
+Otras consolas útiles (no son OpenAPI, pero ayudan a operar el sistema):
+
+| Consola | URL | Para qué |
+|---------|-----|----------|
+| **Eureka** | http://localhost:8761 | Ver microservicios registrados |
+| **Keycloak Admin** | http://localhost:9090 | Gestionar realms, clientes y usuarios |
+| **Admin Panel** | http://localhost:8090 | Interfaz de administración (Vaadin) |
+
+> El **API Gateway** (8080) y el **Admin Panel** (8090) no exponen OpenAPI propio:
+> el Gateway solo enruta y el Admin Panel es una UI Vaadin que consume el Gateway.
+
+---
+
 ## 🚀 Decisiones Arquitectónicas Clave
 
 ### Por qué 5 microservicios y no uno monolito
