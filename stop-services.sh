@@ -1,82 +1,62 @@
 #!/bin/bash
 
 # ============================================================================
-# SCRIPT: Detiene todos los servicios iFit
+# SCRIPT: Detiene los servicios iFit
 # ============================================================================
-# Uso: ./stop-services.sh
-# Detiene Docker y procesos Java
+# Uso:
+#   ./stop-services.sh            Detiene Java + Docker
+#   ./stop-services.sh --java     Detiene solo los servicios Java
+#   ./stop-services.sh --docker   Detiene solo Docker (MySQL, Keycloak)
 # ============================================================================
 
-# Colores para output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib-services.sh"
+cd "$PROJECT_DIR" || exit 1
 
-print_header() {
-    echo -e "${BLUE}========================================${NC}"
-    echo -e "${BLUE}$1${NC}"
-    echo -e "${BLUE}========================================${NC}"
-}
-
-print_success() {
-    echo -e "${GREEN}✓ $1${NC}"
-}
-
-print_error() {
-    echo -e "${RED}✗ $1${NC}"
-}
-
-print_info() {
-    echo -e "${BLUE}ℹ $1${NC}"
-}
-
-# ============================================================================
-# INICIO
-# ============================================================================
+MODE="${1:-all}"
 
 print_header "DETENIENDO SERVICIOS iFIT"
 echo ""
 
-# ============================================================================
-# DETENER SERVICIOS JAVA
-# ============================================================================
-
-print_info "Deteniendo servicios Java..."
-if pkill -f 'spring-boot:run' 2>/dev/null; then
-    print_success "Procesos Java detenidos"
+# ── Servicios Java ───────────────────────────────────────────────────────────
+if [ "$MODE" = "all" ] || [ "$MODE" = "--java" ]; then
+    print_info "Deteniendo servicios Java..."
+    # spring-boot:run lanza un proceso hijo (fork). Matamos ambos patrones.
+    if pkill -f 'spring-boot:run' 2>/dev/null; then
+        print_success "Procesos 'spring-boot:run' señalizados"
+    else
+        print_info "No había procesos 'spring-boot:run'"
+    fi
+    # Forks de Spring Boot (java ... .jar lanzado por el plugin)
+    pkill -f 'spring-boot.run.fork' 2>/dev/null
     sleep 2
-else
-    print_info "No había procesos Java corriendo"
+
+    # Verificar que los puertos quedaron libres
+    for entry in "${JAVA_SERVICES[@]}"; do
+        IFS=':' read -r service_dir port service_name health <<< "$entry"
+        if is_port_open "$port"; then
+            print_warning "$service_name sigue escuchando en $port (PID $(get_pid_for_port "$port"))"
+        fi
+    done
+    echo ""
 fi
 
-echo ""
-
-# ============================================================================
-# DETENER DOCKER
-# ============================================================================
-
-print_info "Deteniendo Docker Compose..."
-if docker compose down 2>/dev/null; then
-    print_success "Docker detenido (MySQL y Keycloak)"
-else
-    print_error "Error deteniendo Docker"
+# ── Docker ───────────────────────────────────────────────────────────────────
+if [ "$MODE" = "all" ] || [ "$MODE" = "--docker" ]; then
+    print_info "Deteniendo Docker Compose..."
+    if docker compose down 2>/dev/null; then
+        print_success "Docker detenido (MySQL y Keycloak)"
+    else
+        print_error "Error deteniendo Docker (¿docker compose disponible?)"
+    fi
+    echo ""
 fi
-
-echo ""
-
-# ============================================================================
-# RESUMEN
-# ============================================================================
 
 print_header "RESUMEN"
 echo ""
-print_success "Todos los servicios han sido detenidos"
+print_success "Operación de parada completada (modo: $MODE)"
 echo ""
-print_info "Para volver a levantarlos:"
-echo "  ./start-services.sh"
-echo ""
-print_info "O reiniciar directamente:"
-echo "  ./restart-services.sh"
+print_info "Volver a levantar:  ./start-services.sh"
+print_info "Reiniciar:          ./restart-services.sh"
+print_info "Ver estado:         ./status-services.sh"
 echo ""

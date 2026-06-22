@@ -1,184 +1,110 @@
 #!/bin/bash
 
 # ============================================================================
-# SCRIPT: Verifica el estado de todos los servicios iFit
+# SCRIPT: Estado detallado de los servicios iFit
 # ============================================================================
 # Uso: ./status-services.sh
-# Muestra el estado de Docker, Java y salud de puertos
+#   Muestra por cada servicio: estado, PID, RAM, CPU, uptime y health HTTP.
+#   Además: recursos Docker, métricas del sistema y registro de Eureka.
+#
+# Consejo: para monitorización en vivo -> watch -n 2 ./status-services.sh
 # ============================================================================
 
-set -e
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib-services.sh"
 
-# Colores para output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+OK=0
+FAIL=0
 
-print_header() {
-    echo -e "${BLUE}========================================${NC}"
-    echo -e "${BLUE}$1${NC}"
-    echo -e "${BLUE}========================================${NC}"
-}
-
-print_success() {
-    echo -e "${GREEN}✓ $1${NC}"
-}
-
-print_error() {
-    echo -e "${RED}✗ $1${NC}"
-}
-
-print_warning() {
-    echo -e "${YELLOW}⚠ $1${NC}"
-}
-
-print_info() {
-    echo -e "${BLUE}ℹ $1${NC}"
-}
-
-# Verificar si un puerto está abierto
-is_port_open() {
-    nc -z localhost "$1" 2>/dev/null
-    return $?
-}
-
-# Verificar si un contenedor Docker está corriendo
-is_docker_running() {
-    docker ps --format '{{.Names}}' | grep -q "^$1$"
-    return $?
-}
-
-# ============================================================================
-# INICIO
-# ============================================================================
-
-print_header "ESTADO DE SERVICIOS iFIT"
+print_header "ESTADO DE SERVICIOS iFIT — $(date '+%Y-%m-%d %H:%M:%S')"
 echo ""
 
-# ============================================================================
-# SERVICIOS DOCKER
-# ============================================================================
-
-print_header "Servicios Docker"
-
-DOCKER_SERVICES=("ifit-mysql" "ifit-keycloak")
-DOCKER_OK=0
-DOCKER_FAIL=0
-
-for service in "${DOCKER_SERVICES[@]}"; do
-    if is_docker_running "$service"; then
-        print_success "$service está corriendo"
-        ((DOCKER_OK++))
+# ── Servicios Docker ─────────────────────────────────────────────────────────
+print_header "Docker (infraestructura)"
+printf "  ${BOLD}%-12s %-8s %-10s %-9s %-18s %s${NC}\n" "SERVICIO" "ESTADO" "SALUD" "CPU" "MEMORIA" "UPTIME"
+for entry in "${DOCKER_SERVICES[@]}"; do
+    IFS=':' read -r container port name <<< "$entry"
+    if is_docker_running "$container"; then
+        OK=$((OK+1))
+        health=$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}n/a{{end}}' "$container" 2>/dev/null)
+        read -r cpu mem < <(docker stats --no-stream --format '{{.CPUPerc}}|{{.MemUsage}}' "$container" 2>/dev/null | awk -F'|' '{print $1" "$2}')
+        uptime=$(docker ps --filter "name=^${container}$" --format '{{.Status}}' 2>/dev/null)
+        local_color=$GREEN; [ "$health" = "unhealthy" ] && local_color=$YELLOW
+        printf "  ${local_color}%-12s${NC} %-8s %-10s %-9s %-18s %s\n" "$name" "UP" "$health" "${cpu:-–}" "${mem:-–}" "${uptime#Up }"
     else
-        print_error "$service NO está corriendo"
-        ((DOCKER_FAIL++))
+        FAIL=$((FAIL+1))
+        printf "  ${RED}%-12s %-8s${NC}\n" "$name" "DOWN"
     fi
 done
-
 echo ""
 
-# ============================================================================
-# SERVICIOS JAVA
-# ============================================================================
-
-print_header "Servicios Java (Puertos)"
-
-JAVA_SERVICES=(
-    "API Gateway:8080"
-    "iFit:8081"
-    "Ronnie:8082"
-    "Admin Panel:8090"
-)
-
-JAVA_OK=0
-JAVA_FAIL=0
-
-for service_config in "${JAVA_SERVICES[@]}"; do
-    IFS=':' read -r service_name port <<< "$service_config"
-
+# ── Servicios Java ───────────────────────────────────────────────────────────
+print_header "Java (microservicios)"
+printf "  ${BOLD}%-14s %-6s %-7s %-8s %-7s %-11s %s${NC}\n" "SERVICIO" "PUERTO" "PID" "RAM(MB)" "CPU%" "UPTIME" "HEALTH"
+for entry in "${JAVA_SERVICES[@]}"; do
+    IFS=':' read -r service_dir port service_name health <<< "$entry"
     if is_port_open "$port"; then
-        print_success "$service_name (puerto $port) está corriendo"
-        ((JAVA_OK++))
+        OK=$((OK+1))
+        pid=$(get_pid_for_port "$port")
+        read -r ram cpu up < <(get_process_stats "$pid")
+        # Health HTTP (si el servicio expone endpoint)
+        hstr="—"
+        if [ -n "$health" ]; then
+            read -r code time <<< "$(http_health "http://localhost:${port}${health}")"
+            if [ "$code" = "200" ]; then
+                hstr="${GREEN}UP${NC} (${time}s)"
+            elif [ "$code" = "000" ]; then
+                hstr="${YELLOW}sin resp.${NC}"
+            else
+                hstr="${YELLOW}HTTP ${code}${NC}"
+            fi
+        fi
+        printf "  ${GREEN}%-14s${NC} %-6s %-7s %-8s %-7s %-11s %b\n" \
+            "$service_name" "$port" "${pid:-–}" "$ram" "$cpu" "$up" "$hstr"
     else
-        print_error "$service_name (puerto $port) NO está corriendo"
-        ((JAVA_FAIL++))
+        FAIL=$((FAIL+1))
+        printf "  ${RED}%-14s %-6s %-7s${NC}\n" "$service_name" "$port" "DOWN"
     fi
 done
-
 echo ""
 
-# ============================================================================
-# OTROS SERVICIOS
-# ============================================================================
-
-print_header "Otros Servicios"
-
-if is_port_open 9090; then
-    print_success "Keycloak Admin (puerto 9090) está corriendo"
-else
-    print_warning "Keycloak Admin (puerto 9090) NO está corriendo"
+# ── Registro de Eureka ───────────────────────────────────────────────────────
+if is_port_open 8761 && command -v curl &>/dev/null; then
+    print_header "Eureka — servicios registrados"
+    apps=$(curl -s --max-time 4 -H "Accept: application/json" "http://localhost:8761/eureka/apps" 2>/dev/null)
+    if [ -n "$apps" ]; then
+        # Extrae pares app/status de forma tolerante (sin jq)
+        echo "$apps" | grep -oE '"(app|status)":"[^"]+"' | paste - - 2>/dev/null \
+            | sed -E 's/"app":"([^"]+)".*"status":"([^"]+)"/  • \1 → \2/' \
+            | sort -u
+        count=$(echo "$apps" | grep -oE '"instanceId":"[^"]+"' | wc -l)
+        echo -e "  ${CYAN}Total instancias registradas: ${count}${NC}"
+    else
+        print_warning "Eureka responde pero no devolvió datos (¿aún arrancando?)"
+    fi
+    echo ""
 fi
 
-if is_port_open 3306; then
-    print_success "MySQL (puerto 3306) está corriendo"
-else
-    print_warning "MySQL (puerto 3306) NO está corriendo"
+# ── Sistema ──────────────────────────────────────────────────────────────────
+print_header "Sistema"
+if command -v free &>/dev/null; then
+    read -r mem_total mem_used mem_free < <(free -m | awk '/^Mem:/{print $2" "$3" "$4}')
+    echo -e "  ${CYAN}RAM:${NC}   ${mem_used}MB usados / ${mem_total}MB totales (${mem_free}MB libres)"
 fi
-
+if command -v uptime &>/dev/null; then
+    echo -e "  ${CYAN}Carga:${NC} $(uptime | sed -E 's/.*load average: //')"
+fi
+disk=$(df -h "$PROJECT_DIR" 2>/dev/null | awk 'NR==2{print $3" / "$2" ("$5" usado)"}')
+[ -n "$disk" ] && echo -e "  ${CYAN}Disco:${NC} $disk"
 echo ""
 
-# ============================================================================
-# RESUMEN
-# ============================================================================
-
+# ── Resumen ──────────────────────────────────────────────────────────────────
 print_header "RESUMEN"
-
-echo -e "${BLUE}Docker Services:${NC}"
-echo -e "  ${GREEN}Corriendo:${NC} $DOCKER_OK"
-echo -e "  ${RED}Parados:${NC} $DOCKER_FAIL"
-
+echo -e "  ${GREEN}Activos:${NC} $OK    ${RED}Caídos:${NC} $FAIL"
 echo ""
-echo -e "${BLUE}Java Services:${NC}"
-echo -e "  ${GREEN}Corriendo:${NC} $JAVA_OK"
-echo -e "  ${RED}Parados:${NC} $JAVA_FAIL"
-
-echo ""
-
-# ============================================================================
-# COMANDOS ÚTILES
-# ============================================================================
-
-print_header "COMANDOS ÚTILES"
-
-echo ""
-print_info "Ver logs en tiempo real:"
-echo "  tail -f /tmp/api-gateway.log"
-echo "  tail -f /tmp/ifit.log"
-echo "  tail -f /tmp/ronnie.log"
-echo "  tail -f /tmp/admin-panel.log"
-echo "  docker logs -f ifit-mysql"
-echo "  docker logs -f ifit-keycloak"
-
-echo ""
-print_info "Reiniciar servicios:"
-echo "  pkill -f 'spring-boot:run'    # Detiene todos los Java"
-echo "  docker compose restart        # Reinicia Docker"
-echo "  ./start-services.sh           # Levanta todo de nuevo"
-
-echo ""
-print_info "Acceso a servicios:"
-echo "  🔐 Keycloak:      http://localhost:9090"
-echo "  🏠 Admin Panel:    http://localhost:8090"
-echo "  🔌 iFit API:       http://localhost:8081"
-echo "  🤖 Ronnie:         http://localhost:8082"
-echo "  🌐 API Gateway:    http://localhost:8080"
-
-echo ""
-
-if [ $DOCKER_FAIL -eq 0 ] && [ $JAVA_FAIL -eq 0 ]; then
-    print_success "Todos los servicios están corriendo ✓"
+if [ "$FAIL" -eq 0 ]; then
+    print_success "Todos los servicios están operativos"
 else
-    print_warning "Algunos servicios no están corriendo"
+    print_warning "Hay $FAIL servicio(s) caído(s). Levántalos con ./start-services.sh"
+    print_info "Diagnostica con: ./help-services.sh <servicio>"
 fi
