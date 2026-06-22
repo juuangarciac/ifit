@@ -720,4 +720,46 @@ public class QuestionnaireController {
     ) {
         return ResponseEntity.ok(questionnaireService.getUserActiveResponses(user.getId()));
     }
+
+    /**
+     * [ADMIN] Obtiene las sesiones completadas de un usuario concreto por su ID.
+     *
+     * Endpoint: {@code GET /ifit/api/v1/questionnaires/responses/user/{userId}/completed}
+     *
+     * <p>Pensado para el panel de administración: permite a un administrador
+     * consultar las sesiones de cuestionario completadas de cualquier usuario.
+     * El detalle de cada sesión se obtiene con {@code /responses/{responseId}/summary}.
+     *
+     * @param userId ID del usuario cuyas sesiones completadas se quieren listar
+     * @return Lista de sesiones completadas del usuario
+     */
+    @PreAuthorize("hasRole('admin_client_role')")
+    @GetMapping("/responses/user/{userId}/completed")
+    @Operation(
+        summary = "[Admin] Sesiones completadas de un usuario",
+        description = "Lista las sesiones de cuestionario completadas por el usuario indicado. Requiere rol admin."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Lista de sesiones completadas obtenida",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = QuestionnaireResponseDto.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Error interno del servidor",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ErrorResponse.class)
+            )
+        )
+    })
+    public ResponseEntity<List<QuestionnaireResponseDto>> getCompletedResponsesByUser(
+        @PathVariable Long userId
+    ) {
+        return ResponseEntity.ok(questionnaireService.getUserCompletedResponses(userId));
+    }
 }

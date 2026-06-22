@@ -66,6 +66,7 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
         nav.addItem(new SideNavItem("Entrenadores", CoachesView.class, VaadinIcon.USER_HEART.create()));
         nav.addItem(new SideNavItem("Niveles", ExperienceLevelsView.class, VaadinIcon.TROPHY.create()));
         nav.addItem(new SideNavItem("Cuestionarios", QuestionnairesView.class, VaadinIcon.CLIPBOARD.create()));
+        nav.addItem(new SideNavItem("Respuestas", ResponsesView.class, VaadinIcon.RECORDS.create()));
         nav.addItem(new SideNavItem("Documentación", DocumentationView.class, VaadinIcon.BOOK.create()));
         addToDrawer(nav);
     }
