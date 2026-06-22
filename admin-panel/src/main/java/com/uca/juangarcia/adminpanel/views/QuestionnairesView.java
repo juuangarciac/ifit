@@ -325,7 +325,7 @@ public class QuestionnairesView extends VerticalLayout {
         questionsSection.setSpacing(true);
 
         H3 title = new H3("Primera Pregunta");
-        title.setMargin(false);
+        title.getStyle().set("margin", "0");
         questionsSection.add(title);
 
         VerticalLayout questionsList = new VerticalLayout();
