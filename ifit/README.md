@@ -1672,6 +1672,16 @@ Authorization: Bearer {jwt-token}
 }
 ```
 
+> **Validación y reintento en Ronnie (anti-rutinas vacías):** el modelo razonador
+> (gpt-oss) puede devolver ocasionalmente un JSON válido pero con los días *sin
+> ejercicios*. Para evitarlo, **Ronnie valida la rutina antes de responder**: si el
+> número de días sin ejercicios es **estrictamente mayor** que el de días con
+> ejercicios, **regenera una vez** y devuelve esa segunda tirada. Los días de
+> descanso vacíos en minoría se consideran válidos y NO disparan el reintento
+> (p. ej. 4 días con 1-2 vacíos se aceptan; 5 días con 5 vacíos se regeneran).
+> Así, iFit recibe normalmente una rutina ya saneada y la normalización de la
+> Fase 4 opera sobre días con ejercicios reales.
+
 ##### F. RoutineService.generateRoutine() - Fase 4: Normalización de Ejercicios
 
 ```java

@@ -170,6 +170,8 @@ El sistema se distribuye en **5 microservicios** independientes que se comunican
    
    Ronnie (LangChain4j) → Groq API: procesa con LLM
    Groq → Ronnie: JSON estructurado de rutina
+   Ronnie valida la rutina: si la mayoría de días vienen SIN ejercicios
+                            (días sin > días con), regenera UNA vez
    
    Ronnie → IFIT: retorna rutina en JSON
    IFIT reconcilia nombres → retorna al Cliente
