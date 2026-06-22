@@ -55,7 +55,7 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
             Optional<String> error = auth.login(event.getUsername(), event.getPassword());
             if (error.isEmpty()) {
                 loginForm.setError(false);
-                UI.getCurrent().navigate(UsersView.class);
+                UI.getCurrent().navigate(DashboardView.class);
             } else {
                 loginForm.setError(true);
                 Notification n = Notification.show(error.get(), 4000, Notification.Position.MIDDLE);
@@ -69,7 +69,7 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
         if (auth.isAuthenticated()) {
-            event.forwardTo(UsersView.class);
+            event.forwardTo(DashboardView.class);
         }
     }
 }
