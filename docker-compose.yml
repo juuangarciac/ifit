@@ -56,6 +56,8 @@ services:
       KC_HOSTNAME_STRICT: false
       KC_HOSTNAME_STRICT_HTTPS: false
       KC_HTTP_ENABLED: true
+      KC_PROXY: edge
+      KEYCLOAK_LOGLEVEL: INFO
     ports:
       - "9090:9090"
     networks:
