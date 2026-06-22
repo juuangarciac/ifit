@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ifit.ronnie.configuration.ChatContext;
 import com.ifit.ronnie.configuration.JwtUtils;
+import com.ifit.ronnie.modules.coach.RoutineValidation;
 import com.ifit.ronnie.modules.coach.dto.RoutineResponseDto;
 import com.ifit.ronnie.modules.message.controller.dto.MessageDto;
 
@@ -92,6 +93,14 @@ public class SerenaController {
                     messageDto.memoryId(),
                     messageDto.message(),
                     catalog);
+            // Si la rutina viene degradada (mayoría de días sin ejercicios),
+            // se regenera una vez y se devuelve la segunda tirada.
+            if (RoutineValidation.isDegraded(routineResponse)) {
+                routineResponse = serenaRoutineService.generateRoutine(
+                        messageDto.memoryId(),
+                        messageDto.message(),
+                        catalog);
+            }
             return ResponseEntity.ok(routineResponse);
         } finally {
             ChatContext.clear();

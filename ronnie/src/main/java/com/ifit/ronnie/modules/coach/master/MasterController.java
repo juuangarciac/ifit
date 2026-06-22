@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ifit.ronnie.configuration.ChatContext;
+import com.ifit.ronnie.modules.coach.RoutineValidation;
 import com.ifit.ronnie.modules.coach.dto.RoutineResponseDto;
 import com.ifit.ronnie.modules.message.controller.dto.MessageDto;
 
@@ -62,6 +63,15 @@ public class MasterController {
                                 messageDto.memoryId(),
                                 messageDto.message(),
                                 catalog);
+
+                        // Si la rutina viene degradada (mayoría de días sin ejercicios),
+                        // se regenera una vez y se devuelve la segunda tirada.
+                        if (RoutineValidation.isDegraded(routineResponse)) {
+                                routineResponse = master.generateRoutine(
+                                        messageDto.memoryId(),
+                                        messageDto.message(),
+                                        catalog);
+                        }
 
                         return ResponseEntity.ok(routineResponse);
                 } finally {
