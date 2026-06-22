@@ -48,7 +48,7 @@ services:
     image: quay.io/keycloak/keycloak:23.0
     container_name: ifit-keycloak
     restart: unless-stopped
-    command: start-dev
+    command: start-dev --import-realm
     environment:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
@@ -56,10 +56,13 @@ services:
       KC_HOSTNAME_STRICT: false
       KC_HOSTNAME_STRICT_HTTPS: false
       KC_HTTP_ENABLED: true
-      KC_PROXY: edge
-      KEYCLOAK_LOGLEVEL: INFO
     ports:
       - "9090:9090"
+    volumes:
+      # Auto-importa el realm de ifit al arrancar (si no existe ya)
+      - ./ifit-realm-export.json:/opt/keycloak/data/import/ifit-realm-export.json:ro
+      # Persiste la BD interna (realms, usuarios, cambios) entre reinicios
+      - keycloak_data:/opt/keycloak/data
     networks:
       - ifit-network
     healthcheck:
@@ -83,3 +86,5 @@ networks:
 volumes:
   mysql_data:
     name: ifit_mysql_data
+  keycloak_data:
+    name: ifit_keycloak_data
