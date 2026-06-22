@@ -15,6 +15,9 @@ cd "$PROJECT_DIR" || exit 1
 
 TARGET="$1"
 
+# Cargar .env para que Spring resuelva placeholders al relanzar con Maven
+load_env || print_warning ".env no encontrado: posibles placeholders sin resolver"
+
 # ── Reinicio de un único servicio Java ───────────────────────────────────────
 if [ -n "$TARGET" ]; then
     # Buscar el servicio en la definición

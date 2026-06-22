@@ -134,6 +134,14 @@ print_summary() {
 print_header "INICIANDO SERVICIOS iFIT"
 echo ""
 
+# Cargar variables de entorno (.env) para que Spring resuelva los placeholders
+if load_env; then
+    print_success "Variables de entorno cargadas desde .env"
+else
+    print_warning ".env no encontrado: los servicios Java pueden fallar por placeholders sin resolver (MAIL_USERNAME, GROQ_API_KEY...)"
+fi
+echo ""
+
 case "$ARG" in
     all)
         start_docker

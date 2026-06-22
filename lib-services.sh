@@ -112,3 +112,19 @@ http_health() {
 
 # Ruta del log de un servicio Java a partir de su directorio.
 log_path_for() { echo "${LOG_DIR}/$1.log"; }
+
+# Carga y EXPORTA las variables del .env del proyecto.
+# Necesario porque 'mvn spring-boot:run' (a diferencia de docker compose) NO
+# lee el .env, y la app usa placeholders como ${MAIL_USERNAME}, ${GROQ_API_KEY}.
+# Devuelve 0 si lo cargó, 1 si no existe el fichero.
+load_env() {
+    local env_file="${PROJECT_DIR}/.env"
+    if [ -f "$env_file" ]; then
+        set -a                 # exporta automáticamente todo lo que se defina
+        # shellcheck disable=SC1090
+        source "$env_file"
+        set +a
+        return 0
+    fi
+    return 1
+}
