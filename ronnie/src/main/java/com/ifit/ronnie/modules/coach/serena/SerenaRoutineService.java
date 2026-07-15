@@ -38,7 +38,7 @@ public interface SerenaRoutineService {
     carácter con una entrada de la lista. Ante la duda, elige el nombre más
     parecido de la lista, nunca uno nuevo.
 
-    {exerciseCatalog}
+    {{exerciseCatalog}}
 
     ════════════════════════════════════════
     SETS, REPS Y DESCANSO SEGÚN EL OBJETIVO
@@ -104,7 +104,7 @@ public interface SerenaRoutineService {
     """)
     @UserMessage("""
         Genera la rutina basándote en los siguientes datos del cliente:
-        {questionnaireData}
+        {{questionnaireData}}
     """)
     RoutineResponseDto generateRoutine(
         @MemoryId int memoryId,

@@ -49,7 +49,7 @@ public interface Master {
 
     ▶ Copia también "sets", "reps", "restSeconds" y "notes" exactamente del catálogo.
 
-    {exerciseCatalog}
+    {{exerciseCatalog}}
 
     ════════════════════════════════════════
     ESTRUCTURA OBLIGATORIA DE CADA DÍA
@@ -93,7 +93,7 @@ public interface Master {
     """)
     @UserMessage("""
                 Genera la rutina basándote en los siguientes datos del cliente:
-                {questionnaireData}
+                {{questionnaireData}}
             """)
     RoutineResponseDto generateRoutine(
         @MemoryId int memoryId,
